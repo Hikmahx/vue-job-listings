@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import jobData from '.@/data.json'
+import jobData from '@/data.json'
 import { ref } from 'vue'
 import JobItem from './JobItem.vue'
 
