@@ -6,6 +6,6 @@
 
 @layer base {
   body {
-    @apply font-spartan text-base;
+    @apply font-spartan text-base bg-cyan-50;
   }
 }
