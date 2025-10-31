@@ -48,9 +48,9 @@ const uniqueSelectedBtns = computed(() => Array.from(new Set(state.selectedBtn))
 
 <template>
   <Header />
-  <div class="max-w-3xl lg:max-w-7xl mx-auto">
-  <Filter :removeBtn="removeBtn" :selectedBtn="uniqueSelectedBtns" :clearAllBtns="clearAllBtns" />
-  <Jobs :jobs="state.jobs" :selectedBtn="uniqueSelectedBtns" :onClickFilter="onClickFilter" />
+  <div class="max-w-3xl lg:max-w-6xl mx-auto">
+    <Filter :removeBtn="removeBtn" :selectedBtn="uniqueSelectedBtns" :clearAllBtns="clearAllBtns" />
+    <Jobs :jobs="state.jobs" :selectedBtn="uniqueSelectedBtns" :onClickFilter="onClickFilter" />
   </div>
 </template>
 
