@@ -14,6 +14,7 @@ import {
   ComboboxItemIndicator,
   ComboboxList,
 } from '@/components/ui/combobox'
+import FilterModal from './FilterModal.vue'
 
 interface SearchFormProps {
   selectedBtn: string[]
@@ -126,7 +127,7 @@ const state = reactive({
             <span class="text-sm"> Sort by Date </span>
           </label>
         </div>
-        <Button class="bg-cyan-400">Advanced Filters</Button>
+          <FilterModal />
       </div>
     </div>
   </div>
