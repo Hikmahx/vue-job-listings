@@ -157,8 +157,11 @@ const onSubmit = handleSubmit((values) => {
         >
           <SearchAndCountry />
 
-          <RadioGroupField name="workType" label="Work Type" :options="workTypes" />
-          <div class="w-full">
+          <div class="w-full border rounded-md p-4">
+            <RadioGroupField name="workType" label="Work Type" :options="workTypes" />
+          </div>
+          <hr class="w-full" />
+          <div class="w-full border rounded-md p-4">
             <FieldLabel class="font-bold mb-8">Language and Compensation</FieldLabel>
             <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
               <FieldGroup class="flex-1 space-y-4 mt-auto">
@@ -188,42 +191,56 @@ const onSubmit = handleSubmit((values) => {
               </SalaryRangeInput>
             </div>
           </div>
-          <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
-            <FieldGroup class="flex-1">
-              <SearchableMultiSelect
-                name="skills"
-                label="Skills"
-                :options="valLabel(allSkills)"
-                placeholder="Search skills..."
-              />
-            </FieldGroup>
+          <hr class="w-full" />
 
-            <FieldGroup class="flex-1">
-              <SearchableMultiSelect
-                name="markets"
-                label="Markets"
-                :options="valLabel(allMarkets)"
-                placeholder="Search markets..."
-              />
-            </FieldGroup>
+          <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
+            <div class="w-full border rounded-md p-4">
+              <FieldGroup class="flex-1">
+                <SearchableMultiSelect
+                  name="skills"
+                  label="Skills"
+                  :options="valLabel(allSkills)"
+                  placeholder="Search skills..."
+                />
+              </FieldGroup>
+            </div>
+            <div class="w-full border rounded-md p-4">
+              <FieldGroup class="flex-1">
+                <SearchableMultiSelect
+                  name="markets"
+                  label="Markets"
+                  :options="valLabel(allMarkets)"
+                  placeholder="Search markets..."
+                />
+              </FieldGroup>
+            </div>
           </div>
+          <hr class="w-full" />
 
           <div class="flex w-full gap-6">
-            <CheckboxGroupField
-              name="companySizes"
-              label="Company Size"
-              :options="companySizes"
-              style="flex-1"
-            />
-            <CheckboxGroupField
-              name="jobTypes"
-              label="Job Types"
-              :options="jobTypes"
-              style="flex-1"
-            />
+            <div class="w-full border rounded-md p-4">
+              <CheckboxGroupField
+                name="companySizes"
+                label="Company Size"
+                :options="companySizes"
+                style="flex-1"
+              />
+            </div>
+            <!-- <div class="absolute inset-0 w-px border h-[90%] hidden lg:flex m-auto"></div> -->
+            <div class="w-full border rounded-md p-4">
+              <CheckboxGroupField
+                name="jobTypes"
+                label="Job Types"
+                :options="jobTypes"
+                style="flex-1"
+              />
+            </div>
           </div>
+          <hr class="w-full" />
 
-          <CheckboxGroupField name="roleTypes" label="Role Types" :options="roleTypes" />
+          <div class="w-full border rounded-md p-4">
+            <CheckboxGroupField name="roleTypes" label="Role Types" :options="roleTypes" />
+          </div>
         </form>
 
         <DialogFooter class="w-full sticky pt-4 px-8 bottom-0">
