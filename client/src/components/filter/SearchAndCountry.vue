@@ -51,7 +51,7 @@ const state = reactive({
       <Input
         type="text"
         placeholder="Search by role, skill, or company..."
-        class="w-full pl-9 h-12 pr-4 py-4 rborder-2 transition-all focus:outline-none focus:ring-2"
+        class="w-full pl-9 h-12 pr-4 py-4 transition-all focus:outline-none focus:ring-2"
       />
     </div>
 
@@ -81,9 +81,6 @@ const state = reactive({
                 :value="country"
               >
                 {{ country.label }}
-                <!-- <ComboboxItemIndicator>
-                  <Check class="ml-auto size-4" />
-                </ComboboxItemIndicator> -->
               </ComboboxItem>
             </ComboboxGroup>
           </ComboboxList>
