@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
-import { h, ref } from 'vue'
+import { ref } from 'vue'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
 import SearchAndCountry from './SearchAndCountry.vue'
@@ -11,8 +11,7 @@ import SearchableMultiSelect from './SearchableMultiSelect.vue'
 import CheckboxGroupField from './CheckboxGroupField.vue'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
-import { Form } from '@/components/ui/form'
-import { FieldGroup } from '@/components/ui/field'
+import { FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const spokenLanguages = [
   { label: 'English', value: 'en' },
@@ -134,15 +133,15 @@ const valLabel = (arr: string[]) => {
   }))
 }
 
-const onSubmit = handleSubmit((values) => {
+const onSubmit = (values: any) => {
   console.log('Form submitted with values:', values)
   showDialog.value = false
-})
+}
 </script>
 
 <template>
-  <Form v-slot="{ handleSubmit }" as="" keep-values :validation-schema="formSchema">
-    <Button variant="default" class="bg-cyan-400" @click="showDialog = true">
+  <div>
+    <Button type="button" variant="default" class="bg-cyan-400" @click="showDialog = true">
       Advanced Filters
     </Button>
 
@@ -152,7 +151,7 @@ const onSubmit = handleSubmit((values) => {
       >
         <form
           id="dialogForm"
-          @submit="handleSubmit($event, onSubmit)"
+          @submit="handleSubmit(onSubmit)"
           class="flex flex-row flex-wrap gap-5"
         >
           <SearchAndCountry />
@@ -165,12 +164,6 @@ const onSubmit = handleSubmit((values) => {
             <FieldLabel class="font-bold mb-8">Language and Compensation</FieldLabel>
             <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
               <FieldGroup class="flex-1 space-y-4 mt-auto">
-                <!-- <SearchableMultiSelect
-                name="spokenLanguages"
-                label="Spoken Language"
-                :options="spokenLanguages"
-                placeholder="Select language..."
-              /> -->
                 <SelectField
                   name="spokenLanguages"
                   label="Spoken Language"
@@ -226,7 +219,6 @@ const onSubmit = handleSubmit((values) => {
                 style="flex-1"
               />
             </div>
-            <!-- <div class="absolute inset-0 w-px border h-[90%] hidden lg:flex m-auto"></div> -->
             <div class="w-full border rounded-md p-4">
               <CheckboxGroupField
                 name="jobTypes"
@@ -248,5 +240,5 @@ const onSubmit = handleSubmit((values) => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  </Form>
+  </div>
 </template>
