@@ -98,8 +98,12 @@ const roleTypes = [
 
 const formSchema = toTypedSchema(
   z.object({
-    workType: z.string().min(2).max(50),
-    spokenLanguages: z.string(),
+    search: z.string().default(''),
+    country: z.string().default('worldwide'),
+    minSalary: z.number().optional(),
+    maxSalary: z.number().optional(),
+    workType: z.string().default(''),
+    spokenLanguages: z.string().default(''),
     skills: z.array(z.string()).default([]),
     markets: z.array(z.string()).default([]),
     companySizes: z.array(z.string()).default([]),
@@ -109,10 +113,15 @@ const formSchema = toTypedSchema(
   }),
 )
 
-const { handleSubmit } = useForm({
+const { handleSubmit, values, errors, resetForm, setValues } = useForm({
   validationSchema: formSchema,
   initialValues: {
+    search: '',
+    country: 'worldwide',
+    minSalary: undefined,
+    maxSalary: undefined,
     workType: '',
+    spokenLanguages: '',
     skills: [],
     markets: [],
     companySizes: [],
@@ -122,9 +131,7 @@ const { handleSubmit } = useForm({
   },
 })
 
-// State
 const showDialog = ref(false)
-const compensation = ref({ min: 1000, max: 20000 })
 
 const valLabel = (arr: string[]) => {
   return arr.map((item: string) => ({
@@ -137,6 +144,9 @@ const onSubmit = (values: any) => {
   console.log('Form submitted with values:', values)
   showDialog.value = false
 }
+
+const handleFormSubmit = handleSubmit(onSubmit) 
+
 </script>
 
 <template>
@@ -151,7 +161,7 @@ const onSubmit = (values: any) => {
       >
         <form
           id="dialogForm"
-          @submit="handleSubmit(onSubmit)"
+          @submit.prevent="handleFormSubmit"
           class="flex flex-row flex-wrap gap-5"
         >
           <SearchAndCountry />
@@ -160,6 +170,7 @@ const onSubmit = (values: any) => {
             <RadioGroupField name="workType" label="Work Type" :options="workTypes" />
           </div>
           <hr class="w-full" />
+
           <div class="w-full border rounded-md p-4">
             <FieldLabel class="font-bold mb-8">Language and Compensation</FieldLabel>
             <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
@@ -172,7 +183,7 @@ const onSubmit = (values: any) => {
                 />
               </FieldGroup>
 
-              <SalaryRangeInput :min-salary="compensation.min" :max-salary="compensation.max">
+              <SalaryRangeInput>
                 <template #currency>
                   <SelectField
                     name="currency"
@@ -216,7 +227,7 @@ const onSubmit = (values: any) => {
                 name="companySizes"
                 label="Company Size"
                 :options="companySizes"
-                style="flex-1"
+                class="flex-1"
               />
             </div>
             <div class="w-full border rounded-md p-4">
@@ -224,7 +235,7 @@ const onSubmit = (values: any) => {
                 name="jobTypes"
                 label="Job Types"
                 :options="jobTypes"
-                style="flex-1"
+                class="flex-1"
               />
             </div>
           </div>
