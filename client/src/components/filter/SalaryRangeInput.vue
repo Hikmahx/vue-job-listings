@@ -1,21 +1,7 @@
 <script setup lang="ts">
 import { Field, FieldLabel } from '@/components/ui/field'
+import { Field as VeeField } from 'vee-validate'
 import Input from '../ui/input/Input.vue'
-
-interface Props {
-  minSalary?: number
-  maxSalary?: number
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  minSalary: 1000,
-  maxSalary: 20000,
-})
-
-const emit = defineEmits<{
-  'update:minSalary': [value: number]
-  'update:maxSalary': [value: number]
-}>()
 </script>
 
 <template>
@@ -27,31 +13,36 @@ const emit = defineEmits<{
     <div class="flex gap-4">
       <!-- Min Salary -->
       <div class="flex gap-4 items-center h-fit">
-        <div>
-          <FieldLabel class="sr-only">Min Salary</FieldLabel>
-          <Field>
+        <VeeField v-slot="{ field, errors }" name="minSalary">
+          <Field :data-invalid="!!errors.length">
+            <FieldLabel class="sr-only">Min Salary</FieldLabel>
             <Input
-              type="text"
-              placeholder="e.g. 50000"
-              :model-value="minSalary"
-              @update:model-value="(value) => emit('update:minSalary', Number(value))"
-              class="w-full pl-9 h-12 pr-4 py-4 transition-all focus:outline-none focus:ring-2"
+              type="number"
+              placeholder="Min"
+              :id="`form-vee-demo-minSalary`"
+              v-bind="field"
+              :aria-invalid="!!errors.length"
+              class="w-24 h-12 px-3 transition-all focus:outline-none focus:ring-2"
             />
+            <FieldError v-if="errors.length" :errors="errors" />
           </Field>
-        </div>
-        <span>-</span>
+        </VeeField>
+        <span class="text-gray-500">-</span>
         <!-- Max Salary -->
-        <div>
-          <FieldLabel class="sr-only">Max Salary</FieldLabel>
-          <Field>
+        <VeeField v-slot="{ field, errors }" name="maxSalary">
+          <Field :data-invalid="!!errors.length">
+            <FieldLabel class="sr-only">Max Salary</FieldLabel>
             <Input
-              placeholder="e.g. 150000"
-              :model-value="maxSalary"
-              @update:model-value="(value) => emit('update:maxSalary', Number(value))"
-              class="w-full pl-9 h-12 pr-4 py-4 transition-all focus:outline-none focus:ring-2"
+              :id="`form-vee-demo-maxSalary`"
+              type="number"
+              v-bind="field"
+              :aria-invalid="!!errors.length"
+              placeholder="Max"
+              class="w-24 h-12 px-3 transition-all focus:outline-none focus:ring-2"
             />
+            <FieldError v-if="errors.length" :errors="errors" />
           </Field>
-        </div>
+        </VeeField>
       </div>
       <slot name="currency" />
     </div>
