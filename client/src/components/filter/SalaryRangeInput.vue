@@ -14,7 +14,7 @@ import Input from '../ui/input/Input.vue'
       <!-- Min Salary -->
       <div class="flex gap-4 items-center h-fit">
         <VeeField v-slot="{ field, errors }" name="minSalary">
-          <Field :data-invalid="!!errors.length">
+          <Field :data-invalid="!!errors.length" class="relative">
             <FieldLabel class="sr-only">Min Salary</FieldLabel>
             <Input
               type="number"
@@ -24,13 +24,12 @@ import Input from '../ui/input/Input.vue'
               :aria-invalid="!!errors.length"
               class="w-24 h-12 px-3 transition-all focus:outline-none focus:ring-2"
             />
-            <FieldError v-if="errors.length" :errors="errors" />
           </Field>
         </VeeField>
         <span class="text-gray-500">-</span>
         <!-- Max Salary -->
         <VeeField v-slot="{ field, errors }" name="maxSalary">
-          <Field :data-invalid="!!errors.length">
+          <Field :data-invalid="!!errors.length" class="relative">
             <FieldLabel class="sr-only">Max Salary</FieldLabel>
             <Input
               :id="`form-vee-demo-maxSalary`"
@@ -40,7 +39,6 @@ import Input from '../ui/input/Input.vue'
               placeholder="Max"
               class="w-24 h-12 px-3 transition-all focus:outline-none focus:ring-2"
             />
-            <FieldError v-if="errors.length" :errors="errors" />
           </Field>
         </VeeField>
       </div>

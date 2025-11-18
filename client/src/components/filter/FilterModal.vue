@@ -95,22 +95,54 @@ const roleTypes = [
   'DevOps Engineer',
   'Data Engineer',
 ]
-
 const formSchema = toTypedSchema(
-  z.object({
-    search: z.string().default(''),
-    country: z.string().default('worldwide'),
-    minSalary: z.number().optional(),
-    maxSalary: z.number().optional(),
-    workType: z.string().default(''),
-    spokenLanguages: z.string().default(''),
-    skills: z.array(z.string()).default([]),
-    markets: z.array(z.string()).default([]),
-    companySizes: z.array(z.string()).default([]),
-    jobTypes: z.array(z.string()).default([]),
-    roleTypes: z.array(z.string()).default([]),
-    currency: z.string().default('usd'),
-  }),
+  z
+    .object({
+      search: z.string().default(''),
+      country: z.string().default('worldwide'),
+      minSalary: z.preprocess(
+        (val) => (val === '' ? undefined : Number(val)),
+        z.number().min(0, 'Salary cannot be negative').optional(),
+      ),
+      maxSalary: z.preprocess(
+        (val) => (val === '' ? undefined : Number(val)),
+        z.number().min(0, 'Salary cannot be negative').optional(),
+      ),
+      workType: z.string().default(''),
+      spokenLanguages: z.string().default(''),
+      skills: z.array(z.string()).default([]),
+      markets: z.array(z.string()).default([]),
+      companySizes: z.array(z.string()).default([]),
+      jobTypes: z.array(z.string()).default([]),
+      roleTypes: z.array(z.string()).default([]),
+      currency: z.string().default('usd'),
+    })
+    .refine(
+      (data) => {
+        // Only validate if both values are provided
+        if (data.minSalary === undefined || data.maxSalary === undefined) {
+          return true
+        }
+        return data.minSalary <= data.maxSalary
+      },
+      {
+        message: 'Minimum salary cannot be higher than maximum salary',
+        path: ['minSalary'],
+      },
+    )
+    .refine(
+      (data) => {
+        // Attach error to maxSalary field ass well. (opt)
+        if (data.minSalary === undefined || data.maxSalary === undefined) {
+          return true
+        }
+        return data.minSalary <= data.maxSalary
+      },
+      {
+        message: 'Minimum salary cannot be higher than maximum salary',
+        path: ['maxSalary'],
+      },
+    ),
 )
 
 const { handleSubmit, values, errors, resetForm, setValues } = useForm({
@@ -145,8 +177,7 @@ const onSubmit = (values: any) => {
   showDialog.value = false
 }
 
-const handleFormSubmit = handleSubmit(onSubmit) 
-
+const handleFormSubmit = handleSubmit(onSubmit)
 </script>
 
 <template>
