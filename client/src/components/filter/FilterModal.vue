@@ -10,7 +10,7 @@ import SalaryRangeInput from './SalaryRangeInput.vue'
 import SearchableMultiSelect from './SearchableMultiSelect.vue'
 import CheckboxGroupField from './CheckboxGroupField.vue'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const spokenLanguages = [
@@ -170,6 +170,10 @@ const handleFormSubmit = handleSubmit(onSubmit)
       <DialogContent
         class="h-full max-h-[80vh] overflow-scroll sm:max-w-2xl lg:max-w-5xl w-[95%] mx-auto py-12"
       >
+      <DialogTitle class="sr-only">Advanced Job Filters</DialogTitle>
+        <DialogDescription class="sr-only">
+          Use the form below to apply advanced filters to your job search.
+        </DialogDescription>
         <form
           id="dialogForm"
           @submit.prevent="handleFormSubmit"
