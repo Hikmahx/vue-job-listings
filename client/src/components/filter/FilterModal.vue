@@ -100,14 +100,8 @@ const formSchema = toTypedSchema(
     .object({
       search: z.string().default(''),
       country: z.string().default('worldwide'),
-      minSalary: z.preprocess(
-        (val) => (val === '' ? undefined : Number(val)),
-        z.number().min(0, 'Salary cannot be negative').optional(),
-      ),
-      maxSalary: z.preprocess(
-        (val) => (val === '' ? undefined : Number(val)),
-        z.number().min(0, 'Salary cannot be negative').optional(),
-      ),
+      minSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
+      maxSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       workType: z.string().default(''),
       spokenLanguages: z.string().default(''),
       skills: z.array(z.string()).default([]),
@@ -119,24 +113,10 @@ const formSchema = toTypedSchema(
     })
     .refine(
       (data) => {
-        // Only validate if both values are provided
-        if (data.minSalary === undefined || data.maxSalary === undefined) {
-          return true
+        if (data.minSalary && data.maxSalary) {
+          return data.minSalary <= data.maxSalary
         }
-        return data.minSalary <= data.maxSalary
-      },
-      {
-        message: 'Minimum salary cannot be higher than maximum salary',
-        path: ['minSalary'],
-      },
-    )
-    .refine(
-      (data) => {
-        // Attach error to maxSalary field ass well. (opt)
-        if (data.minSalary === undefined || data.maxSalary === undefined) {
-          return true
-        }
-        return data.minSalary <= data.maxSalary
+        return true
       },
       {
         message: 'Minimum salary cannot be higher than maximum salary',
