@@ -99,7 +99,7 @@ const formSchema = toTypedSchema(
   z
     .object({
       search: z.string().default(''),
-      country: z.string().default('worldwide'),
+      country: z.string().default(''),
       minSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       maxSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       workType: z.string().default(''),
@@ -109,7 +109,7 @@ const formSchema = toTypedSchema(
       companySizes: z.array(z.string()).default([]),
       jobTypes: z.array(z.string()).default([]),
       roleTypes: z.array(z.string()).default([]),
-      currency: z.string().default('usd'),
+      currency: z.string().default(''),
     })
     .refine(
       (data) => {
@@ -129,7 +129,7 @@ const { handleSubmit, values, errors, resetForm, setValues } = useForm({
   validationSchema: formSchema,
   initialValues: {
     search: '',
-    country: 'worldwide',
+    country: '',
     minSalary: undefined,
     maxSalary: undefined,
     workType: '',
@@ -139,7 +139,7 @@ const { handleSubmit, values, errors, resetForm, setValues } = useForm({
     companySizes: [],
     jobTypes: [],
     roleTypes: [],
-    currency: 'usd',
+    currency: '',
   },
 })
 
