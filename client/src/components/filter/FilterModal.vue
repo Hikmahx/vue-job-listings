@@ -10,7 +10,13 @@ import SalaryRangeInput from './SalaryRangeInput.vue'
 import SearchableMultiSelect from './SearchableMultiSelect.vue'
 import CheckboxGroupField from './CheckboxGroupField.vue'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog'
 import { FieldGroup, FieldLabel } from '@/components/ui/field'
 
 const spokenLanguages = [
@@ -161,8 +167,14 @@ const handleFormSubmit = handleSubmit(onSubmit)
 </script>
 
 <template>
-  <div>
-    <Button type="button" variant="default" class="bg-cyan-400" @click="showDialog = true">
+  <div class="w-full flex md:justify-end">
+    <Button
+      type="button"
+      variant="default"
+      size="lg"
+      class="bg-cyan-400 h-12 font-medium text-base tracking-wider w-full md:w-fit"
+      @click="showDialog = true"
+    >
       Advanced Filters
     </Button>
 
@@ -170,7 +182,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
       <DialogContent
         class="h-full max-h-[80vh] overflow-scroll sm:max-w-2xl lg:max-w-5xl w-[95%] mx-auto py-12"
       >
-      <DialogTitle class="sr-only">Advanced Job Filters</DialogTitle>
+        <DialogTitle class="sr-only">Advanced Job Filters</DialogTitle>
         <DialogDescription class="sr-only">
           Use the form below to apply advanced filters to your job search.
         </DialogDescription>
@@ -242,16 +254,10 @@ const handleFormSubmit = handleSubmit(onSubmit)
                 name="companySizes"
                 label="Company Size"
                 :options="companySizes"
-                class="flex-1"
               />
             </div>
             <div class="w-full border rounded-md p-4">
-              <CheckboxGroupField
-                name="jobTypes"
-                label="Job Types"
-                :options="jobTypes"
-                class="flex-1"
-              />
+              <CheckboxGroupField name="jobTypes" label="Job Types" :options="jobTypes" />
             </div>
           </div>
           <hr class="w-full" />

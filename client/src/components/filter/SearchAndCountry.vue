@@ -34,7 +34,7 @@ const countries = [
 </script>
 
 <template>
-  <div class="flex gap-3 w-full">
+  <div class="flex flex-col sm:flex-row gap-3 w-full">
     <!-- Search Input -->
     <div class="flex-1">
       <VeeField v-slot="{ field, errors }" name="search">
@@ -58,7 +58,7 @@ const countries = [
     </div>
 
     <!-- Country Select -->
-    <div class="relative">
+    <div class="relative flex justify-end">
       <VeeField v-slot="{ field }" name="country">
         <Combobox :model-value="field.value" @update:model-value="field.onChange">
           <ComboboxAnchor>

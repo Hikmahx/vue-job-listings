@@ -33,7 +33,7 @@ defineProps<Props>()
           :model-value="field.value"
           :aria-invalid="!!errors.length"
           @update:model-value="field.onChange"
-          class="grid grid-cols-3 gap-3"
+          class="grid md:grid-cols-3 gap-3"
         >
           <FieldLabel
             v-for="option in options"
@@ -43,7 +43,7 @@ defineProps<Props>()
           >
             <Field orientation="horizontal" class="flex-row-reverse">
               <FieldContent>
-                <FieldTitle>{{ option }}</FieldTitle>
+                <FieldTitle class="text-xs ">{{ option }}</FieldTitle>
               </FieldContent>
               <RadioGroupItem
                 :id="`${name}-${option}`"

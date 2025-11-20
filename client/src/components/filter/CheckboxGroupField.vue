@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { Checkbox } from '@/components/ui/checkbox'
 import {
   Field,
@@ -15,12 +15,11 @@ defineProps({
   name: { type: String, required: true },
   label: { type: String, required: true },
   options: { type: Array, required: true },
-  style: { type: String, required: false, default: '' },
 })
 </script>
 
 <template>
-  <FieldGroup :class="style">
+  <FieldGroup>
     <VeeField v-slot="{ field, errors }" :name="name">
       <FieldSet>
         <FieldLegend class="font-bold mb-6">{{ label }}</FieldLegend>
