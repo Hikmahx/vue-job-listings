@@ -15,7 +15,7 @@ const forwarded = useForwardProps(delegatedProps)
 <template>
   <ComboboxAnchor
     v-bind="forwarded"
-    :class="cn('w-[200px]', props.class)"
+    :class="cn(props.class)"
   >
     <slot />
   </ComboboxAnchor>

@@ -23,7 +23,7 @@ const filteredJobs = computed(() => {
 </script>
 
 <template>
-  <ul class="pt-24 px-10 pb-px">
+  <ul class="pt-24 px-4 lg:px-10 pb-px">
     <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" :onClickFilter="onClickFilter" />
   </ul>
 </template>

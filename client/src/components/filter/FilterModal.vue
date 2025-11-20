@@ -189,7 +189,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
         <form
           id="dialogForm"
           @submit.prevent="handleFormSubmit"
-          class="flex flex-row flex-wrap gap-5"
+          class="w-full flex flex-row flex-wrap gap-5"
         >
           <SearchAndCountry />
 
@@ -248,7 +248,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
           </div>
           <hr class="w-full" />
 
-          <div class="flex w-full gap-6">
+          <div class="flex flex-col md:flex-row w-full gap-6">
             <div class="w-full border rounded-md p-4">
               <CheckboxGroupField
                 name="companySizes"
@@ -267,8 +267,13 @@ const handleFormSubmit = handleSubmit(onSubmit)
           </div>
         </form>
 
-        <DialogFooter class="w-full sticky pt-4 px-8 bottom-0">
-          <Button type="submit" form="dialogForm">Save changes</Button>
+        <DialogFooter class="w-full sticky pt-4 md:px-8 bottom-0">
+          <Button
+            type="submit"
+            form="dialogForm"
+            class="h-12 font-medium text-base tracking-wider w-full md:w-fit"
+            >Save changes</Button
+          >
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -60,7 +60,7 @@ const countries = [
     <!-- Country Select -->
     <div class="relative flex justify-end">
       <VeeField v-slot="{ field }" name="country">
-        <Combobox :model-value="field.value" @update:model-value="field.onChange">
+        <Combobox :model-value="field.value" @update:model-value="field.onChange" class="w-full sm:w-[200px]">
           <ComboboxAnchor>
             <div class="relative w-full max-w-sm items-center">
               <ComboboxInput

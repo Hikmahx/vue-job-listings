@@ -43,15 +43,15 @@ const handleFormSubmit = handleSubmit((values) => {
 </script>
 
 <template>
-  <div class="px-10 w-full max-w-3xl lg:max-w-6xl m-auto">
+  <div class="px-4 lg:px-10 w-full max-w-3xl lg:max-w-6xl m-auto">
     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8 -mt-12 lg:-mt-20 relative z-20">
       <form @change="handleFormSubmit" class="mb-6">
         <SearchAndCountry />
       </form>
 
       <!-- Below the filter tags-->
-      <div class="flex flex-wrap items-center justify-between pt-6 mt-6 border-t gap-8">
-        <div class="flex items-center gap-2">
+      <div class="flex flex-wrap md:flex-nowrap flex-col md:flex-row items-center justify-between pt-6 mt-6 border-t gap-8">
+        <div class="flex items-center gap-2 w-full">
           <span
             class="relative mr-6 after:content-['.'] after:ml-1 after:text-3xl after:absolute after:top-[-1rem] after:opacity-70 after:blur-[0.06rem]"
           >

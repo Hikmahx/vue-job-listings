@@ -12,7 +12,7 @@ defineProps<FilterProps>()
 </script>
 
 <template>
-  <div class="px-10">
+  <div class="px-4 lg:px-10">
     <div
       :class="`${
         selectedBtn.length > 0 ? 'block' : 'hidden'

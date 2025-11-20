@@ -6,12 +6,12 @@ defineProps<{ job: Job; onClickFilter: (event: Event) => void }>()
 
 <template>
   <li
-    :class="`relative flex flex-col lg:flex-row gap-12 lg:gap-4 bg-white rounded-md shadow-[0_12px_16px_0_#d7e9ec] mb-16 lg:mb-10 p-7 px-6 lg:px-10 ${job.featured && `before:content-[''] before:absolute before:w-1.5 before:h-full before:bg-[#5ea4a6] before:top-0 before:left-0`} before:rounded-l-md`"
+    :class="`relative flex flex-col lg:flex-row gap-8 lg:gap-4 bg-white rounded-md shadow-[0_12px_16px_0_#d7e9ec] mb-16 lg:mb-10 p-7 px-6 lg:px-10 ${job.featured && `before:content-[''] before:absolute before:w-1.5 before:h-full before:bg-[#5ea4a6] before:top-0 before:left-0 before:rounded-l-md`}`"
   >
     <img
       :src="`${job.logo}`"
       alt="banner"
-      class="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -top-16 lg:top-0 mb-[-16px]"
+      class="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -mt-14 mb-[-16px]"
     />
     <div class="flex-1 flex flex-col lg:flex-row lg:items-center">
       <div class="">

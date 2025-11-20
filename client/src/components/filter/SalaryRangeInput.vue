@@ -10,7 +10,7 @@ import Input from '../ui/input/Input.vue'
       <FieldLabel class="text-cyan-900">Compensation</FieldLabel>
     </div>
 
-    <div class="flex gap-4">
+    <div class="flex flex-col sm:flex-row gap-4">
       <!-- Min Salary -->
       <div class="flex gap-4 items-center h-fit">
         <VeeField v-slot="{ field, errors }" name="minSalary">
