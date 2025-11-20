@@ -20,7 +20,7 @@ defineProps({
 
 <template>
   <FieldGroup>
-    <VeeField v-slot="{ field, errors }" :name="name">
+    <VeeField v-slot="{ field, errors, value }" :name="name">
       <FieldSet>
         <FieldLegend class="font-bold mb-6">{{ label }}</FieldLegend>
 
@@ -38,12 +38,12 @@ defineProps({
 
               <Checkbox
                 :id="`${name}-${option}`"
-                :model-value="field.value?.includes(option) ?? false"
+                :model-value="value?.includes(option) ?? false"
                 :aria-invalid="!!errors.length"
                 class="accent-cyan-400"
                 @update:model-value="
                   (checked) => {
-                    const current = field.value || []
+                    const current = value || []
                     const newValue = checked
                       ? [...current, option]
                       : current.filter((v) => v !== option)

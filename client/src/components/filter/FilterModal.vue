@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
 import SearchAndCountry from './SearchAndCountry.vue'
@@ -131,25 +131,37 @@ const formSchema = toTypedSchema(
     ),
 )
 
+const filters = ref({
+  search: '',
+  country: '',
+  minSalary: undefined,
+  maxSalary: undefined,
+  workType: '',
+  spokenLanguages: '',
+  skills: [],
+  markets: [],
+  companySizes: [],
+  jobTypes: [],
+  roleTypes: [],
+  currency: '',
+})
+
 const { handleSubmit, values, errors, resetForm, setValues } = useForm({
   validationSchema: formSchema,
-  initialValues: {
-    search: '',
-    country: '',
-    minSalary: undefined,
-    maxSalary: undefined,
-    workType: '',
-    spokenLanguages: '',
-    skills: [],
-    markets: [],
-    companySizes: [],
-    jobTypes: [],
-    roleTypes: [],
-    currency: '',
-  },
+  // Use a function to get initial values from filters
+  initialValues: () => filters.value,
 })
 
 const showDialog = ref(false)
+
+// Set values when dialog opens
+watch(showDialog, (isOpen) => {
+  if (isOpen) {
+    // Force set the values to ensure they're properly bound
+    setValues(filters.value)
+  }
+})
+
 
 const valLabel = (arr: string[]) => {
   return arr.map((item: string) => ({
@@ -159,7 +171,8 @@ const valLabel = (arr: string[]) => {
 }
 
 const onSubmit = (values: any) => {
-  console.log('Form submitted with values:', values)
+  // console.log('Form submitted with values:', values)
+  filters.value = { ...values }
   showDialog.value = false
 }
 

@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <VeeField v-slot="{ field, errors }" :name="name">
+  <VeeField v-slot="{ field, errors, value }" :name="name">
     <Field orientation="responsive" :data-invalid="!!errors.length">
       <FieldContent>
         <FieldLabel class="font-bold">{{ label }}</FieldLabel>
@@ -47,11 +47,11 @@ const props = withDefaults(defineProps<Props>(), {
               class="flex items-center space-x-2 p-2"
             >
               <Checkbox
-                :model-value="field.value?.includes(option.value) ?? false"
+                :model-value="value?.includes(option.value) ?? false"
                 :aria-invalid="!!errors.length"
                 @update:model-value="
                   (checked) => {
-                    const current = field.value || []
+                    const current = value || []
                     const newValue = checked
                       ? [...current, option.value]
                       : current.filter((v) => v !== option.value)

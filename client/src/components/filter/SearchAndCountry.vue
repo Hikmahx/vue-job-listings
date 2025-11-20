@@ -37,7 +37,7 @@ const countries = [
   <div class="flex flex-col sm:flex-row gap-3 w-full">
     <!-- Search Input -->
     <div class="flex-1">
-      <VeeField v-slot="{ field, errors }" name="search">
+      <VeeField v-slot="{ field, errors, value }" name="search">
         <Field :data-invalid="!!errors.length" class="relative">
           <FieldLabel class="sr-only">Search Jobs</FieldLabel>
           <span class="absolute left-0 inset-y-0 flex items-center px-3 -z-10 w-4">
@@ -48,8 +48,7 @@ const countries = [
             placeholder="Search by role, skill, or company..."
             class="w-full pl-9 h-12 pr-4 py-4 transition-all focus:outline-none focus:ring-2"
             :id="`form-vee-search`"
-            v-bind="field"
-            :model-value="field.value"
+            :model-value="value"
             :aria-invalid="!!errors.length"
             @update:model-value="field.onChange"
           />
@@ -59,8 +58,12 @@ const countries = [
 
     <!-- Country Select -->
     <div class="relative flex justify-end">
-      <VeeField v-slot="{ field }" name="country">
-        <Combobox :model-value="field.value" @update:model-value="field.onChange" class="w-full sm:w-[200px]">
+      <VeeField v-slot="{ field, value }" name="country">
+        <Combobox
+          :model-value="value"
+          @update:model-value="field.onChange"
+          class="w-full sm:w-[200px]"
+        >
           <ComboboxAnchor>
             <div class="relative w-full max-w-sm items-center">
               <ComboboxInput

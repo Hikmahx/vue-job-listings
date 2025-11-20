@@ -30,20 +30,22 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <FieldGroup :class="style">
-    <VeeField v-slot="{ field, errors }" :name="name">
+    <VeeField v-slot="{ field, errors, value }" :name="name">
       <Field orientation="responsive" :data-invalid="!!errors.length" class="gap-0">
         <FieldContent class="sr-only">
           <FieldLabel :for="`form-vee-select-${name}`">{{ label }}</FieldLabel>
           <FieldError v-if="errors.length" :errors="errors" />
         </FieldContent>
 
-        <Select :name="field.name" :model-value="field.value" @update:model-value="field.onChange">
+        <Select :name="field.name" :model-value="value" @update:model-value="field.onChange">
           <SelectTrigger
             :id="`form-vee-select-${name}`"
             :aria-invalid="!!errors.length"
             class="min-w-[120px] h-12"
           >
-            <SelectValue :placeholder="placeholder" />
+            <SelectValue :placeholder="placeholder">
+              {{ options.find((opt) => opt.value === value)?.label || placeholder }}
+            </SelectValue>
           </SelectTrigger>
 
           <SelectContent position="item-aligned">
