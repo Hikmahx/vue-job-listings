@@ -27,9 +27,13 @@ const filters = ref({
 })
 
 const groupedFilters = (item) => {
-  filters.value = { ...filters.value, ...item }
-  
-  const data = Object.entries(item)
+  Object.keys(item).forEach((key) => {
+    if (item[key] !== undefined && item[key] !== null) {
+      filters.value[key] = item[key]
+    }
+  })
+
+  const data = Object.entries(filters.value)
   const mappedData = data
     .filter(
       ([key, value]) =>
@@ -40,7 +44,7 @@ const groupedFilters = (item) => {
     )
     .map(([key, value]) => {
       if (Array.isArray(value)) {
-        if (value.length === 1 || value.length < 1) {
+        if (value.length === 1) {
           return { [key]: value[0] }
         }
         if (value.length > 1) {
@@ -50,6 +54,8 @@ const groupedFilters = (item) => {
         return { [key]: value }
       }
     })
+    .filter(Boolean) // removes undefined, null, false, 0, "", NaN
+
   console.log('Filtered data:', mappedData)
   return mappedData
 }
@@ -60,7 +66,7 @@ provide('filters', filters)
 
 <template>
   <div>
-    <header class="h-40 md:h-[250px] w-f ull bg-cyan-400">
+    <header class="h-40 md:h-[250px] w-full bg-cyan-400">
       <div class="relative w-full h-full">
         <img
           src="@/assets/img/bg-header-desktop.svg"
