@@ -1,26 +1,10 @@
 <script setup lang="ts">
-import { inject, ref, watch } from 'vue'
-// import FilterBtn from './FilterBtn.vue'
+import { inject, ref } from 'vue'
 import FilterModal from './FilterModal.vue'
 import SearchAndCountry from './SearchAndCountry.vue'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
-import { FieldGroup, FieldLabel } from '@/components/ui/field'
-
-// interface SearchFormProps {
-//   selectedBtn: string[]
-//   removeBtn: (btn: string) => void
-//   clearAllBtns: () => void
-// }
-
-// defineProps<SearchFormProps>()
-
-const sortByDate = ref(false)
-
-const handleSearch = () => {
-  console.log('Searching...', { sortByDate: sortByDate.value })
-}
 
 const filters = inject('filters')
 const groupedFilters = inject('groupedFilters')
@@ -40,27 +24,15 @@ const { handleSubmit, values, setValues } = useForm({
   }),
 })
 
-// Watch for form changes and update shared filters
-watch(values, (newValues) => {
-  console.log('Search form values changed:', newValues)
-  filters.value.search = newValues.search
-  filters.value.country = newValues.country
-  
-  // Call groupedFilters to process the changes
-  groupedFilters(newValues)
-})
+// Only update when form is explicitly submitted
+const onSubmit = (values: any) => {
+  console.log('Form submitted:', values)
+  filters.value.search = values.search
+  filters.value.country = values.country
+  groupedFilters(values)
+}
 
-// Watch for changes in shared filters (from FilterModal) and update form
-watch(filters, (newFilters) => {
-  setValues({
-    search: newFilters.search,
-    country: newFilters.country,
-  })
-})
-
-const handleFormSubmit = handleSubmit((values) => {
-  console.log('Form submitted on change:', values)
-})
+const handleFormSubmit = handleSubmit(onSubmit)
 </script>
 
 <template>
@@ -68,6 +40,7 @@ const handleFormSubmit = handleSubmit((values) => {
     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8 -mt-12 lg:-mt-20 relative z-20">
       <form @submit.prevent="handleFormSubmit" class="mb-6">
         <SearchAndCountry />
+        <button type="submit" class="sr-only">Apply Search</button>
       </form>
 
       <!-- Below the filter tags-->
