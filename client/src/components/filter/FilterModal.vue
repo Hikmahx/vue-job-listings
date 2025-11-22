@@ -30,14 +30,14 @@ const spokenLanguages = [
 ]
 
 const currencies = [
-  { value: 'usd', label: 'USD' },
-  { value: 'eur', label: 'EUR' },
-  { value: 'gbp', label: 'GBP' },
-  { value: 'cad', label: 'CAD' },
-  { value: 'aud', label: 'AUD' },
-  { value: 'jpy', label: 'JPY' },
-  { value: 'inr', label: 'INR' },
-  { value: 'sgd', label: 'SGD' },
+  { value: '$', label: 'USD' },
+  { value: '€', label: 'EUR' },
+  { value: '£', label: 'GBP' },
+  { value: 'CA$', label: 'CAD' },
+  { value: 'A$', label: 'AUD' },
+  { value: '¥', label: 'JPY' },
+  { value: '₹', label: 'INR' },
+  { value: 'S$', label: 'SGD' },
 ]
 
 const workTypes = ['remote', 'hybrid', 'onsite']
