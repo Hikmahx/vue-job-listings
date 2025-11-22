@@ -24,6 +24,7 @@ const filters = ref({
   jobTypes: [],
   roleTypes: [],
   currency: '',
+  sortByDate: false,
 })
 
 const groupedFilters = (item) => {
@@ -51,6 +52,8 @@ const groupedFilters = (item) => {
           return { [key]: value.length }
         }
       } else if (typeof value === 'string' || typeof value === 'number') {
+        return { [key]: value }
+      } else if (typeof value === 'boolean' && value === true) {
         return { [key]: value }
       }
     })

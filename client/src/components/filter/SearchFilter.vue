@@ -13,6 +13,7 @@ const formSchema = toTypedSchema(
   z.object({
     search: z.string().optional(),
     country: z.string().optional(),
+    sortByDate: z.boolean().default(false),
   }),
 )
 
@@ -21,18 +22,26 @@ const { handleSubmit, values, setValues } = useForm({
   initialValues: () => ({
     search: filters.value.search,
     country: filters.value.country,
+    sortByDate: filters.value.sortByDate || false,
   }),
 })
 
-// Only update when form is explicitly submitted
 const onSubmit = (values: any) => {
   console.log('Form submitted:', values)
   filters.value.search = values.search
   filters.value.country = values.country
+  filters.value.sortByDate = values.sortByDate
   groupedFilters(values)
 }
 
 const handleFormSubmit = handleSubmit(onSubmit)
+
+// Handle sort by date checkbox change immediately (optional)
+const onSortChange = (event: Event) => {
+  const checked = (event.target as HTMLInputElement).checked
+  filters.value.sortByDate = checked
+  groupedFilters({ sortByDate: checked })
+}
 </script>
 
 <template>
@@ -54,8 +63,13 @@ const handleFormSubmit = handleSubmit(onSubmit)
             159 results
           </span>
           <label class="flex items-center gap-2 cursor-pointer">
-            <input type="checkbox" class="w-4 h-4 rounded accent-cyan-700" />
-            <span class="text-sm"> Sort by Date </span>
+            <input 
+              type="checkbox" 
+              class="w-4 h-4 rounded accent-cyan-700" 
+              :checked="filters.sortByDate"
+              @change="onSortChange"
+            />
+            <span class="text-sm">Sort by Date</span>
           </label>
         </div>
         <FilterModal />
