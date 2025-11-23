@@ -12,7 +12,7 @@ defineProps<FilterBtnProps>()
 <template>
   <div v-for="(btn, index) in btns" :key="index">
     <button
-      class="flex items-center gap-2 bg-cyan-50 text-cyan-400 font-semibold rounded-md overflow-hidden"
+      class="flex items-center gap-2 bg-cyan-50 text-cyan-400 font-semibold rounded-md overflow-hidden capitalize"
     >
       <span class="px-2">{{ btn }}</span>
       <span
