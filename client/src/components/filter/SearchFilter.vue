@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
+import { inject, ref, watch } from 'vue'
+import Filter from './Filter.vue'
 import FilterModal from './FilterModal.vue'
 import SearchAndCountry from './SearchAndCountry.vue'
 import { toTypedSchema } from '@vee-validate/zod'
@@ -26,6 +27,20 @@ const { handleSubmit, values, setValues } = useForm({
   }),
 })
 
+
+// Update form values when filters change
+watch(
+  () => ({ search: filters.value.search, country: filters.value.country }),
+  (newFilters) => {
+    setValues({
+      search: newFilters.search || '',
+      country: newFilters.country || '',
+      sortByDate: filters.value.sortByDate || false,
+    })
+  },
+  { deep: true },
+)
+
 const onSubmit = (values: any) => {
   console.log('Form submitted:', values)
   filters.value.search = values.search
@@ -36,7 +51,6 @@ const onSubmit = (values: any) => {
 
 const handleFormSubmit = handleSubmit(onSubmit)
 
-// Handle sort by date checkbox change immediately (optional)
 const onSortChange = (event: Event) => {
   const checked = (event.target as HTMLInputElement).checked
   filters.value.sortByDate = checked
@@ -51,6 +65,10 @@ const onSortChange = (event: Event) => {
         <SearchAndCountry />
         <button type="submit" class="sr-only">Apply Search</button>
       </form>
+      <!-- Filters buttton -->
+      <div class="">
+        <Filter />
+      </div>
 
       <!-- Below the filter tags-->
       <div
@@ -63,9 +81,9 @@ const onSortChange = (event: Event) => {
             159 results
           </span>
           <label class="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="checkbox" 
-              class="w-4 h-4 rounded accent-cyan-700" 
+            <input
+              type="checkbox"
+              class="w-4 h-4 rounded accent-cyan-700"
               :checked="filters.sortByDate"
               @change="onSortChange"
             />

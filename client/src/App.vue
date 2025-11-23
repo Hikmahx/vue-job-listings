@@ -2,7 +2,6 @@
 import { computed, onMounted, reactive } from 'vue'
 import Header from './components/Header.vue'
 import Jobs from './components/jobs/Jobs.vue'
-import Filter from './components/filter/Filter.vue'
 import type { Job } from './types'
 
 onMounted(() => {
@@ -35,22 +34,15 @@ const onClickFilter = (e: Event) => {
   }
 }
 
-const removeBtn = (btn: string): void => {
-  state.selectedBtn = state.selectedBtn.filter((selectBtn) => selectBtn !== btn)
-}
-
-const clearAllBtns = (): void => {
-  state.selectedBtn = []
-}
-
 const uniqueSelectedBtns = computed(() => Array.from(new Set(state.selectedBtn)))
 </script>
 
 <template>
-  <Header />
-  <div class="max-w-3xl lg:max-w-6xl mx-auto">
-    <Filter :removeBtn="removeBtn" :selectedBtn="uniqueSelectedBtns" :clearAllBtns="clearAllBtns" />
-    <Jobs :jobs="state.jobs" :selectedBtn="uniqueSelectedBtns" :onClickFilter="onClickFilter" />
+  <div>
+    <Header />
+    <div class="max-w-3xl lg:max-w-6xl mx-auto">
+      <Jobs :jobs="state.jobs" :selectedBtn="uniqueSelectedBtns" :onClickFilter="onClickFilter" />
+    </div>
   </div>
 </template>
 
