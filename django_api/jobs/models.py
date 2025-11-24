@@ -22,3 +22,6 @@ class Job(models.Model):
     contract = models.CharField(max_length=50, choices=CONTRACT_CHOICES)
     location = models.CharField(max_length=100)
     skills = models.JSONField(default=list)
+    
+    def __str__(self):
+        return f"{self.company} - {self.position}"
