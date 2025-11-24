@@ -27,7 +27,12 @@ class JobSerializer(serializers.ModelSerializer):
 
     def get_postedAt(self, obj):
         delta = timesince(obj.posted_at).split(",")[0]
-        value, unit = delta.split(" ")
+
+        parts = delta.split(" ")
+        if len(parts) < 2:
+            return "just now"
+        
+        value, unit = parts
 
         short = {
             "minute": "m",
@@ -45,6 +50,7 @@ class JobSerializer(serializers.ModelSerializer):
         }.get(unit, "")
 
         return f"{value}{short} ago"
+
     
     def get_new(self, obj):
         # Job is "new" if posted within the last 2 days
