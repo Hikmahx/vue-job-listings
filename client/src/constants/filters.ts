@@ -1,11 +1,7 @@
-export const spokenLanguages = [
-  { label: 'English', value: 'en' },
-  { label: 'Spanish', value: 'es' },
-  { label: 'French', value: 'fr' },
-  { label: 'German', value: 'de' },
-  { label: 'Italian', value: 'it' },
-  { label: 'Chinese', value: 'zh' },
-  { label: 'Japanese', value: 'ja' },
+export const levels = [
+  { label: 'Junior', value: 'junior' },
+  { label: 'Midweight', value: 'midweight' },
+  { label: 'Senior', value: 'senior' },
 ]
 
 export const currencies = [
@@ -71,12 +67,12 @@ export const markets = [
 ]
 
 export const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+']
-export const jobTypes = ['full-time', 'part-time', 'contract', 'internship']
-export const roleTypes = [
-  'Backend Engineer',
-  'Frontend Engineer',
-  'Full-Stack Engineer',
-  'Mobile Engineer',
-  'DevOps Engineer',
-  'Data Engineer',
+export const contract = ['full-time', 'part-time', 'contract', 'internship']
+export const roles = [
+  'Backend',
+  'Frontend',
+  'Full-Stack',
+  'Mobile',
+  'DevOps',
+  'Data',
 ]

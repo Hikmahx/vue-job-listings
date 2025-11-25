@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue'
 import FilterBtn from './FilterBtn.vue'
-import { spokenLanguages } from '@/constants/filters'
+import { levels } from '@/constants/filters'
 
 const filters = inject('filters')
 const groupedFilters = inject('groupedFilters')
@@ -30,14 +30,24 @@ const selectedBtns = computed(() => {
         })
         break
 
-      case 'spokenLanguages':
-        const lang = spokenLanguages.find((opt) => opt.value === value)
+      case 'level':
+        const lang = levels.find((opt) => opt.value === value)
         btns.push({
           text: lang?.label || value,
-          key: 'spokenLanguages',
+          key: 'level',
           value: '',
         })
         break
+
+      // case 'level':
+      //   btns.push({
+      //     text: value.charAt(0).toUpperCase() + value.slice(1),
+      //     key: 'level',
+      //     value: '',
+      //   })
+      //   break
+
+      // spokenLanguages removed
 
       case 'minSalary':
       case 'maxSalary':
@@ -63,8 +73,8 @@ const selectedBtns = computed(() => {
       case 'skills':
       case 'markets':
       case 'companySizes':
-      case 'jobTypes':
-      case 'roleTypes':
+      case 'contract':
+      case 'roles':
         if (typeof value === 'number') {
           btns.push({
             text: value === 1 ? filters.value[key][0] : `${key} • ${value}`,
@@ -105,12 +115,12 @@ const clearAllBtns = () => {
     minSalary: undefined,
     maxSalary: undefined,
     workType: '',
-    spokenLanguages: '',
+    level: '',
     skills: [],
     markets: [],
     companySizes: [],
-    jobTypes: [],
-    roleTypes: [],
+    contract: [],
+    roles: [],
     currency: '',
     sortByDate: false,
   })

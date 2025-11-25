@@ -18,7 +18,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { FieldGroup, FieldLabel } from '@/components/ui/field'
-import {skills, markets, spokenLanguages, currencies, workTypes, companySizes, jobTypes, roleTypes } from '@/constants/filters'
+import {
+  skills,
+  markets,
+  levels,
+  currencies,
+  workTypes,
+  companySizes,
+  contract,
+  roles,
+} from '@/constants/filters'
 const formSchema = toTypedSchema(
   z
     .object({
@@ -27,12 +36,12 @@ const formSchema = toTypedSchema(
       minSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       maxSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       workType: z.string().default(''),
-      spokenLanguages: z.string().default(''),
+      level: z.string().default(''),
       skills: z.array(z.string()).default([]),
       markets: z.array(z.string()).default([]),
       companySizes: z.array(z.string()).default([]),
-      jobTypes: z.array(z.string()).default([]),
-      roleTypes: z.array(z.string()).default([]),
+      contract: z.array(z.string()).default([]),
+      roles: z.array(z.string()).default([]),
       currency: z.string().default(''),
     })
     .refine(
@@ -115,14 +124,14 @@ const handleFormSubmit = handleSubmit(onSubmit)
           <hr class="w-full" />
 
           <div class="w-full border rounded-md p-4">
-            <FieldLabel class="font-bold mb-8">Language and Compensation</FieldLabel>
+            <FieldLabel class="font-bold mb-8">Level and Compensation</FieldLabel>
             <div class="flex flex-wrap lg:flex-nowrap flex-row gap-6 w-full">
               <FieldGroup class="flex-1 space-y-4 mt-auto">
                 <SelectField
-                  name="spokenLanguages"
-                  label="Spoken Language"
-                  :options="spokenLanguages"
-                  placeholder="Select language..."
+                  name="level"
+                  label="Level"
+                  :options="levels"
+                  placeholder="Select level..."
                 />
               </FieldGroup>
 
@@ -173,13 +182,13 @@ const handleFormSubmit = handleSubmit(onSubmit)
               />
             </div>
             <div class="w-full border rounded-md p-4">
-              <CheckboxGroupField name="jobTypes" label="Job Types" :options="jobTypes" />
+              <CheckboxGroupField name="contract" label="Contract" :options="contract" />
             </div>
           </div>
           <hr class="w-full" />
 
           <div class="w-full border rounded-md p-4">
-            <CheckboxGroupField name="roleTypes" label="Role Types" :options="roleTypes" />
+            <CheckboxGroupField name="roles" label="Roles" :options="roles" />
           </div>
         </form>
 

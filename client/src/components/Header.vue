@@ -1,28 +1,19 @@
 <script setup lang="ts">
-import { defineProps, provide, ref } from 'vue'
+import { defineProps, provide, ref, watch } from 'vue'
 import SearchFilter from './filter/SearchFilter.vue'
 
-// For the grouped filter, we need:
-// -  work type (eg remote),
-// - Language (if not english, eg French)
-// - Salary range with the currency (eg $10k-$40k)
-// - Skills (eg React.js if one and if more eg Skills . 3)
-// - Market (same as skills eg Market • 2)
-// - Company size (same as skills eg Company Size • 2)
-// - Job Types (same as skills eg Job Types • 2)
-// - Role Types (same as skills eg Role Types • 2)
 const filters = ref({
   search: '',
   country: '',
   minSalary: undefined,
   maxSalary: undefined,
   workType: '',
-  spokenLanguages: '',
+  level: '',
   skills: [],
   markets: [],
   companySizes: [],
-  jobTypes: [],
-  roleTypes: [],
+  contract: [],
+  roles: [],
   currency: '',
   sortByDate: false,
 })
@@ -60,6 +51,7 @@ const groupedFilters = (item) => {
     .filter(Boolean) // removes undefined, null, false, 0, "", NaN
 
   console.log('Filtered data:', mappedData)
+
   return mappedData
 }
 
