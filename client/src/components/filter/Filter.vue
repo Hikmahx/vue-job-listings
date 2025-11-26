@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { inject, computed } from 'vue'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useFilterStore } from '@/stores/FilterStore'
 import FilterBtn from './FilterBtn.vue'
-import { levels } from '@/constants/filters'
+import { levelsOptions, skillsOptions, marketsOptions, rolesOptions } from '@/constants/filters'
 
-const filters = inject('filters')
-const groupedFilters = inject('groupedFilters')
+// const filters = inject('filters')
+// const groupedFilters = inject('groupedFilters')
+const filterStore = useFilterStore()
+const { groupedFilters, skills, markets, companySizes, contract, roles } = storeToRefs(filterStore)
 
 const formatSalary = (salary: number) => {
   if (salary >= 1000000) return `${(salary / 1000000).toFixed(0)}M`
@@ -13,47 +17,40 @@ const formatSalary = (salary: number) => {
 }
 
 const selectedBtns = computed(() => {
-  const filterData = groupedFilters(filters.value)
-  const btns = []
+  const filterData = (groupedFilters.value ?? []) as Array<Record<string, unknown>>
+  const btns: Array<{ text: string; key: string; value: unknown }> = []
 
   for (const item of filterData) {
-    const [key, value] = Object.entries(item)[0]
+    const entries = Object.entries(item || {})
+    const first = entries[0]
+    if (!first) continue
+    const [key, value] = first
 
     if (key === 'search' || key === 'country' || key === 'sortByDate') continue
 
     switch (key) {
       case 'workType':
         btns.push({
-          text: value.charAt(0).toUpperCase() + value.slice(1),
+          text: String(value).replace(/^./, (c) => c.toUpperCase()),
           key: 'workType',
           value: '',
         })
         break
 
       case 'level':
-        const lang = levels.find((opt) => opt.value === value)
-        btns.push({
-          text: lang?.label || value,
-          key: 'level',
-          value: '',
-        })
+        const lang = levelsOptions.find((opt) => opt.value === value)
+        btns.push({ text: lang?.label || String(value), key: 'level', value: '' })
         break
-
-      // case 'level':
-      //   btns.push({
-      //     text: value.charAt(0).toUpperCase() + value.slice(1),
-      //     key: 'level',
-      //     value: '',
-      //   })
-      //   break
-
-      // spokenLanguages removed
 
       case 'minSalary':
       case 'maxSalary':
-        const min = filterData.find((item) => item.minSalary)?.['minSalary']
-        const max = filterData.find((item) => item.maxSalary)?.['maxSalary']
-        const currency = filterData.find((item) => item.currency)?.['currency'] || ''
+        const foundMin = filterData.find((it) => it && 'minSalary' in it) as any
+        const foundMax = filterData.find((it) => it && 'maxSalary' in it) as any
+        const foundCurrency = filterData.find((it) => it && 'currency' in it) as any
+
+        const min = foundMin?.minSalary as number | undefined
+        const max = foundMax?.maxSalary as number | undefined
+        const currency = (foundCurrency?.currency as string) || ''
 
         let salaryText = ''
         if (min && max)
@@ -61,7 +58,7 @@ const selectedBtns = computed(() => {
         else if (min) salaryText = `>${currency}${formatSalary(min)}`
         else if (max) salaryText = `<${currency}${formatSalary(max)}`
 
-        if (salaryText && !btns.some((btn) => btn.key === 'salary')) {
+        if (salaryText && !btns.some((b) => b.key === 'salary')) {
           btns.push({
             text: salaryText,
             key: 'salary',
@@ -75,18 +72,36 @@ const selectedBtns = computed(() => {
       case 'companySizes':
       case 'contract':
       case 'roles':
+        // Map stored values back to a human-friendly label.
+        const arrays: Record<string, string[] | undefined> = {
+          skills: skills.value,
+          markets: markets.value,
+          companySizes: companySizes.value,
+          contract: contract.value,
+          roles: roles.value,
+        }
+        const arr = arrays[key] as string[] | undefined
         if (typeof value === 'number') {
-          btns.push({
-            text: value === 1 ? filters.value[key][0] : `${key} • ${value}`,
-            key: key,
-            value: [],
-          })
+          btns.push({ text: value === 1 ? (arr?.[0] ?? '') : `${key} • ${value}`, key, value: [] })
         } else {
-          btns.push({
-            text: value,
-            key: key,
-            value: [],
-          })
+          // For skills and markets, stored values may be normalized (e.g. 'javascript')
+          let label = String(value)
+          if (key === 'skills') {
+            const found = skillsOptions.find(
+              (s) => s.toLowerCase().replace(/\s+/g, '-') === String(value),
+            )
+            label = found ?? String(value)
+          } else if (key === 'markets') {
+            const found = marketsOptions.find(
+              (m) => m.toLowerCase().replace(/\s+/g, '-') === String(value),
+            )
+            label = found ?? String(value)
+          } else if (key === 'roles') {
+            // roles are stored as plain labels
+            const found = rolesOptions.find((r) => r === String(value))
+            label = found ?? String(value)
+          }
+          btns.push({ text: label, key, value: [] })
         }
         break
     }
@@ -95,36 +110,22 @@ const selectedBtns = computed(() => {
   return btns
 })
 
-const removeBtn = (btnText) => {
+const removeBtn = (btnText: string) => {
   const btnToRemove = selectedBtns.value.find((btn) => btn.text === btnText)
 
   if (btnToRemove) {
     if (btnToRemove.key === 'salary') {
-      filters.value.minSalary = undefined
-      filters.value.maxSalary = undefined
-      filters.value.currency = ''
+      // Clear salary fields in one call
+      filterStore.setFilters({ minSalary: undefined, maxSalary: undefined, currency: '' })
     } else {
-      filters.value[btnToRemove.key] = btnToRemove.value
+      const key = btnToRemove.key as keyof import('@/stores/FilterStore').FilterFields
+      filterStore.setFilters({ [key]: btnToRemove.value } as any)
     }
-    groupedFilters(filters.value)
   }
 }
 
 const clearAllBtns = () => {
-  Object.assign(filters.value, {
-    minSalary: undefined,
-    maxSalary: undefined,
-    workType: '',
-    level: '',
-    skills: [],
-    markets: [],
-    companySizes: [],
-    contract: [],
-    roles: [],
-    currency: '',
-    sortByDate: false,
-  })
-  groupedFilters(filters.value)
+  filterStore.resetFilters()
 }
 </script>
 

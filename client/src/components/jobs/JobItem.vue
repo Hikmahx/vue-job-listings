@@ -1,7 +1,17 @@
 <script setup lang="ts">
+import { useFilterStore } from '@/stores/FilterStore'
 import type { Job } from '@/types'
 
-defineProps<{ job: Job; onClickFilter: (event: Event) => void }>()
+const filterStore = useFilterStore()
+
+defineProps<{ job: Job }>()
+
+const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'language' | 'tool') => {
+  const clickedText = (e.target as HTMLElement).textContent?.trim()
+  if (clickedText) {
+    filterStore.onFilterClick(clickedText, filterType)
+  }
+}
 </script>
 
 <template>
@@ -56,13 +66,13 @@ defineProps<{ job: Job; onClickFilter: (event: Event) => void }>()
 
       <div class="mt-4 flex flex-wrap gap-x-3 gap-y-4 lg:ml-auto">
         <button
-          @click="onClickFilter"
+          @click="(e) => handleFilterClick(e, 'role')"
           class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
         >
           {{ job.role }}
         </button>
         <button
-          @click="onClickFilter"
+          @click="(e) => handleFilterClick(e, 'level')"
           class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
         >
           {{ job.level }}
@@ -71,7 +81,7 @@ defineProps<{ job: Job; onClickFilter: (event: Event) => void }>()
           v-for="language in job.languages"
           :data-language="language"
           :key="language"
-          @click="onClickFilter"
+          @click="(e) => handleFilterClick(e, 'language')"
           class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
         >
           {{ language }}
@@ -80,7 +90,7 @@ defineProps<{ job: Job; onClickFilter: (event: Event) => void }>()
           v-for="tool in job.tools"
           :data-tool="tool"
           :key="tool"
-          @click="onClickFilter"
+          @click="(e) => handleFilterClick(e, 'tool')"
           class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
         >
           {{ tool }}

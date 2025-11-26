@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { inject, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useFilterStore } from '@/stores/FilterStore'
 import Filter from './Filter.vue'
 import FilterModal from './FilterModal.vue'
 import SearchAndCountry from './SearchAndCountry.vue'
@@ -7,8 +9,8 @@ import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
 
-const filters = inject('filters')
-const groupedFilters = inject('groupedFilters')
+const filterStore = useFilterStore()
+const { search, country, sortByDate } = storeToRefs(filterStore)
 
 const formSchema = toTypedSchema(
   z.object({
@@ -20,22 +22,21 @@ const formSchema = toTypedSchema(
 
 const { handleSubmit, values, setValues } = useForm({
   validationSchema: formSchema,
-  initialValues: () => ({
-    search: filters.value.search,
-    country: filters.value.country,
-    sortByDate: filters.value.sortByDate || false,
-  }),
+  initialValues: {
+    search: search.value,
+    country: country.value,
+    sortByDate: sortByDate.value || false,
+  },
 })
-
 
 // Update form values when filters change
 watch(
-  () => ({ search: filters.value.search, country: filters.value.country }),
+  () => ({ search: search.value, country: country.value }),
   (newFilters) => {
     setValues({
       search: newFilters.search || '',
       country: newFilters.country || '',
-      sortByDate: filters.value.sortByDate || false,
+      sortByDate: sortByDate.value || false,
     })
   },
   { deep: true },
@@ -43,18 +44,18 @@ watch(
 
 const onSubmit = (values: any) => {
   console.log('Form submitted:', values)
-  filters.value.search = values.search
-  filters.value.country = values.country
-  filters.value.sortByDate = values.sortByDate
-  groupedFilters(values)
+  filterStore.setFilters({
+    search: values.search,
+    country: values.country,
+    sortByDate: values.sortByDate,
+  })
 }
 
 const handleFormSubmit = handleSubmit(onSubmit)
 
 const onSortChange = (event: Event) => {
   const checked = (event.target as HTMLInputElement).checked
-  filters.value.sortByDate = checked
-  groupedFilters({ sortByDate: checked })
+  filterStore.setFilters({ sortByDate: checked })
 }
 </script>
 
@@ -84,7 +85,7 @@ const onSortChange = (event: Event) => {
             <input
               type="checkbox"
               class="w-4 h-4 rounded accent-cyan-700"
-              :checked="filters.sortByDate"
+              :checked="sortByDate"
               @change="onSortChange"
             />
             <span class="text-sm">Sort by Date</span>

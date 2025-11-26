@@ -1,62 +1,10 @@
 <script setup lang="ts">
-import { defineProps, provide, ref, watch } from 'vue'
+// import { useFilterStore } from '@/stores/FilterStore'
 import SearchFilter from './filter/SearchFilter.vue'
 
-const filters = ref({
-  search: '',
-  country: '',
-  minSalary: undefined,
-  maxSalary: undefined,
-  workType: '',
-  level: '',
-  skills: [],
-  markets: [],
-  companySizes: [],
-  contract: [],
-  roles: [],
-  currency: '',
-  sortByDate: false,
-})
-
-const groupedFilters = (item) => {
-  Object.keys(item).forEach((key) => {
-    if (item[key] !== undefined && item[key] !== null) {
-      filters.value[key] = item[key]
-    }
-  })
-
-  const data = Object.entries(filters.value)
-  const mappedData = data
-    .filter(
-      ([key, value]) =>
-        value !== null &&
-        value !== undefined &&
-        !(Array.isArray(value) && value.length === 0) &&
-        !(typeof value === 'string' && value.trim() === ''),
-    )
-    .map(([key, value]) => {
-      if (Array.isArray(value)) {
-        if (value.length === 1) {
-          return { [key]: value[0] }
-        }
-        if (value.length > 1) {
-          return { [key]: value.length }
-        }
-      } else if (typeof value === 'string' || typeof value === 'number') {
-        return { [key]: value }
-      } else if (typeof value === 'boolean' && value === true) {
-        return { [key]: value }
-      }
-    })
-    .filter(Boolean) // removes undefined, null, false, 0, "", NaN
-
-  console.log('Filtered data:', mappedData)
-
-  return mappedData
-}
-
-provide('groupedFilters', groupedFilters)
-provide('filters', filters)
+// const FilterStore = useFilterStore()
+// provide('groupedFilters', groupedFilters)
+// provide('filters', filters)
 </script>
 
 <template>

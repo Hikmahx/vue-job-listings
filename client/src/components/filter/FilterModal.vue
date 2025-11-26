@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod'
-import { inject, ref, watch } from 'vue'
+import { ref, watch, defineAsyncComponent } from 'vue'
+import { storeToRefs } from 'pinia'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
+import { useFilterStore } from '@/stores/FilterStore'
 import SearchAndCountry from './SearchAndCountry.vue'
 import RadioGroupField from './RadioGroupField.vue'
 import SelectField from './SelectField.vue'
 import SalaryRangeInput from './SalaryRangeInput.vue'
-import SearchableMultiSelect from './SearchableMultiSelect.vue'
-import CheckboxGroupField from './CheckboxGroupField.vue'
+const SearchableMultiSelect = defineAsyncComponent(() => import('./SearchableMultiSelect.vue'))
+const CheckboxGroupField = defineAsyncComponent(() => import('./CheckboxGroupField.vue'))
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,15 +21,19 @@ import {
 } from '@/components/ui/dialog'
 import { FieldGroup, FieldLabel } from '@/components/ui/field'
 import {
-  skills,
-  markets,
-  levels,
-  currencies,
-  workTypes,
-  companySizes,
-  contract,
-  roles,
+  skillsOptions,
+  marketsOptions,
+  levelsOptions,
+  currenciesOptions,
+  workTypesOptions,
+  companySizesOptions,
+  contractOptions,
+  rolesOptions,
 } from '@/constants/filters'
+
+const filterStore = useFilterStore()
+const filterState = storeToRefs(filterStore)
+
 const formSchema = toTypedSchema(
   z
     .object({
@@ -58,20 +64,43 @@ const formSchema = toTypedSchema(
     ),
 )
 
-const filters = inject('filters')
-const groupedFilters = inject('groupedFilters')
-
 const showDialog = ref(false)
 
-const { handleSubmit, setValues } = useForm({
+const { handleSubmit, setValues, values } = useForm({
   validationSchema: formSchema,
-  initialValues: filters.value,
+  initialValues: {
+    search: filterState.search.value,
+    country: filterState.country.value,
+    minSalary: filterState.minSalary.value,
+    maxSalary: filterState.maxSalary.value,
+    workType: filterState.workType.value,
+    level: filterState.level.value,
+    skills: filterState.skills.value,
+    markets: filterState.markets.value,
+    companySizes: filterState.companySizes.value,
+    contract: filterState.contract.value,
+    roles: filterState.roles.value,
+    currency: filterState.currency.value,
+  },
 })
 
 // Set values when dialog opens
 watch(showDialog, (isOpen) => {
   if (isOpen) {
-    setValues(filters.value)
+    setValues({
+      search: filterState.search.value,
+      country: filterState.country.value,
+      minSalary: filterState.minSalary.value,
+      maxSalary: filterState.maxSalary.value,
+      workType: filterState.workType.value,
+      level: filterState.level.value,
+      skills: filterState.skills.value,
+      markets: filterState.markets.value,
+      companySizes: filterState.companySizes.value,
+      contract: filterState.contract.value,
+      roles: filterState.roles.value,
+      currency: filterState.currency.value,
+    })
   }
 })
 
@@ -83,8 +112,7 @@ const valLabel = (arr: string[]) => {
 }
 
 const onSubmit = (values: any) => {
-  // console.log('Form submitted with values:', values)
-  groupedFilters(values)
+  filterStore.setFilters(values)
   showDialog.value = false
 }
 
@@ -105,6 +133,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
 
     <Dialog :open="showDialog" @update:open="(value) => (showDialog = value)" class="relative">
       <DialogContent
+        v-if="showDialog"
         class="h-full max-h-[80vh] overflow-scroll sm:max-w-2xl lg:max-w-5xl w-[95%] mx-auto py-12"
       >
         <DialogTitle class="sr-only">Advanced Job Filters</DialogTitle>
@@ -119,7 +148,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
           <SearchAndCountry />
 
           <div class="w-full border rounded-md p-4">
-            <RadioGroupField name="workType" label="Work Type" :options="workTypes" />
+            <RadioGroupField name="workType" label="Work Type" :options="workTypesOptions" />
           </div>
           <hr class="w-full" />
 
@@ -130,7 +159,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
                 <SelectField
                   name="level"
                   label="Level"
-                  :options="levels"
+                  :options="levelsOptions"
                   placeholder="Select level..."
                 />
               </FieldGroup>
@@ -140,7 +169,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
                   <SelectField
                     name="currency"
                     label="Currency"
-                    :options="currencies"
+                    :options="currenciesOptions"
                     placeholder="Select currency"
                   />
                 </template>
@@ -155,7 +184,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
                 <SearchableMultiSelect
                   name="skills"
                   label="Skills"
-                  :options="valLabel(skills)"
+                  :options="valLabel(skillsOptions)"
                   placeholder="Search skills..."
                 />
               </FieldGroup>
@@ -165,7 +194,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
                 <SearchableMultiSelect
                   name="markets"
                   label="Markets"
-                  :options="valLabel(markets)"
+                  :options="valLabel(marketsOptions)"
                   placeholder="Search markets..."
                 />
               </FieldGroup>
@@ -178,17 +207,17 @@ const handleFormSubmit = handleSubmit(onSubmit)
               <CheckboxGroupField
                 name="companySizes"
                 label="Company Size"
-                :options="companySizes"
+                :options="companySizesOptions"
               />
             </div>
             <div class="w-full border rounded-md p-4">
-              <CheckboxGroupField name="contract" label="Contract" :options="contract" />
+              <CheckboxGroupField name="contract" label="Contract" :options="contractOptions" />
             </div>
           </div>
           <hr class="w-full" />
 
           <div class="w-full border rounded-md p-4">
-            <CheckboxGroupField name="roles" label="Roles" :options="roles" />
+            <CheckboxGroupField name="roles" label="Roles" :options="rolesOptions" />
           </div>
         </form>
 

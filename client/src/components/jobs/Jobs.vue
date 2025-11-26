@@ -1,30 +1,31 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useJobStore } from '@/stores/JobStore'
+import { useFilterStore } from '@/stores/FilterStore'
 import JobItem from './JobItem.vue'
-import type { Job } from '@/types'
 
-const { jobs, onClickFilter, selectedBtn } = defineProps<{
-  jobs: Job[]
-  onClickFilter: (event: Event) => void
-  selectedBtn: string[]
-}>()
+const jobStore = useJobStore()
+const filterStore = useFilterStore()
+
+const { jobs } = storeToRefs(jobStore)
+const { uniqueSelectedBtns } = storeToRefs(filterStore)
 
 const filteredJobs = computed(() => {
-  if (selectedBtn.length === 0) {
-    return jobs
+  if (uniqueSelectedBtns.value.length === 0) {
+    return jobs.value
   }
 
-  return jobs.filter((job) => {
+  return jobs.value.filter((job) => {
     const jobAttributes = [job.role, job.level, ...job.languages, ...job.tools]
-
-    return selectedBtn.every((selected) => jobAttributes.includes(selected))
+    return uniqueSelectedBtns.value.every((selected) => jobAttributes.includes(selected))
   })
 })
 </script>
 
 <template>
   <ul class="pt-24 px-4 lg:px-10 pb-px">
-    <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" :onClickFilter="onClickFilter" />
+    <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" />
   </ul>
 </template>
 

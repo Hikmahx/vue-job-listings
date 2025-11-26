@@ -1,10 +1,10 @@
-export const levels = [
+export const levelsOptions = [
   { label: 'Junior', value: 'junior' },
   { label: 'Midweight', value: 'midweight' },
   { label: 'Senior', value: 'senior' },
 ]
 
-export const currencies = [
+export const currenciesOptions = [
   { value: '$', label: 'USD' },
   { value: '€', label: 'EUR' },
   { value: '£', label: 'GBP' },
@@ -15,9 +15,9 @@ export const currencies = [
   { value: 'S$', label: 'SGD' },
 ]
 
-export const workTypes = ['remote', 'hybrid', 'onsite']
+export const workTypesOptions = ['remote', 'hybrid', 'onsite']
 
-export const skills = [
+export const skillsOptions = [
   'JavaScript',
   'React.js',
   'React',
@@ -46,7 +46,7 @@ export const skills = [
   'Express.js',
 ]
 
-export const markets = [
+export const marketsOptions = [
   'SaaS',
   'FinTech',
   'HealthTech',
@@ -66,13 +66,6 @@ export const markets = [
   'Food & Beverage',
 ]
 
-export const companySizes = ['1-10', '11-50', '51-200', '201-500', '500+']
-export const contract = ['full-time', 'part-time', 'contract', 'internship']
-export const roles = [
-  'Backend',
-  'Frontend',
-  'Full-Stack',
-  'Mobile',
-  'DevOps',
-  'Data',
-]
+export const companySizesOptions = ['1-10', '11-50', '51-200', '201-500', '500+']
+export const contractOptions = ['full-time', 'part-time', 'contract', 'internship']
+export const rolesOptions = ['Backend', 'Frontend', 'Full-Stack', 'Mobile', 'DevOps', 'Data']
