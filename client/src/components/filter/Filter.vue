@@ -6,7 +6,8 @@ import FilterBtn from './FilterBtn.vue'
 import { levelsOptions, skillsOptions, marketsOptions, rolesOptions } from '@/constants/filters'
 
 const filterStore = useFilterStore()
-const { groupedFilters, skills, markets, companySizes, contract, roles, workType, level } = storeToRefs(filterStore)
+const { groupedFilters, skills, markets, companySizes, contract, roles, workType, level } =
+  storeToRefs(filterStore)
 
 onMounted(() => {
   console.log('On mount filter data', {
@@ -16,7 +17,7 @@ onMounted(() => {
     markets: markets.value,
     roles: roles.value,
     companySizes: companySizes.value,
-    contract: contract.value
+    contract: contract.value,
   })
   console.log('Grouped filters', groupedFilters.value)
 })
@@ -37,7 +38,7 @@ const selectedBtns = computed(() => {
     if (!first) continue
     const [key, value] = first
 
-    if (key === 'search' || key === 'country' || key === 'sortByDate') continue
+    if (key === 'search' || key === 'country' || key === 'sortByCompany') continue
 
     switch (key) {
       case 'workType':

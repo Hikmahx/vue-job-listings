@@ -13,8 +13,8 @@ import { useForm } from 'vee-validate'
 const filterStore = useFilterStore()
 const route = useRoute()
 const router = useRouter()
-const { search, country, sortByDate } = storeToRefs(filterStore)
 
+// Use watch with immediate: true to catch query params when they become available
 watch(
   () => route.query,
   (query) => {
@@ -26,11 +26,13 @@ watch(
   { immediate: true, deep: true }
 )
 
+const { search, country, sortByCompany } = storeToRefs(filterStore)
+
 const formSchema = toTypedSchema(
   z.object({
     search: z.string().optional(),
     country: z.string().optional(),
-    sortByDate: z.boolean().default(false),
+    sortByCompany: z.boolean().default(false),
   }),
 )
 
@@ -39,7 +41,7 @@ const { handleSubmit, setValues } = useForm({
   initialValues: {
     search: search.value,
     country: country.value,
-    sortByDate: sortByDate.value || false,
+    sortByCompany: sortByCompany.value || false,
   },
 })
 
@@ -50,7 +52,7 @@ watch(
     setValues({
       search: newFilters.search || '',
       country: newFilters.country || '',
-      sortByDate: sortByDate.value || false,
+      sortByCompany: sortByCompany.value || false,
     })
   },
   { deep: true },
@@ -61,7 +63,7 @@ const onSubmit = (values: any) => {
   filterStore.setFilters({
     search: values.search,
     country: values.country,
-    sortByDate: values.sortByDate,
+    sortByCompany: values.sortByCompany,
   })
 }
 
@@ -69,7 +71,7 @@ const handleFormSubmit = handleSubmit(onSubmit)
 
 const onSortChange = (event: Event) => {
   const checked = (event.target as HTMLInputElement).checked
-  filterStore.setFilters({ sortByDate: checked })
+  filterStore.setFilters({ sortByCompany: checked })
 }
 
 // Sync to URL when filters change
@@ -81,7 +83,6 @@ watch(
   { deep: true }
 )
 </script>
-
 
 <template>
   <div class="px-4 lg:px-10 w-full max-w-3xl lg:max-w-6xl m-auto">
@@ -109,10 +110,10 @@ watch(
             <input
               type="checkbox"
               class="w-4 h-4 rounded accent-cyan-700"
-              :checked="sortByDate"
+              :checked="sortByCompany"
               @change="onSortChange"
             />
-            <span class="text-sm">Sort by Date</span>
+            <span class="text-[10px]">Sort by Company (A-Z)</span>
           </label>
         </div>
         <FilterModal />

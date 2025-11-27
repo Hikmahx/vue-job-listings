@@ -22,7 +22,7 @@ export interface FilterFields {
   contract: string[]
   roles: string[]
   currency: string
-  sortByDate: boolean
+  sortByCompany: boolean
 }
 
 export const useFilterStore = defineStore('filterStore', {
@@ -39,7 +39,7 @@ export const useFilterStore = defineStore('filterStore', {
     contract: [],
     roles: [],
     currency: '',
-    sortByDate: false,
+    sortByCompany: false,
     // Selected buttons from job cards
     selectedBtns: [],
   }),
@@ -126,7 +126,7 @@ export const useFilterStore = defineStore('filterStore', {
       this.contract = []
       this.roles = []
       this.currency = ''
-      this.sortByDate = false
+      this.sortByCompany = false
     },
 
     // Selected buttons actions
@@ -192,7 +192,7 @@ export const useFilterStore = defineStore('filterStore', {
       if (data.currency !== undefined) this.currency = String(data.currency)
       if (data.minSalary !== undefined) this.minSalary = Number(data.minSalary)
       if (data.maxSalary !== undefined) this.maxSalary = Number(data.maxSalary)
-      if (data.sortByDate !== undefined) this.sortByDate = data.sortByDate === 'true'
+      if (data.sortByCompany !== undefined) this.sortByCompany = data.sortByCompany === 'true'
 
       if (data.skills !== undefined) {
         this.skills =
@@ -261,7 +261,7 @@ export const useFilterStore = defineStore('filterStore', {
       if (this.currency) query.currency = this.currency
       if (this.minSalary !== undefined) query.minSalary = this.minSalary
       if (this.maxSalary !== undefined) query.maxSalary = this.maxSalary
-      if (this.sortByDate) query.sortByDate = 'true'
+      if (this.sortByCompany) query.sortByCompany = 'true'
 
       if (this.skills.length > 0) query.skills = this.skills.join(',')
       if (this.markets.length > 0) query.markets = this.markets.join(',')
