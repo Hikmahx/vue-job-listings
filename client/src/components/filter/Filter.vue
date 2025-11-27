@@ -1,14 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useFilterStore } from '@/stores/FilterStore'
 import FilterBtn from './FilterBtn.vue'
 import { levelsOptions, skillsOptions, marketsOptions, rolesOptions } from '@/constants/filters'
 
-// const filters = inject('filters')
-// const groupedFilters = inject('groupedFilters')
 const filterStore = useFilterStore()
-const { groupedFilters, skills, markets, companySizes, contract, roles } = storeToRefs(filterStore)
+const { groupedFilters, skills, markets, companySizes, contract, roles, workType, level } = storeToRefs(filterStore)
+
+onMounted(() => {
+  console.log('On mount filter data', {
+    workType: workType.value,
+    level: level.value,
+    skills: skills.value,
+    markets: markets.value,
+    roles: roles.value,
+    companySizes: companySizes.value,
+    contract: contract.value
+  })
+  console.log('Grouped filters', groupedFilters.value)
+})
 
 const formatSalary = (salary: number) => {
   if (salary >= 1000000) return `${(salary / 1000000).toFixed(0)}M`

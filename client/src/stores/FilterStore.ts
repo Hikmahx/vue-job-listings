@@ -108,23 +108,9 @@ export const useFilterStore = defineStore('filterStore', {
         }
       }
     },
-    // Filter field actions
-    updateField<K extends keyof FilterFields>(field: K, value: FilterFields[K]) {
-      // Use Pinia's $patch for a clean, typed update
-      this.$patch({ [field]: value } as Partial<FilterFields>)
-    },
 
-    updateMultipleFields(item: Partial<FilterFields>) {
-      // Patch multiple fields at once; typed as Partial<FilterFields>
-      this.$patch(item)
-    },
-
-    /**
-     * Alias with a clearer name for updating multiple filter fields at once.
-     * Use this from components when you want to set several fields in one call.
-     */
-    setFilters(item: Partial<FilterFields>) {
-      this.updateMultipleFields(item)
+    setFilters(filters: Record<string, any>) {
+      Object.assign(this, filters)
     },
 
     resetFilters() {
@@ -194,6 +180,96 @@ export const useFilterStore = defineStore('filterStore', {
       if (field && !field.includes(value)) {
         field.push(value)
       }
+    },
+
+    loadFromObject(data: Record<string, any>) {
+      console.log('Loading filters from URL:', data)
+
+      if (data.search !== undefined) this.search = String(data.search)
+      if (data.country !== undefined) this.country = String(data.country)
+      if (data.workType !== undefined) this.workType = String(data.workType)
+      if (data.level !== undefined) this.level = String(data.level)
+      if (data.currency !== undefined) this.currency = String(data.currency)
+      if (data.minSalary !== undefined) this.minSalary = Number(data.minSalary)
+      if (data.maxSalary !== undefined) this.maxSalary = Number(data.maxSalary)
+      if (data.sortByDate !== undefined) this.sortByDate = data.sortByDate === 'true'
+
+      if (data.skills !== undefined) {
+        this.skills =
+          typeof data.skills === 'string'
+            ? data.skills.split(',').filter(Boolean)
+            : Array.isArray(data.skills)
+              ? data.skills
+              : []
+      }
+
+      if (data.markets !== undefined) {
+        this.markets =
+          typeof data.markets === 'string'
+            ? data.markets.split(',').filter(Boolean)
+            : Array.isArray(data.markets)
+              ? data.markets
+              : []
+      }
+
+      if (data.roles !== undefined) {
+        this.roles =
+          typeof data.roles === 'string'
+            ? data.roles.split(',').filter(Boolean)
+            : Array.isArray(data.roles)
+              ? data.roles
+              : []
+      }
+
+      if (data.companySizes !== undefined) {
+        this.companySizes =
+          typeof data.companySizes === 'string'
+            ? data.companySizes.split(',').filter(Boolean)
+            : Array.isArray(data.companySizes)
+              ? data.companySizes
+              : []
+      }
+
+      if (data.contract !== undefined) {
+        this.contract =
+          typeof data.contract === 'string'
+            ? data.contract.split(',').filter(Boolean)
+            : Array.isArray(data.contract)
+              ? data.contract
+              : []
+      }
+
+      console.log('Store after loading:', {
+        workType: this.workType,
+        level: this.level,
+        skills: this.skills,
+        markets: this.markets,
+        roles: this.roles,
+      })
+    },
+
+    /**
+     * Export filter state as an object (used to build query string)
+     */
+    toQueryObject(): Record<string, any> {
+      const query: Record<string, any> = {}
+
+      if (this.search) query.search = this.search
+      if (this.country) query.country = this.country
+      if (this.workType) query.workType = this.workType
+      if (this.level) query.level = this.level
+      if (this.currency) query.currency = this.currency
+      if (this.minSalary !== undefined) query.minSalary = this.minSalary
+      if (this.maxSalary !== undefined) query.maxSalary = this.maxSalary
+      if (this.sortByDate) query.sortByDate = 'true'
+
+      if (this.skills.length > 0) query.skills = this.skills.join(',')
+      if (this.markets.length > 0) query.markets = this.markets.join(',')
+      if (this.roles.length > 0) query.roles = this.roles.join(',')
+      if (this.companySizes.length > 0) query.companySizes = this.companySizes.join(',')
+      if (this.contract.length > 0) query.contract = this.contract.join(',')
+
+      return query
     },
   },
 })

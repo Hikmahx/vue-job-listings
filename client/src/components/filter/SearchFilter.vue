@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFilterStore } from '@/stores/FilterStore'
 import Filter from './Filter.vue'
@@ -10,7 +11,20 @@ import * as z from 'zod'
 import { useForm } from 'vee-validate'
 
 const filterStore = useFilterStore()
+const route = useRoute()
+const router = useRouter()
 const { search, country, sortByDate } = storeToRefs(filterStore)
+
+watch(
+  () => route.query,
+  (query) => {
+    console.log('Loading from URL params:', query)
+    if (Object.keys(query).length > 0) {
+      filterStore.loadFromObject(query)
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 const formSchema = toTypedSchema(
   z.object({
@@ -20,7 +34,7 @@ const formSchema = toTypedSchema(
   }),
 )
 
-const { handleSubmit, values, setValues } = useForm({
+const { handleSubmit, setValues } = useForm({
   validationSchema: formSchema,
   initialValues: {
     search: search.value,
@@ -29,7 +43,7 @@ const { handleSubmit, values, setValues } = useForm({
   },
 })
 
-// Update form values when filters change
+// Update form when store changes
 watch(
   () => ({ search: search.value, country: country.value }),
   (newFilters) => {
@@ -57,7 +71,17 @@ const onSortChange = (event: Event) => {
   const checked = (event.target as HTMLInputElement).checked
   filterStore.setFilters({ sortByDate: checked })
 }
+
+// Sync to URL when filters change
+watch(
+  () => filterStore.toQueryObject(),
+  (queryObj) => {
+    router.push({ query: queryObj })
+  },
+  { deep: true }
+)
 </script>
+
 
 <template>
   <div class="px-4 lg:px-10 w-full max-w-3xl lg:max-w-6xl m-auto">
