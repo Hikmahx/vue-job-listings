@@ -1,16 +1,11 @@
 <script setup lang="ts">
 import { useJobStore } from './stores/JobStore'
-// import { useFilterStore } from './stores/FilterStore'
 import { onMounted } from 'vue'
 import Header from './components/Header.vue'
 import Jobs from './components/jobs/Jobs.vue'
-// import { storeToRefs } from 'pinia'
 
 // Stores
 const jobStore = useJobStore()
-// const filterStore = useFilterStore()
-
-// const { jobs } = storeToRefs(jobStore)
 const { getData } = jobStore
 
 onMounted(() => {
