@@ -26,30 +26,33 @@ class JobSerializer(serializers.ModelSerializer):
         ]
 
     def get_postedAt(self, obj):
-        delta = timesince(obj.posted_at).split(",")[0]
-
-        parts = delta.split(" ")
-        if len(parts) < 2:
+        now = timezone.now()
+        time_difference = now - obj.posted_at
+        
+        if time_difference.total_seconds() < 0:
             return "just now"
         
-        value, unit = parts
-
-        short = {
-            "minute": "m",
-            "minutes": "m",
-            "hour": "h",
-            "hours": "h",
-            "day": "d",
-            "days": "d",
-            "week": "w",
-            "weeks": "w",
-            "month": "mo",
-            "months": "mo",
-            "year": "y",
-            "years": "y",
-        }.get(unit, "")
-
-        return f"{value}{short} ago"
+        minutes = int(time_difference.total_seconds() // 60)
+        hours = int(time_difference.total_seconds() // 3600)
+        days = int(time_difference.total_seconds() // 86400)
+        weeks = int(time_difference.total_seconds() // 604800)
+        months = int(days // 30.44)
+        years = int(days // 365.25)
+        
+        if minutes < 1:
+            return "just now"
+        elif minutes < 60:
+            return f"{minutes}m ago"
+        elif hours < 24:
+            return f"{hours}h ago"
+        elif days < 7:
+            return f"{days}d ago"
+        elif weeks < 4:
+            return f"{weeks}w ago"
+        elif months < 12:
+            return f"{months}mo ago"
+        else:
+            return f"{years}y ago"
 
     
     def get_new(self, obj):
