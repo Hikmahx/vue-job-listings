@@ -6,7 +6,7 @@ const filterStore = useFilterStore()
 
 defineProps<{ job: Job }>()
 
-const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'language' | 'tool') => {
+const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'skills') => {
   const clickedText = (e.target as HTMLElement).textContent?.trim()
   if (clickedText) {
     filterStore.onFilterClick(clickedText, filterType)
@@ -21,7 +21,7 @@ const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'language' |
     <img
       :src="`${job.logo}`"
       alt="banner"
-      class="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -mt-14 mb-[-16px]"
+      class="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -mt-14 md:mt-0 mb-[-16px]"
     />
     <div class="flex-1 flex flex-col lg:flex-row lg:items-center">
       <div class="">
@@ -51,12 +51,12 @@ const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'language' |
 
         <div class="mt-4 flex items-center flex-wrap text-sm text-[#7b8e8e]">
           <span
-            class="relative mr-6 after:content-['.'] after:ml-1 after:text-3xl after:absolute after:top-[-1rem] after:opacity-70 after:blur-[0.06rem]"
+            class="relative mr-6 after:content-['.'] after:ml-1.5 after:text-3xl after:absolute after:top-[-18px] after:opacity-70 after:blur-[0.06rem]"
           >
             {{ job.postedAt }}
           </span>
           <span
-            class="relative mr-6 after:content-['.'] after:ml-1 after:text-3xl after:absolute after:top-[-1rem] after:opacity-70 after:blur-[0.06rem]"
+            class="relative mr-6 after:content-['.'] after:ml-1.5 after:text-3xl after:absolute after:top-[-18px] after:opacity-70 after:blur-[0.06rem] capitalize"
           >
             {{ job.contract }}
           </span>
@@ -67,33 +67,24 @@ const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'language' |
       <div class="mt-4 flex flex-wrap gap-x-3 gap-y-4 lg:ml-auto">
         <button
           @click="(e) => handleFilterClick(e, 'role')"
-          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
+          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200 capitalize"
         >
           {{ job.role }}
         </button>
         <button
           @click="(e) => handleFilterClick(e, 'level')"
-          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
+          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200 capitalize"
         >
           {{ job.level }}
         </button>
         <button
-          v-for="language in job.languages"
-          :data-language="language"
-          :key="language"
-          @click="(e) => handleFilterClick(e, 'language')"
-          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
+          v-for="skill in job.skills"
+          :data-skill="skill"
+          :key="skill"
+          @click="(e) => handleFilterClick(e, 'skills')"
+          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200 capitalize"
         >
-          {{ language }}
-        </button>
-        <button
-          v-for="tool in job.tools"
-          :data-tool="tool"
-          :key="tool"
-          @click="(e) => handleFilterClick(e, 'tool')"
-          class="px-3 py-2 h-8 bg-[#eef6f6] text-cyan-400 font-bold rounded-sm hover:bg-cyan-400 hover:text-white transition-colors duration-200"
-        >
-          {{ tool }}
+          {{ skill }}
         </button>
       </div>
     </div>

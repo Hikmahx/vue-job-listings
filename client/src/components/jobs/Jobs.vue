@@ -17,7 +17,7 @@ const filteredJobs = computed(() => {
   }
 
   return jobs.value.filter((job) => {
-    const jobAttributes = [job.role, job.level, ...job.languages, ...job.tools]
+    const jobAttributes = [job.role, job.level, ...job.skills]
     return uniqueSelectedBtns.value.every((selected) => jobAttributes.includes(selected))
   })
 })

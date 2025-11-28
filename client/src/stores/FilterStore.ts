@@ -81,7 +81,7 @@ export const useFilterStore = defineStore('filterStore', {
      * Remove a value from the correct filter array (roles, skills, etc.)
      * Used for 'x' and 'clear' actions in the UI.
      */
-    removeFilterValue(value: string, filterType: 'role' | 'level' | 'language' | 'tool') {
+    removeFilterValue(value: string, filterType: 'role' | 'level' | 'skills') {
       let field: string[] | undefined
       switch (filterType) {
         case 'role':
@@ -92,10 +92,7 @@ export const useFilterStore = defineStore('filterStore', {
             this.level = ''
           }
           return
-        case 'language':
-          field = this.skills
-          break
-        case 'tool':
+        case 'skills':
           field = this.skills
           break
         default:
@@ -151,7 +148,7 @@ export const useFilterStore = defineStore('filterStore', {
      * Handle filter click from job cards: intelligently categorize the clicked value
      * and update the appropriate filter field (level, roles, skills, etc.).
      */
-    onFilterClick(value: string, filterType: 'role' | 'level' | 'language' | 'tool') {
+    onFilterClick(value: string, filterType: 'role' | 'level' | 'skills') {
       let field: string[] | undefined
       switch (filterType) {
         case 'role':
@@ -164,13 +161,7 @@ export const useFilterStore = defineStore('filterStore', {
             return
           }
           break
-        case 'language':
-          // Normalize skill/language values to match SearchableMultiSelect option values
-          field = this.skills
-          value = value.toLowerCase().replace(/\s+/g, '-')
-          break
-        case 'tool':
-          // Tools are stored alongside skills (normalized)
+        case 'skills':
           field = this.skills
           value = value.toLowerCase().replace(/\s+/g, '-')
           break
