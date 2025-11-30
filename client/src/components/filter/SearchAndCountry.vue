@@ -56,9 +56,9 @@ const countries = [
       </VeeField>
     </div>
 
-    <!-- Country Select -->
+    <!-- Location Select -->
     <div class="relative flex justify-end">
-      <VeeField v-slot="{ field, value }" name="country">
+      <VeeField v-slot="{ field, value }" name="location">
         <Combobox
           :model-value="value"
           @update:model-value="field.onChange"
@@ -70,11 +70,11 @@ const countries = [
                 class="pl-9 h-12"
                 :display-value="
                   (val) => {
-                    const country = countries.find((c) => c.value === val)
-                    return country?.label || ''
+                    const location = countries.find((c) => c.value === val)
+                    return location?.label || ''
                   }
                 "
-                placeholder="Select country..."
+                placeholder="Select location..."
               />
               <span class="absolute start-0 inset-y-0 flex items-center justify-center px-3">
                 <MapPin class="size-4 text-muted-foreground" />
@@ -82,14 +82,14 @@ const countries = [
             </div>
           </ComboboxAnchor>
           <ComboboxList>
-            <ComboboxEmpty>No country found.</ComboboxEmpty>
+            <ComboboxEmpty>No location found.</ComboboxEmpty>
             <ComboboxGroup>
               <ComboboxItem
-                v-for="country in countries"
-                :key="country.value"
-                :value="country.value"
+                v-for="location in countries"
+                :key="location.value"
+                :value="location.value"
               >
-                {{ country.label }}
+                {{ location.label }}
               </ComboboxItem>
             </ComboboxGroup>
           </ComboboxList>

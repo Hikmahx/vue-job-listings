@@ -38,7 +38,7 @@ const formSchema = toTypedSchema(
   z
     .object({
       search: z.string().default(''),
-      country: z.string().default(''),
+      location: z.string().default(''),
       minSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       maxSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
       workType: z.string().default(''),
@@ -70,7 +70,7 @@ const { handleSubmit, setValues, values } = useForm({
   validationSchema: formSchema,
   initialValues: {
     search: filterState.search.value,
-    country: filterState.country.value,
+    location: filterState.location.value,
     minSalary: filterState.minSalary.value,
     maxSalary: filterState.maxSalary.value,
     workType: filterState.workType.value,
@@ -89,7 +89,7 @@ watch(showDialog, (isOpen) => {
   if (isOpen) {
     setValues({
       search: filterState.search.value,
-      country: filterState.country.value,
+      location: filterState.location.value,
       minSalary: filterState.minSalary.value,
       maxSalary: filterState.maxSalary.value,
       workType: filterState.workType.value,

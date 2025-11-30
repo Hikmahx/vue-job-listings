@@ -23,15 +23,15 @@ watch(
       filterStore.loadFromObject(query)
     }
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 )
 
-const { search, country, sortByCompany } = storeToRefs(filterStore)
+const { search, location, sortByCompany } = storeToRefs(filterStore)
 
 const formSchema = toTypedSchema(
   z.object({
     search: z.string().optional(),
-    country: z.string().optional(),
+    location: z.string().optional(),
     sortByCompany: z.boolean().default(false),
   }),
 )
@@ -40,18 +40,18 @@ const { handleSubmit, setValues } = useForm({
   validationSchema: formSchema,
   initialValues: {
     search: search.value,
-    country: country.value,
+    location: location.value,
     sortByCompany: sortByCompany.value || false,
   },
 })
 
 // Update form when store changes
 watch(
-  () => ({ search: search.value, country: country.value }),
+  () => ({ search: search.value, location: location.value }),
   (newFilters) => {
     setValues({
       search: newFilters.search || '',
-      country: newFilters.country || '',
+      location: newFilters.location || '',
       sortByCompany: sortByCompany.value || false,
     })
   },
@@ -62,7 +62,7 @@ const onSubmit = (values: any) => {
   console.log('Form submitted:', values)
   filterStore.setFilters({
     search: values.search,
-    country: values.country,
+    location: values.location,
     sortByCompany: values.sortByCompany,
   })
 }
@@ -80,7 +80,7 @@ watch(
   (queryObj) => {
     router.push({ query: queryObj })
   },
-  { deep: true }
+  { deep: true },
 )
 </script>
 

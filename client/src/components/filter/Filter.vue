@@ -38,7 +38,7 @@ const selectedBtns = computed(() => {
     if (!first) continue
     const [key, value] = first
 
-    if (key === 'search' || key === 'country' || key === 'sortByCompany') continue
+    if (key === 'search' || key === 'location' || key === 'sortByCompany') continue
 
     switch (key) {
       case 'workType':

@@ -11,7 +11,7 @@ import {
 
 export interface FilterFields {
   search: string
-  country: string
+  location: string
   minSalary: number | undefined
   maxSalary: number | undefined
   workType: string
@@ -28,7 +28,7 @@ export interface FilterFields {
 export const useFilterStore = defineStore('filterStore', {
   state: (): FilterFields & { selectedBtns: string[] } => ({
     search: '',
-    country: '',
+    location: '',
     minSalary: undefined,
     maxSalary: undefined,
     workType: '',
@@ -112,7 +112,7 @@ export const useFilterStore = defineStore('filterStore', {
 
     resetFilters() {
       this.search = ''
-      this.country = ''
+      this.location = ''
       this.minSalary = undefined
       this.maxSalary = undefined
       this.workType = ''
@@ -177,7 +177,7 @@ export const useFilterStore = defineStore('filterStore', {
       console.log('Loading filters from URL:', data)
 
       if (data.search !== undefined) this.search = String(data.search)
-      if (data.country !== undefined) this.country = String(data.country)
+      if (data.location !== undefined) this.location = String(data.location)
       if (data.workType !== undefined) this.workType = String(data.workType)
       if (data.level !== undefined) this.level = String(data.level)
       if (data.currency !== undefined) this.currency = String(data.currency)
@@ -246,7 +246,7 @@ export const useFilterStore = defineStore('filterStore', {
       const query: Record<string, any> = {}
 
       if (this.search) query.search = this.search
-      if (this.country) query.country = this.country
+      if (this.location) query.location = this.location
       if (this.workType) query.workType = this.workType
       if (this.level) query.level = this.level
       if (this.currency) query.currency = this.currency
