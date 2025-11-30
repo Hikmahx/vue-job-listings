@@ -1,7 +1,6 @@
 from django.db import models
 from django.utils import timezone
-import uuid
-
+from shortuuidfield import ShortUUIDField
 class Job(models.Model):
     LEVEL_CHOICES = [
         ('junior', 'Junior'),
@@ -15,7 +14,7 @@ class Job(models.Model):
         ('internship', 'Internship'),
     ]
     
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4().hex, editable=False)
+    id = ShortUUIDField(primary_key=True)
     company = models.CharField(max_length=50)
     logo = models.URLField()
     featured = models.BooleanField(default=False)
