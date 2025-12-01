@@ -1,16 +1,37 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useJobStore } from '@/stores/JobStore'
 import { useFilterStore } from '@/stores/FilterStore'
 import JobItem from './JobItem.vue'
 import JobItemSkeleton from './JobItemSkeleton.vue'
+import { onMounted } from 'vue'
 
 const jobStore = useJobStore()
 const filterStore = useFilterStore()
 
 const { jobs, loading, error } = storeToRefs(jobStore)
+const { getData } = jobStore
 const { uniqueSelectedBtns } = storeToRefs(filterStore)
+
+
+// onMounted and watch used to avoid double fetching data for both of them
+onMounted(() => {
+  if (uniqueSelectedBtns.value.length == 0) {
+    getData()
+    console.log('Fetching all jobs on mount')
+  }
+})
+
+watch(
+  () => filterStore.toQueryObject(),
+  (queryObj) => {
+    if (Object.keys(queryObj).length === 0) return 
+    getData()
+  },
+  { deep: true, immediate: true },
+)
+
 
 const filteredJobs = computed(() => {
   if (uniqueSelectedBtns.value.length === 0) {

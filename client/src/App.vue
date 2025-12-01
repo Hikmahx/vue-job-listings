@@ -5,12 +5,12 @@ import Header from './components/Header.vue'
 import Jobs from './components/jobs/Jobs.vue'
 
 // Stores
-const jobStore = useJobStore()
-const { getData } = jobStore
+// const jobStore = useJobStore()
+// const { getData } = jobStore
 
-onMounted(() => {
-  getData()
-})
+// onMounted(() => {
+//   getData()
+// })
 </script>
 
 <template>
