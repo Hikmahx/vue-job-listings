@@ -4,11 +4,12 @@ import { storeToRefs } from 'pinia'
 import { useJobStore } from '@/stores/JobStore'
 import { useFilterStore } from '@/stores/FilterStore'
 import JobItem from './JobItem.vue'
+import JobItemSkeleton from './JobItemSkeleton.vue'
 
 const jobStore = useJobStore()
 const filterStore = useFilterStore()
 
-const { jobs } = storeToRefs(jobStore)
+const { jobs, loading, error } = storeToRefs(jobStore)
 const { uniqueSelectedBtns } = storeToRefs(filterStore)
 
 const filteredJobs = computed(() => {
@@ -24,9 +25,23 @@ const filteredJobs = computed(() => {
 </script>
 
 <template>
-  <ul class="pt-24 px-4 lg:px-10 pb-px">
-    <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" />
-  </ul>
+  <div class="pt-24 px-4 lg:px-10">
+    <ul v-if="loading" class="flex flex-col gap-6">
+      <JobItemSkeleton v-for="n in 6" :key="n" />
+    </ul>
+
+    <div v-else-if="error" class="text-red-500 font-semibold text-center py-20">
+      {{ error }}
+    </div>
+
+    <div v-else-if="filteredJobs.length === 0" class="text-gray-500 font-medium text-center py-20">
+      No jobs found matching your filters.
+    </div>
+
+    <ul v-else class="flex flex-col gap-6">
+      <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" />
+    </ul>
+  </div>
 </template>
 
 <style scoped></style>
