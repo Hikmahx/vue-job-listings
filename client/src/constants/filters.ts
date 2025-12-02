@@ -4,16 +4,42 @@ export const levelsOptions = [
   { label: 'Senior', value: 'senior' },
 ]
 
-export const currenciesOptions = [
-  { value: '$', label: 'USD' },
-  { value: '€', label: 'EUR' },
-  { value: '£', label: 'GBP' },
-  { value: 'CA$', label: 'CAD' },
-  { value: 'A$', label: 'AUD' },
-  { value: '¥', label: 'JPY' },
-  { value: '₹', label: 'INR' },
-  { value: 'S$', label: 'SGD' },
+const currenciesData = [
+  { label: '$', value: 'USD' },
+  { label: '£', value: 'GBP' },
+  { label: '¥', value: 'CNY' },
+  { label: '৳', value: 'BDT' },
+  { label: '฿', value: 'THB' },
+  { label: '₡', value: 'CRC' },
+  { label: '₦', value: 'NGN' },
+  { label: '₩', value: 'KRW' },
+  { label: '₪', value: 'ILS' },
+  { label: '₫', value: 'VND' },
+  { label: '€', value: 'EUR' },
+  { label: '₱', value: 'PHP' },
+  { label: '₲', value: 'PYG' },
+  { label: '₴', value: 'UAH' },
+  { label: '₹', value: 'INR' },
+  { label: '₺', value: 'TRY' },
+  { label: '₽', value: 'RUB' },
+  { label: '₾', value: 'GEL' },
+  { label: '₿', value: 'BTC' },
+  { label: 'Ł', value: 'LTC' },
+  { label: 'ɱ', value: 'XMR' },
+  { label: 'zł', value: 'PLN' },
+  { label: 'Ξ', value: 'ETH' },
 ]
+
+export const currenciesOptions = currenciesData
+  .map(({ value, label }) => ({
+    label: `${value} (${label})`,
+    value: label,
+  }))
+  .sort((a, b) => {
+    const abbrA = a.label.split(' ')[0] || ''
+    const abbrB = b.label.split(' ')[0] || ''
+    return abbrA.localeCompare(abbrB)
+  })
 
 export const workTypesOptions = ['remote', 'hybrid', 'onsite']
 
@@ -64,6 +90,7 @@ export const marketsOptions = [
   'Real Estate',
   'Travel',
   'Food & Beverage',
+  'Others',
 ]
 
 export const companySizesOptions = ['1-10', '11-50', '51-200', '201-500', '500+']
