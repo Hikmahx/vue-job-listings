@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from shortuuidfield import ShortUUIDField
 
-# import pycountry
+import pycountry
 # from babel.numbers import get_currency_symbol
 
 # CURRENCY_CHOICES = []
@@ -94,6 +94,7 @@ class Job(models.Model):
         ("500+", "500+"),
     ]
     
+    LOCATION_CHOICES = [(country.alpha_2, country.name) for country in pycountry.countries]
 
     
     id = ShortUUIDField(primary_key=True)
@@ -107,7 +108,7 @@ class Job(models.Model):
     contract = models.CharField(max_length=50, choices=CONTRACT_CHOICES)
     # only countries or worldwide is allowed in location (remote can cause conflict with work_type)
     # also bcos $ currency is universal and location helps narrow down the pool
-    location = models.CharField(max_length=100)
+    location = models.CharField(max_length=100, choices=LOCATION_CHOICES)
     currency = models.CharField(max_length=50, choices=CURRENCY_CHOICES, default='')
     min_salary = models.IntegerField(default=0)
     max_salary = models.IntegerField(default=0)

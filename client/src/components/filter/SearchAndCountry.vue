@@ -12,25 +12,10 @@ import {
 } from '@/components/ui/combobox'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Field as VeeField } from 'vee-validate'
+import countriesData from 'countries-list-json'
+import { valLabel } from '@/utils/filters'
 
-const countries = [
-  { value: 'worldwide', label: 'Worldwide' },
-  { value: 'usa', label: 'United States' },
-  { value: 'uk', label: 'United Kingdom' },
-  { value: 'canada', label: 'Canada' },
-  { value: 'australia', label: 'Australia' },
-  { value: 'germany', label: 'Germany' },
-  { value: 'france', label: 'France' },
-  { value: 'spain', label: 'Spain' },
-  { value: 'nigeria', label: 'Nigeria' },
-  { value: 'italy', label: 'Italy' },
-  { value: 'netherlands', label: 'Netherlands' },
-  { value: 'india', label: 'India' },
-  { value: 'singapore', label: 'Singapore' },
-  { value: 'japan', label: 'Japan' },
-  { value: 'brazil', label: 'Brazil' },
-  { value: 'mexico', label: 'Mexico' },
-]
+const countries = valLabel(Object.values(countriesData).map((country: any) => country.name))
 </script>
 
 <template>
