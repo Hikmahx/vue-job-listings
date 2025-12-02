@@ -30,6 +30,7 @@ import {
   contractOptions,
   rolesOptions,
 } from '@/constants/filters'
+import { valLabel } from '@/utils/filters';
 
 const filterStore = useFilterStore()
 const filterState = storeToRefs(filterStore)
@@ -103,13 +104,6 @@ watch(showDialog, (isOpen) => {
     })
   }
 })
-
-const valLabel = (arr: string[]) => {
-  return arr.map((item: string) => ({
-    value: item.toLowerCase().replace(/\s+/g, '-'),
-    label: item,
-  }))
-}
 
 const onSubmit = (values: any) => {
   filterStore.setFilters(values)
