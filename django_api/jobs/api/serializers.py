@@ -7,6 +7,11 @@ from jobs.models import Job
 class JobSerializer(serializers.ModelSerializer):
     postedAt = serializers.SerializerMethodField()
     new = serializers.SerializerMethodField()
+    # Rename field from underscore to camelCase to match frontend and serializer
+    minSalary = serializers.IntegerField(source='min_salary', required=False, allow_null=True)
+    maxSalary = serializers.IntegerField(source='max_salary', required=False, allow_null=True)
+    companySize = serializers.CharField(source='company_size', required=False, allow_null=True)
+    workType = serializers.CharField(source='work_type', required=False, allow_null=True)
 
     class Meta:
         model = Job
@@ -22,6 +27,12 @@ class JobSerializer(serializers.ModelSerializer):
             "postedAt",
             "contract",
             "location",
+            "currency", 
+            "minSalary",
+            "maxSalary",
+            "market",
+            "companySize",
+            "workType",
             "skills",
         ]
 
@@ -58,3 +69,8 @@ class JobSerializer(serializers.ModelSerializer):
     def get_new(self, obj):
         # Job is "new" if posted within the last 2 days
         return obj.posted_at >= timezone.now() - timedelta(days=2)
+
+
+    def validate(self, obj):
+        if (obj.get("min_salary") or obj.get("max_salary")) and not obj.get("currency"):
+            raise serializers.ValidationError("Currency is required when specifying salary range.")
