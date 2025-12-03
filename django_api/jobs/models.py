@@ -109,7 +109,8 @@ class Job(models.Model):
     # only countries or worldwide is allowed in location (remote can cause conflict with work_type)
     # also bcos $ currency is universal and location helps narrow down the pool
     location = models.CharField(max_length=100, choices=LOCATION_CHOICES)
-    currency = models.CharField(max_length=50, choices=CURRENCY_CHOICES, default='')
+    # default is added insteadd of null to make sure that the optional fields still show in the json response, even as an empty value
+    currency = models.CharField(max_length=50, choices=CURRENCY_CHOICES, blank=True, default='')
     min_salary = models.IntegerField(default=0)
     max_salary = models.IntegerField(default=0)
     market = models.CharField(max_length=50, choices=MARKET_CHOICES, default='')
