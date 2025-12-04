@@ -10,5 +10,12 @@ export interface Job {
   postedAt: string
   contract: string
   location: string
+  currency: string
+  minSalary: number | null
+  maxSalary: number | null
+  market: string
+  companySize: string | null
+  workType: string | null
+  timeframe: string
   skills: string[]
 }
