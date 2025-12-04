@@ -38,7 +38,8 @@ const selectedBtns = computed(() => {
     if (!first) continue
     const [key, value] = first
 
-    if (key === 'search' || key === 'location' || key === 'sortByCompany') continue
+    if (key === 'search' || key === 'location' || key === 'sortByCompany' || key === 'timeframe')
+      continue
 
     switch (key) {
       case 'workType':
@@ -59,10 +60,12 @@ const selectedBtns = computed(() => {
         const foundMin = filterData.find((it) => it && 'minSalary' in it) as any
         const foundMax = filterData.find((it) => it && 'maxSalary' in it) as any
         const foundCurrency = filterData.find((it) => it && 'currency' in it) as any
+        const foundTimeframe = filterData.find((it) => it && 'timeframe' in it) as any
 
         const min = foundMin?.minSalary as number | undefined
         const max = foundMax?.maxSalary as number | undefined
         const currency = (foundCurrency?.currency as string) || ''
+        const timeframe = (foundTimeframe?.timeframe as string) || ''
 
         let salaryText = ''
         if (min && max)
@@ -71,10 +74,16 @@ const selectedBtns = computed(() => {
         else if (max) salaryText = `<${currency}${formatSalary(max)}`
 
         if (salaryText && !btns.some((b) => b.key === 'salary')) {
+          const capitalizedTimeframe = timeframe
+            ? timeframe.replace(/^./, (c) => c.toUpperCase())
+            : ''
+          const salaryWithTimeframe = capitalizedTimeframe
+            ? `${salaryText} per ${capitalizedTimeframe}`
+            : salaryText
           btns.push({
-            text: salaryText,
+            text: salaryWithTimeframe,
             key: 'salary',
-            value: { minSalary: undefined, maxSalary: undefined, currency: '' },
+            value: { minSalary: undefined, maxSalary: undefined, currency: '', timeframe: '' },
           })
         }
         break
@@ -128,7 +137,12 @@ const removeBtn = (btnText: string) => {
   if (btnToRemove) {
     if (btnToRemove.key === 'salary') {
       // Clear salary fields in one call
-      filterStore.setFilters({ minSalary: undefined, maxSalary: undefined, currency: '' })
+      filterStore.setFilters({
+        minSalary: undefined,
+        maxSalary: undefined,
+        currency: '',
+        timeframe: '',
+      })
     } else {
       const key = btnToRemove.key as keyof import('@/stores/FilterStore').FilterFields
       filterStore.setFilters({ [key]: btnToRemove.value } as any)

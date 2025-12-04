@@ -9,6 +9,7 @@ class JobFilter(filters.FilterSet):
     # Rename field from underscore to camelCase to match frontend and serializer (so these can't be in Meta)
     minSalary = filters.NumberFilter(field_name="min_salary", lookup_expr="gte")
     maxSalary = filters.NumberFilter(field_name="max_salary", lookup_expr="lte")
+    # timeframe = filters.CharFilter(field_name="timeframe", lookup_expr="exact")
     markets = filters.BaseInFilter(field_name="market", lookup_expr="in")
     companySizes = filters.BaseInFilter(field_name="company_size", lookup_expr="in")
     workType = filters.CharFilter(field_name="work_type", lookup_expr="exact")
@@ -24,6 +25,7 @@ class JobFilter(filters.FilterSet):
             # "release_date": ["exact", "year__gt"], 
             "currency": ["exact"],
             # "market": ["exact", "in"],
+            "timeframe": ["exact"],
         }
     
     def filter_skills(self, queryset, name, value):

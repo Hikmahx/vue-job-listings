@@ -33,6 +33,14 @@ class Job(models.Model):
         ("hybrid", "hybrid"),
         ("onsite", "onsite"),
     ]
+
+    TIMEFRAME_CHOICES = [
+        ("hour", "Hour"),
+        ("day", "Day"),
+        ("week", "Week"),
+        ("month", "Month"),
+        ("year", "Year"),
+    ]
     
     CURRENCY_DATA = [
     ('$', 'USD'),
@@ -113,6 +121,9 @@ class Job(models.Model):
     currency = models.CharField(max_length=50, choices=CURRENCY_CHOICES, blank=True, default='')
     min_salary = models.IntegerField(default=0)
     max_salary = models.IntegerField(default=0)
+    timeframe = models.CharField(
+        max_length=16, choices=TIMEFRAME_CHOICES, blank=True, default='year'
+    )
     market = models.CharField(max_length=50, choices=MARKET_CHOICES, default='')
     company_size = models.CharField(max_length=50, choices=COMPANYSIZE_CHOICES, default='')
     work_type = models.CharField(max_length=50, choices=WORKTYPE_CHOICES, default='')

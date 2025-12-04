@@ -14,6 +14,7 @@ export interface FilterFields {
   location: string
   minSalary: number | undefined
   maxSalary: number | undefined
+  timeframe: string
   workType: string
   level: string
   skills: string[]
@@ -31,6 +32,7 @@ export const useFilterStore = defineStore('filterStore', {
     location: '',
     minSalary: undefined,
     maxSalary: undefined,
+    timeframe: '',
     workType: '',
     level: '',
     skills: [],
@@ -115,6 +117,7 @@ export const useFilterStore = defineStore('filterStore', {
       this.location = ''
       this.minSalary = undefined
       this.maxSalary = undefined
+      this.timeframe = ''
       this.workType = ''
       this.level = ''
       this.skills = []
@@ -183,6 +186,7 @@ export const useFilterStore = defineStore('filterStore', {
       if (data.currency !== undefined) this.currency = String(data.currency)
       if (data.minSalary !== undefined) this.minSalary = Number(data.minSalary)
       if (data.maxSalary !== undefined) this.maxSalary = Number(data.maxSalary)
+      if (data.timeframe !== undefined) this.timeframe = String(data.timeframe)
       if (data.sortByCompany !== undefined) this.sortByCompany = data.sortByCompany === 'true'
 
       if (data.skills !== undefined) {
@@ -252,6 +256,7 @@ export const useFilterStore = defineStore('filterStore', {
       if (this.currency) query.currency = this.currency
       if (this.minSalary !== undefined) query.minSalary = this.minSalary
       if (this.maxSalary !== undefined) query.maxSalary = this.maxSalary
+      if (this.timeframe) query.timeframe = this.timeframe
       if (this.sortByCompany) query.sortByCompany = 'true'
 
       if (this.skills.length > 0) query.skills = this.skills.join(',')

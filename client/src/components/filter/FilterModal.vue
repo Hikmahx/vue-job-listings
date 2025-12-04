@@ -29,8 +29,9 @@ import {
   companySizesOptions,
   contractOptions,
   rolesOptions,
+  timeframeOptions,
 } from '@/constants/filters'
-import { valLabel } from '@/utils/filters';
+import { valLabel } from '@/utils/filters'
 
 const filterStore = useFilterStore()
 const filterState = storeToRefs(filterStore)
@@ -40,8 +41,8 @@ const formSchema = toTypedSchema(
     .object({
       search: z.string().default(''),
       location: z.string().default(''),
-      minSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
-      maxSalary: z.union([z.number().min(0, 'Salary cannot be negative'), z.nan()]).optional(),
+      minSalary: z.number().min(0, 'Salary cannot be negative').optional(),
+      maxSalary: z.number().min(0, 'Salary cannot be negative').optional(),
       workType: z.string().default(''),
       level: z.string().default(''),
       skills: z.array(z.string()).default([]),
@@ -50,6 +51,7 @@ const formSchema = toTypedSchema(
       contract: z.array(z.string()).default([]),
       roles: z.array(z.string()).default([]),
       currency: z.string().default(''),
+      timeframe: z.string().default(''),
     })
     .refine(
       (data) => {
@@ -62,7 +64,48 @@ const formSchema = toTypedSchema(
         message: 'Minimum salary cannot be higher than maximum salary',
         path: ['maxSalary'],
       },
+    )
+    .refine(
+      (data) => {
+        const hasMin = typeof data.minSalary === 'number'
+        const hasMax = typeof data.maxSalary === 'number'
+        const hasAnySalary = hasMin || hasMax
+        const hasTimeOrCurrency = !!data.timeframe || !!data.currency
+        if (!hasAnySalary && hasTimeOrCurrency) {
+          return false
+        }
+        return true
+      },
+      {
+        message: 'Min or max value must be provided when selecting timeframe or currency',
+        path: ['maxSalary'],
+      },
     ),
+
+  // .refine(
+  //   (data) => {
+  //     if ((data.minSalary || data.maxSalary) && !data.timeframe) {
+  //       return false
+  //     }
+  //     return true
+  //   },
+  //   {
+  //     message: 'Select a timeframe when specifying salary',
+  //     path: ['timeframe'],
+  //   },
+  // )
+  // .refine(
+  //   (data) => {
+  //     if ((data.minSalary || data.maxSalary) && !data.currency) {
+  //       return false
+  //     }
+  //     return true
+  //   },
+  //   {
+  //     message: 'Select a currency when specifying salary',
+  //     path: ['currency'],
+  //   },
+  // ),
 )
 
 const showDialog = ref(false)
@@ -82,6 +125,7 @@ const { handleSubmit, setValues, values } = useForm({
     contract: filterState.contract.value,
     roles: filterState.roles.value,
     currency: filterState.currency.value,
+    timeframe: filterState.timeframe.value,
   },
 })
 
@@ -101,6 +145,7 @@ watch(showDialog, (isOpen) => {
       contract: filterState.contract.value,
       roles: filterState.roles.value,
       currency: filterState.currency.value,
+      timeframe: filterState.timeframe.value,
     })
   }
 })
@@ -165,6 +210,14 @@ const handleFormSubmit = handleSubmit(onSubmit)
                     label="Currency"
                     :options="currenciesOptions"
                     placeholder="Select currency"
+                  />
+                </template>
+                <template #timeframe>
+                  <SelectField
+                    name="timeframe"
+                    label="Timeframe"
+                    :options="valLabel(timeframeOptions)"
+                    placeholder="Select timeframe"
                   />
                 </template>
               </SalaryRangeInput>

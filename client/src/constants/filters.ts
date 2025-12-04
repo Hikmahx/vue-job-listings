@@ -96,3 +96,5 @@ export const marketsOptions = [
 export const companySizesOptions = ['1-10', '11-50', '51-200', '201-500', '500+']
 export const contractOptions = ['full-time', 'part-time', 'contract', 'internship']
 export const rolesOptions = ['Backend', 'Frontend', 'Full-Stack', 'Mobile', 'DevOps', 'Data']
+
+export const timeframeOptions = ['Hour', 'Day', 'Week', 'Month', 'Year']
