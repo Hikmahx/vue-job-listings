@@ -1,13 +1,5 @@
 import { defineStore } from 'pinia'
-import {
-  levelsOptions,
-  rolesOptions,
-  skillsOptions,
-  marketsOptions,
-  companySizesOptions,
-  contractOptions,
-  workTypesOptions,
-} from '@/constants/filters'
+import { levelsOptions } from '@/constants/filters'
 
 export interface FilterFields {
   search: string
