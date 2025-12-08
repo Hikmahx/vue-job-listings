@@ -1,5 +1,7 @@
 # Vue Job Listings - Full Stack Application (WIP)
 
+
+![homepage](/client/public/images/readme/job-list.png)
 This is a full-stack job listings application built with Vue.js and Django REST Framework. The application allows users to browse, search, and filter job listings with advanced filtering capabilities including salary ranges, work types, company sizes, markets, and many more.
 
 ## Table of contents
@@ -45,9 +47,6 @@ Users should be able to:
 - Sort jobs by posting date (newest first) or by company name
 
 ### Screenshot
-
-![homepage](/client/public/images/readme/job-list.png)
-
 
 Currently in the process of implementing the landing page design
 
