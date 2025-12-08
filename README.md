@@ -2,6 +2,7 @@
 
 
 ![homepage](/client/public/images/readme/job-list.png)
+
 This is a full-stack job listings application built with Vue.js and Django REST Framework. The application allows users to browse, search, and filter job listings with advanced filtering capabilities including salary ranges, work types, company sizes, markets, and many more.
 
 ## Table of contents
