@@ -46,7 +46,10 @@ Users should be able to:
 
 ### Screenshot
 
-Currently in the process of designing the landing page
+![homepage](/client/public/images/readme/job-list.png)
+
+
+Currently in the process of implementing the landing page design
 
 ### Links
 
