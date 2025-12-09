@@ -67,7 +67,7 @@ const closeMobileMenu = () => {
     />
     <img
       src="@/assets/img/bg-hero-desktop.svg"
-          class="absolute inset-0 hidden lg:flex h-full"
+          class="absolute inset-0 hidden lg:flex w-full h-full"
       alt="bg-hero-desktop"
     />
     <!-- Header Navigation -->
