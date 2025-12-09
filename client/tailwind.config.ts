@@ -2,6 +2,10 @@ module.exports = {
   purge: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      screens: {
+        '2xl': '1440px', 
+        '3xl': '1700px', 
+      },
       fontSize: {
         base: '15px',
       },
