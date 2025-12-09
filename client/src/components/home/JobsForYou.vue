@@ -23,7 +23,7 @@ const displayedJobs = computed(() => jobs.value.slice(0, 5))
 
 <template>
   <section class="py-16 lg:py-24 bg-cyan-50">
-    <div class="container mx-auto px-4">
+    <div class="container max-w-3xl lg:max-w-6xl 2xl:max-w-7xl mx-auto px-4">
       <SectionTitle title="JOBS FOR YOU" />
 
       <div v-if="loading" class="text-center py-12">

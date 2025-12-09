@@ -71,7 +71,7 @@ const closeMobileMenu = () => {
       alt="bg-hero-desktop"
     />
     <!-- Header Navigation -->
-    <header class="container mx-auto px-4 py-8 lg:py-10 relative">
+    <header class="container mx-auto max-w-3xl lg:max-w-6xl 2xl:max-w-7xl px-4 py-8 lg:py-10 relative">
       <nav class="flex items-center justify-between">
         <div class="flex items-center justify-between gap-20">
           <router-link to="/" class="flex items-center">
