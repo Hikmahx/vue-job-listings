@@ -58,15 +58,13 @@ const faqItems: FAQItem[] = [
             <!-- Left -->
             <div class="flex flex-col justify-start flex-1 text-center lg:text-left">
               <h1
-                class="text-4xl sm:text-5xl font-semibold mb-6 tracking-wider text-cyan-900"
-                :style="{ color: 'rgb(44, 58, 58)' }"
+                class="text-2xl lg:text-3xl font-bold mb-6 tracking-wider text-cyan-900"
               >
                 FAQs
               </h1>
 
               <p
-                class="text-sm sm:text-base lg:text-lg leading-loose text-grayish-cyan"
-                :style="{ color: 'rgb(123, 142, 142)' }"
+                class="text-sm sm:text-base leading-loose text-grayish-cyan"
               >
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec ante vitae purus
                 tempus egestas. Curabitur euismod purus sed elit faucibus.
@@ -86,7 +84,6 @@ const faqItems: FAQItem[] = [
                 >
                   <AccordionTrigger
                     class="hover:no-underline flex justify-between items-center gap-4 text-left"
-                    :style="{ color: 'rgb(44, 58, 58)' }"
                   >
                     <span class="text-base sm:text-lg font-medium">
                       {{ item.question }}

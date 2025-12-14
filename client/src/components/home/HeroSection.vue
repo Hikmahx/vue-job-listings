@@ -21,6 +21,12 @@ import vercelLogo from '@/assets/img/trustedby/vercel.svg'
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
 
+const navLinks = [
+  { to: '/jobs', label: 'Jobs' },
+  { to: '#companies', label: 'Companies' },
+  { to: '#about', label: 'About' }
+]
+
 const formSchema = toTypedSchema(
   z.object({
     search: z.string().default(''),
@@ -78,14 +84,19 @@ const closeMobileMenu = () => {
             <img src="/logo.svg" alt="JobList Logo" class="h-5" />
           </router-link>
           <div class="hidden md:flex items-center gap-6 ml-[84px]">
-            <router-link to="/jobs" class="hover:opacity-80 transition-opacity">Jobs</router-link>
-            <a href="#collections" class="hover:opacity-80 transition-opacity">Collections</a>
-            <a href="#learn" class="hover:opacity-80 transition-opacity">Learn</a>
+            <router-link 
+              v-for="link in navLinks" 
+              :key="link.to"
+              :to="link.to" 
+              class="hover:text-cyan-900/80 transition-all"
+            >
+              {{ link.label }}
+            </router-link>
           </div>
         </div>
         <div class="hidden md:flex items-center gap-4">
-          <Button variant="ghost" class="text-white hover:bg-white/10 border-0"> Login </Button>
-          <Button class="bg-cyan-900 hover:bg-cyan-400 text-white px-6 lg:px-7 h-12"> Signup </Button>
+          <Button variant="ghost" class="text-white hover:bg-cyan-900/50 hover:text-cyan-50 border-0 px-6 lg:px-7 h-12"> Login </Button>
+          <Button class="bg-cyan-900 hover:bg-cyan-50 text-white hover:text-cyan-900 px-6 lg:px-7 h-12"> Signup </Button>
         </div>
         <button class="md:hidden" @click="isMobileMenuOpen = true">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +110,7 @@ const closeMobileMenu = () => {
         </button>
       </nav>
 
-      <!-- Mobile Menu Drawer -->
+      <!-- Mobile Menu  -->
       <Dialog :open="isMobileMenuOpen" @update:open="(value) => (isMobileMenuOpen = value)">
         <DialogContent
           class="!fixed !right-0 !top-0 !left-auto !h-full !w-[300px] !max-w-full !translate-x-0 !translate-y-0 !rounded-none border-l data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right [&>button]:hidden"
@@ -115,26 +126,14 @@ const closeMobileMenu = () => {
             </div>
             <nav class="flex flex-col gap-6 flex-1">
               <router-link
-                to="/jobs"
+                v-for="link in navLinks"
+                :key="link.to"
+                :to="link.to"
                 @click="closeMobileMenu"
                 class="text-cyan-900 font-medium hover:text-cyan-400 transition-colors"
               >
-                Jobs
+                {{ link.label }}
               </router-link>
-              <a
-                href="#collections"
-                @click="closeMobileMenu"
-                class="text-cyan-900 font-medium hover:text-cyan-400 transition-colors"
-              >
-                Collections
-              </a>
-              <a
-                href="#learn"
-                @click="closeMobileMenu"
-                class="text-cyan-900 font-medium hover:text-cyan-400 transition-colors"
-              >
-                Learn
-              </a>
             </nav>
             <div class="flex flex-col gap-4 pt-6 border-t">
               <Button
@@ -171,7 +170,6 @@ const closeMobileMenu = () => {
           Job Seekers
         </p>
 
-        <!-- Search Form -->
         <form @submit.prevent="onSubmit" class="w-full max-w-[856px] mx-auto">
           <div class="bg-white rounded-lg p-8 shadow-lg flex flex-col sm:flex-row gap-2">
             <div class="flex-1 min-w-0">
@@ -187,11 +185,9 @@ const closeMobileMenu = () => {
           </div>
         </form>
 
-        <!-- Company Logos -->
         <div
           class="mt-12 lg:mt-16 flex flex-wrap items-center justify-center gap-6 lg:gap-8 opacity-80"
         >
-          <!-- <div class="text-sm text-gray-300 mb-4 w-full lg:w-auto lg:mb-0">Trusted by:</div> -->
           <div class="flex over items-center justify-center gap-4 lg:gap-6">
             <img
               v-for="company in trustedCompanies"
@@ -206,5 +202,3 @@ const closeMobileMenu = () => {
     </div>
   </section>
 </template>
-
-<style scoped></style>
