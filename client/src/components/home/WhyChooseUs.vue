@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import SectionTitle from './SectionTitle.vue'
-import map from '@/assets/img/map.svg'
 </script>
 
 <template>
