@@ -172,7 +172,7 @@ const closeMobileMenu = () => {
 
         <form @submit.prevent="onSubmit" class="w-full max-w-[856px] mx-auto">
           <div class="bg-white rounded-lg p-8 shadow-lg flex flex-col sm:flex-row gap-2">
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 text-cyan-900">
               <SearchAndCountry />
             </div>
             <Button
