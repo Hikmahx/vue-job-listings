@@ -12,9 +12,6 @@ class JobSerializer(serializers.ModelSerializer):
     maxSalary = serializers.IntegerField(source='max_salary', required=False, allow_null=True)
     companySize = serializers.CharField(source='company_size', required=False, allow_null=True)
     workType = serializers.CharField(source='work_type', required=False, allow_null=True)
-    timeframe = serializers.CharField(
-        source='timeframe', required=False, allow_blank=True, allow_null=True
-    )
 
     class Meta:
         model = Job
