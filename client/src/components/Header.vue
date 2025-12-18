@@ -1,15 +1,21 @@
 <script setup lang="ts">
 // import { useFilterStore } from '@/stores/FilterStore'
-import SearchFilter from './filter/SearchFilter.vue'
+// import SearchFilter from './filter/SearchFilter.vue'
 
 // const FilterStore = useFilterStore()
 // provide('groupedFilters', groupedFilters)
 // provide('filters', filters)
+import { useAttrs } from 'vue'
+
+const attrs = useAttrs()
 </script>
 
 <template>
   <div>
-    <header class="h-40 md:h-[250px] w-full bg-cyan-400">
+    <header
+      class="h-40 md:h-[250px] w-full bg-cyan-400"
+      v-bind="attrs"
+    >
       <div class="relative w-full h-full">
         <img
           src="@/assets/img/bg-header-desktop.svg"
@@ -23,6 +29,6 @@ import SearchFilter from './filter/SearchFilter.vue'
         />
       </div>
     </header>
-    <SearchFilter />
+    <slot />
   </div>
 </template>
