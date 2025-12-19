@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useFilterStore } from '@/stores/FilterStore'
+import { getSalaryDisplay } from '@/utils/salaryFormatter'
 import FilterBtn from './FilterBtn.vue'
 import { levelsOptions, skillsOptions, marketsOptions, rolesOptions } from '@/constants/filters'
 
@@ -21,12 +22,6 @@ onMounted(() => {
   })
   console.log('Grouped filters', groupedFilters.value)
 })
-
-const formatSalary = (salary: number) => {
-  if (salary >= 1000000) return `${(salary / 1000000).toFixed(0)}M`
-  if (salary >= 1000) return `${(salary / 1000).toFixed(0)}k`
-  return salary.toString()
-}
 
 const selectedBtns = computed(() => {
   const filterData = (groupedFilters.value ?? []) as Array<Record<string, unknown>>
@@ -67,21 +62,11 @@ const selectedBtns = computed(() => {
         const currency = (foundCurrency?.currency as string) || ''
         const timeframe = (foundTimeframe?.timeframe as string) || ''
 
-        let salaryText = ''
-        if (min && max)
-          salaryText = `${currency}${formatSalary(min)}-${currency}${formatSalary(max)}`
-        else if (min) salaryText = `>${currency}${formatSalary(min)}`
-        else if (max) salaryText = `<${currency}${formatSalary(max)}`
-
-        if (salaryText && !btns.some((b) => b.key === 'salary')) {
-          const capitalizedTimeframe = timeframe
-            ? timeframe.replace(/^./, (c) => c.toUpperCase())
-            : ''
-          const salaryWithTimeframe = capitalizedTimeframe
-            ? `${salaryText} per ${capitalizedTimeframe}`
-            : salaryText
+        const salaryDisplay = getSalaryDisplay(min, max, currency, timeframe)
+        
+        if (salaryDisplay && !btns.some((b) => b.key === 'salary')) {
           btns.push({
-            text: salaryWithTimeframe,
+            text: salaryDisplay,
             key: 'salary',
             value: { minSalary: undefined, maxSalary: undefined, currency: '', timeframe: '' },
           })
