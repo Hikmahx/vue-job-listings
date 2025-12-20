@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from shortuuidfield import ShortUUIDField
+from .job_details import JobDetails
 
 import pycountry
 # from babel.numbers import get_currency_symbol
@@ -128,6 +129,13 @@ class Job(models.Model):
     company_size = models.CharField(max_length=50, choices=COMPANYSIZE_CHOICES, default='')
     work_type = models.CharField(max_length=50, choices=WORKTYPE_CHOICES, default='')
     skills = models.JSONField(default=list)
+    details = models.OneToOneField(
+        JobDetails, 
+        on_delete=models.CASCADE, 
+        related_name='job',
+        null=True,
+        blank=True
+    )
     
     def __str__(self):
         return f"{self.company} - {self.position}"
