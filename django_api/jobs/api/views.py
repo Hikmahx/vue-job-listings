@@ -23,4 +23,7 @@ class GetAllJobsAPI (generics.ListAPIView):
             
         return queryset.order_by(ordering)
     
-
+class GetJobWithDetails(generics.RetrieveAPIView):
+    queryset = Job.objects.select_related('details')
+    serializer_class = JobSerializer
+    lookup_field = 'id'

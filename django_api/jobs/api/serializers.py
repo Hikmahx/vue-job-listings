@@ -1,8 +1,76 @@
 from rest_framework import serializers
-from django.utils.timesince import timesince
 from django.utils import timezone
 from datetime import timedelta
-from jobs.models import Job
+from jobs.models import Job, JobDetails
+
+class JobDetailsSerializer(serializers.ModelSerializer):
+    externalApply = serializers.BooleanField(source='external_apply')
+    experienceRequired = serializers.CharField(source='experience_required', allow_null=True)
+    foundedYear = serializers.IntegerField(source='founded_year', allow_null=True)
+    
+    class Meta:
+        model = JobDetails
+        fields = [
+            'description',
+            'requirements',
+            'responsibilities',
+            'externalApply',
+            'apply',
+            'experienceRequired',
+            'foundedYear',
+            'website'
+        ]
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        
+        if 'requirements' in data and isinstance(data['requirements'], dict):
+            pass
+        else:
+            data['requirements'] = {
+                "content": "",
+                "items": []
+            }
+        
+        if 'responsibilities' in data and isinstance(data['responsibilities'], dict):
+            pass
+        else:
+            data['responsibilities'] = {
+                "content": "",
+                "items": []
+            }
+        
+        return data
+    
+    def validate_requirements(self, value):
+        """Validate requirements JSON structure"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Requirements must be a dictionary")
+        
+        if 'content' not in value or 'items' not in value:
+            raise serializers.ValidationError("Requirements must have both 'content' and 'items' fields")
+
+        if not isinstance(value['items'], list):
+            raise serializers.ValidationError("Requirements items must be a list")
+        
+        return value
+    
+    def validate_responsibilities(self, value):
+        """Validate responsibilities JSON structure"""
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("Responsibilities must be a dictionary")
+        
+        if 'content' not in value:
+            raise serializers.ValidationError("Responsibilities must have 'content' field")
+        
+        if 'items' not in value:
+            raise serializers.ValidationError("Responsibilities must have 'items' field")
+        
+        if not isinstance(value['items'], list):
+            raise serializers.ValidationError("Responsibilities items must be a list")
+        
+        return value
+
 
 class JobSerializer(serializers.ModelSerializer):
     postedAt = serializers.SerializerMethodField()
@@ -12,7 +80,8 @@ class JobSerializer(serializers.ModelSerializer):
     maxSalary = serializers.IntegerField(source='max_salary', required=False, allow_null=True)
     companySize = serializers.CharField(source='company_size', required=False, allow_null=True)
     workType = serializers.CharField(source='work_type', required=False, allow_null=True)
-
+    jobDetails = JobDetailsSerializer(source='details', read_only=True)
+    
     class Meta:
         model = Job
         fields = [
@@ -35,8 +104,10 @@ class JobSerializer(serializers.ModelSerializer):
             "companySize",
             "workType",
             "skills",
+            "jobDetails",
         ]
-
+        read_only_fields = ['jobDetails']
+    
     def get_postedAt(self, obj):
         now = timezone.now()
         time_difference = now - obj.posted_at
@@ -72,8 +143,9 @@ class JobSerializer(serializers.ModelSerializer):
         return obj.posted_at >= timezone.now() - timedelta(days=2)
 
 
-    def validate(self, obj):
-        if (obj.get("min_salary") or obj.get("max_salary")) and not obj.get("currency"):
+    def validate(self, data):
+        if (data.get("min_salary") or data.get("max_salary")) and not data.get("currency"):
             raise serializers.ValidationError("Currency is required when specifying salary range.")
-        if (obj.get("min_salary") or obj.get("max_salary")) and not obj.get("timeframe"):
+        if (data.get("min_salary") or data.get("max_salary")) and not data.get("timeframe"):
             raise serializers.ValidationError("Timeframe is required when specifying salary range.")
+        return data
