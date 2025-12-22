@@ -2,8 +2,8 @@ from django.db import models
 
 class JobDetails(models.Model):
     description = models.TextField()
-    requirements = models.JSONField()
-    responsibilities = models.JSONField()
+    requirements = models.JSONField(default=lambda: {"content": "", "items": []})
+    responsibilities = models.JSONField(default=lambda: {"content": "", "items": []})
     external_apply = models.BooleanField(default=False)
     apply = models.URLField(blank=True, null=True)
     experience_required = models.CharField(max_length=100, blank=True, null=True)
