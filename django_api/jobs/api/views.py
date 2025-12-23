@@ -1,5 +1,4 @@
-from rest_framework import generics, status
-from rest_framework.response import Response
+from rest_framework import generics
 from jobs.models import Job
 from jobs.api.serializers import JobSerializer
 from django_filters import rest_framework as filters
@@ -15,7 +14,7 @@ class GetAllJobsAPI (generics.ListAPIView):
     search_fields = ['company', 'position', 'role', 'level', 'skills', 'location']
     
     def get_queryset(self):
-        queryset = Job.objects.all() 
+        queryset = Job.objects.select_related('details').all()
         ordering = '-posted_at'
         sort_by_company = self.request.query_params.get('sortByCompany', '').lower()
         if sort_by_company == 'true':
@@ -25,5 +24,19 @@ class GetAllJobsAPI (generics.ListAPIView):
     
 class GetJobWithDetails(generics.RetrieveAPIView):
     queryset = Job.objects.select_related('details')
+    serializer_class = JobSerializer
+    lookup_field = 'id'
+
+class CreateJobAPI(generics.CreateAPIView):
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+
+class UpdateJobAPI(generics.UpdateAPIView):
+    queryset = Job.objects.select_related('details')
+    serializer_class = JobSerializer
+    lookup_field = 'id'
+
+class DeleteJobAPI(generics.DestroyAPIView):
+    queryset = Job.objects.all()
     serializer_class = JobSerializer
     lookup_field = 'id'
