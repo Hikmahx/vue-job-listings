@@ -18,4 +18,22 @@ export interface Job {
   workType: string | null
   timeframe: string
   skills: string[]
+  jobDetails?: JobDetails
+}
+
+export interface JobDetails {
+  description: string
+  requirements: {
+    content: string
+    items: string[]
+  }
+  responsibilities: {
+    content: string
+    items: string[]
+  }
+  externalApply: boolean
+  apply: string
+  experienceRequired: string
+  foundedYear: number
+  website: string
 }
