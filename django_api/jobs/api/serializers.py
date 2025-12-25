@@ -144,12 +144,23 @@ class JobSerializer(serializers.ModelSerializer):
         # Job is "new" if posted within the last 2 days
         return obj.posted_at >= timezone.now() - timedelta(days=2)
 
-
     def validate(self, data):
-        if (data.get("min_salary") or data.get("max_salary")) and not data.get("currency"):
+        min_salary = data.get("min_salary")
+        max_salary = data.get("max_salary")
+        
+        # Check if salaries are provided (not None) and non-zero
+        has_min_salary = min_salary is not None and min_salary != 0
+        has_max_salary = max_salary is not None and max_salary != 0
+        
+        if (has_min_salary or has_max_salary) and not data.get("currency"):
             raise serializers.ValidationError("Currency is required when specifying salary range.")
-        if (data.get("min_salary") or data.get("max_salary")) and not data.get("timeframe"):
+        
+        if (has_min_salary or has_max_salary) and not data.get("timeframe"):
             raise serializers.ValidationError("Timeframe is required when specifying salary range.")
+        
+        if has_min_salary and has_max_salary and min_salary > max_salary:
+            raise serializers.ValidationError("Minimum salary cannot be greater than maximum salary.")
+        
         return data
     
 
