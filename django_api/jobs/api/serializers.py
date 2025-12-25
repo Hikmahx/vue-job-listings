@@ -5,8 +5,8 @@ from jobs.models import Job, JobDetails
 
 class JobDetailsSerializer(serializers.ModelSerializer):
     externalApply = serializers.BooleanField(source='external_apply')
-    experienceRequired = serializers.CharField(source='experience_required', allow_null=True)
-    foundedYear = serializers.IntegerField(source='founded_year', allow_null=True)
+    experienceRequired = serializers.CharField(source='experience_required', allow_blank=True, required=False)
+    foundedYear = serializers.IntegerField(source='founded_year', allow_null=True, required=False)
     
     class Meta:
         model = JobDetails
@@ -21,29 +21,10 @@ class JobDetailsSerializer(serializers.ModelSerializer):
             'website'
         ]
     
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        
-        if 'requirements' in data and isinstance(data['requirements'], dict):
-            pass
-        else:
-            data['requirements'] = {
-                "content": "",
-                "items": []
-            }
-        
-        if 'responsibilities' in data and isinstance(data['responsibilities'], dict):
-            pass
-        else:
-            data['responsibilities'] = {
-                "content": "",
-                "items": []
-            }
-        
-        return data
-    
     def validate_requirements(self, value):
-        """Validate requirements JSON structure"""
+        if not value:
+            return {"content": "", "items": []}
+        
         if not isinstance(value, dict):
             raise serializers.ValidationError("Requirements must be a dictionary")
         
@@ -56,15 +37,14 @@ class JobDetailsSerializer(serializers.ModelSerializer):
         return value
     
     def validate_responsibilities(self, value):
-        """Validate responsibilities JSON structure"""
+        if not value:
+            return {"content": "", "items": []}
+        
         if not isinstance(value, dict):
             raise serializers.ValidationError("Responsibilities must be a dictionary")
         
-        if 'content' not in value:
-            raise serializers.ValidationError("Responsibilities must have 'content' field")
-        
-        if 'items' not in value:
-            raise serializers.ValidationError("Responsibilities must have 'items' field")
+        if 'content' not in value or 'items' not in value:
+            raise serializers.ValidationError("Responsibilities must have both 'content' and 'items' fields")
         
         if not isinstance(value['items'], list):
             raise serializers.ValidationError("Responsibilities items must be a list")
@@ -76,10 +56,10 @@ class JobSerializer(serializers.ModelSerializer):
     postedAt = serializers.SerializerMethodField()
     new = serializers.SerializerMethodField()
     # Rename field from underscore to camelCase to match frontend and serializer
-    minSalary = serializers.IntegerField(source='min_salary', required=False, allow_null=True)
-    maxSalary = serializers.IntegerField(source='max_salary', required=False, allow_null=True)
-    companySize = serializers.CharField(source='company_size', required=False, allow_null=True)
-    workType = serializers.CharField(source='work_type', required=False, allow_null=True)
+    minSalary = serializers.IntegerField(source='min_salary', required=False, default=0)
+    maxSalary = serializers.IntegerField(source='max_salary', required=False, default=0)
+    companySize = serializers.CharField(source='company_size', required=False, allow_blank=True)
+    workType = serializers.CharField(source='work_type', required=False, allow_blank=True)
     
     # Removed read_only=True to allow writes for CRUD
     jobDetails = JobDetailsSerializer(source='details', required=False, allow_null=True)
@@ -117,12 +97,10 @@ class JobSerializer(serializers.ModelSerializer):
         if time_difference.total_seconds() < 0:
             return "just now"
         
-        minutes = int(time_difference.total_seconds() // 60)
-        hours = int(time_difference.total_seconds() // 3600)
-        days = int(time_difference.total_seconds() // 86400)
-        weeks = int(time_difference.total_seconds() // 604800)
-        months = int(days // 30.44)
-        years = int(days // 365.25)
+        seconds = time_difference.total_seconds()
+        minutes = int(seconds // 60)
+        hours = int(seconds // 3600)
+        days = int(seconds // 86400)
         
         if minutes < 1:
             return "just now"
@@ -132,11 +110,14 @@ class JobSerializer(serializers.ModelSerializer):
             return f"{hours}h ago"
         elif days < 7:
             return f"{days}d ago"
-        elif weeks < 4:
+        elif days < 30:
+            weeks = days // 7
             return f"{weeks}w ago"
-        elif months < 12:
+        elif days < 365:
+            months = int(days / 30.44)
             return f"{months}mo ago"
         else:
+            years = int(days / 365.25)
             return f"{years}y ago"
 
     
@@ -145,20 +126,20 @@ class JobSerializer(serializers.ModelSerializer):
         return obj.posted_at >= timezone.now() - timedelta(days=2)
 
     def validate(self, data):
-        min_salary = data.get("min_salary")
-        max_salary = data.get("max_salary")
+        min_salary = data.get("min_salary", 0)
+        max_salary = data.get("max_salary", 0)
+        currency = data.get("currency", "")
+        timeframe = data.get("timeframe", "")
         
-        # Check if salaries are provided (not None) and non-zero
-        has_min_salary = min_salary is not None and min_salary != 0
-        has_max_salary = max_salary is not None and max_salary != 0
+        has_salary = min_salary > 0 or max_salary > 0
         
-        if (has_min_salary or has_max_salary) and not data.get("currency"):
+        if has_salary and not currency:
             raise serializers.ValidationError("Currency is required when specifying salary range.")
         
-        if (has_min_salary or has_max_salary) and not data.get("timeframe"):
+        if has_salary and not timeframe:
             raise serializers.ValidationError("Timeframe is required when specifying salary range.")
         
-        if has_min_salary and has_max_salary and min_salary > max_salary:
+        if min_salary > 0 and max_salary > 0 and min_salary > max_salary:
             raise serializers.ValidationError("Minimum salary cannot be greater than maximum salary.")
         
         return data
@@ -168,6 +149,7 @@ class JobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         details_data = validated_data.pop('details', None)
         job = Job.objects.create(**validated_data)
+
         if details_data:
             JobDetails.objects.create(job=job, **details_data)
         
@@ -175,6 +157,7 @@ class JobSerializer(serializers.ModelSerializer):
     
     def update(self, instance, validated_data):
         details_data = validated_data.pop('details', None)
+        
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
