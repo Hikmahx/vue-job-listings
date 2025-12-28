@@ -26,9 +26,15 @@ const handleFilterClick = (e: Event, filterType: 'role' | 'level' | 'skills') =>
     <div class="flex-1 flex flex-col lg:flex-row lg:items-center">
       <div class="">
         <div class="flex items-center justify-start gap-1 flex-wrap">
-          <h2 class="text-sm text-cyan-400 mr-5 whitespace-nowrap font-semibold">
-            {{ job.company }}
-          </h2>
+          <router-link
+            :to="{ name: 'job-detail', params: { id: job.id } }"
+            aria-label="`View details for ${job.position} at ${job.company}`"
+            class="text-sm text-cyan-400 hover:text-cyan-400/50 mr-5 whitespace-nowrap font-semibold hover:underline"
+          >
+            <h2>
+              {{ job.company }}
+            </h2>
+          </router-link>
           <span
             v-if="job.new"
             class="bg-cyan-400 text-white uppercase px-2 pt-1 h-6 rounded-full flex items-center justify-center text-[11px] font-bold"
