@@ -1,5 +1,5 @@
 export interface Job {
-  id: number
+  id: string
   company: string
   logo: string
   new: boolean
@@ -11,14 +11,14 @@ export interface Job {
   contract: string
   location: string
   currency: string
-  minSalary: number | null
-  maxSalary: number | null
+  minSalary: number 
+  maxSalary: number 
   market: string
-  companySize: string | null
-  workType: string | null
+  companySize: string
+  workType: string
   timeframe: string
   skills: string[]
-  jobDetails?: JobDetails
+  jobDetails?: JobDetails | null
 }
 
 export interface JobDetails {
@@ -32,8 +32,8 @@ export interface JobDetails {
     items: string[]
   }
   externalApply: boolean
-  apply: string
-  experienceRequired: string
-  foundedYear: number
-  website: string
+  apply: string | null
+  experienceRequired: string | null
+  foundedYear: number | null
+  website: string | null
 }
