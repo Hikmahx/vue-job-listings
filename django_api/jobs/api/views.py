@@ -4,11 +4,13 @@ from jobs.api.serializers import JobSerializer
 from django_filters import rest_framework as filters
 from rest_framework.filters import SearchFilter, OrderingFilter
 from jobs.api.filters import JobFilter
+from jobs.api.pagination import JobPagination
 
 class GetAllJobsAPI (generics.ListAPIView):
     # queryset = Job.objects.all().order_by('-posted_at')
     serializer_class = JobSerializer
     filter_backends = (filters.DjangoFilterBackend, SearchFilter, OrderingFilter)
+    pagination_class = JobPagination
     # filterset_fields = ('level', 'contract', 'location', 'role', 'company')
     filterset_class = JobFilter
     search_fields = ['company', 'position', 'role', 'level', 'skills', 'location']
