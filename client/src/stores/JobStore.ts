@@ -6,25 +6,43 @@ import { useFilterStore } from './FilterStore'
 export const useJobStore = defineStore('jobStore', {
   state: () => ({
     jobs: [] as Job[],
-    currentJob: null as Job | null,
     loading: false,
     error: null as string | null,
+    currentPage: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+    currentJob: null as Job | null,
   }),
-  getters: {},
+  getters: {
+    getTotalPages(): number {
+      return this.totalPages
+    },
+    getCurrentPage(): number {
+      return this.currentPage
+    },
+    getCurrentJob(): Job | null {
+      return this.currentJob
+    },
+  },
   actions: {
-    async getData() {
+    async getData(page = 1) {
       const filterStore = useFilterStore()
       const queryObject = filterStore.toQueryObject()
       const params = new URLSearchParams(queryObject).toString()
+
+      const url = `http://127.0.0.1:8000/api/jobs?page=${page}${params ? '&' + params : ''}`
 
       this.loading = true
       this.error = null
 
       try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/jobs?${params}`)
-        // const res = await axios.get(`./data.json`)
+        const res = await axios.get(url)
 
-        this.jobs = res.data
+        this.jobs = res.data.results
+        this.currentPage = page
+        this.totalCount = res.data.count
+        this.totalPages = Math.ceil(res.data.count / this.pageSize)
         return res.data
       } catch (err) {
         this.error = err instanceof Error ? err.message : 'Failed to fetch jobs'
@@ -52,9 +70,8 @@ export const useJobStore = defineStore('jobStore', {
       }
     },
 
-    clearCurrentJob() {
-      this.currentJob = null
-      this.error = null
+    async changePage(page: number) {
+      await this.getData(page)
     },
   },
 })
