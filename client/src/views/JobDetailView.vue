@@ -1,29 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import axios from 'axios'
 import { Heart, Share2, MapPin, Clock, Briefcase, ExternalLink } from 'lucide-vue-next'
-// import type { JobDetail } from '@/types'
 import ApplicationModal from '@/components/jobs/ApplicationModal.vue'
 import Header from '@/components/Header.vue'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getSalaryDisplay } from '@/utils/salaryFormatter'
+import { useJobStore } from '@/stores/JobStore'
 
+const jobStore = useJobStore()
 const route = useRoute()
 const router = useRouter()
-
-import dummyJobDetail from './dummy-data-details.json'
-
-// State
-const jobDetail = ref<any | null>(dummyJobDetail)
-const loading = ref(false)
-const error = ref<string | null>(null)
 const showApplicationModal = ref(false)
 const isFavorited = ref(false)
 
-// Computed
-const jobId = computed(() => 'BhsupYnXuGUypcTdps364L')
-const jobDetails = computed(() => jobDetail.value?.jobDetails || {})
+const jobId = computed(() => route.params.id as string)
+const jobDetail = computed(() => jobStore.currentJob)
+const loading = computed(() => jobStore.loading)
+const error = computed(() => jobStore.error)
+const jobDetails = computed(() => jobDetail.value?.jobDetails || null)
 const salaryDisplay = computed(() => {
   if (!jobDetail.value) return ''
   return getSalaryDisplay(
@@ -34,7 +29,6 @@ const salaryDisplay = computed(() => {
   )
 })
 
-// Info items configuration
 const quickInfoItems = computed(() =>
   [
     {
@@ -46,8 +40,8 @@ const quickInfoItems = computed(() =>
     {
       icon: Clock,
       label: 'Experience',
-      value: jobDetails.value.experienceRequired,
-      show: !!jobDetails.value.experienceRequired,
+      value: jobDetails.value?.experienceRequired,
+      show: !!jobDetails.value?.experienceRequired,
     },
     {
       icon: MapPin,
@@ -76,8 +70,8 @@ const companyInfoItems = computed(() =>
     },
     {
       label: 'Founded',
-      value: jobDetails.value.foundedYear,
-      show: !!jobDetails.value.foundedYear,
+      value: jobDetails.value?.foundedYear || '',
+      show: !!jobDetails.value?.foundedYear,
     },
     {
       label: 'Company Size',
@@ -87,24 +81,24 @@ const companyInfoItems = computed(() =>
   ].filter((item) => item.show),
 )
 
-// Lifecycle
 onMounted(async () => {
-  // await fetchJobDetail()
+  await fetchJobDetail()
 })
 
-// Methods
-async function fetchJobDetail() {
-  loading.value = true
-  error.value = null
+watch(
+  () => route.params.id,
+  async (newId) => {
+    if (newId) {
+      await fetchJobDetail()
+    }
+  },
+)
 
+async function fetchJobDetail() {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/job-details/${jobId.value}/`)
-    jobDetail.value = response.data
+    await jobStore.getJobById(jobId.value)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to fetch job details'
-    console.error('Failed to fetch job details:', err)
-  } finally {
-    loading.value = false
+    console.error('Error fetching job:', err)
   }
 }
 
@@ -185,7 +179,7 @@ function toggleFavorite() {
                 </div>
               </div>
               <a
-                v-if="jobDetails.website"
+                v-if="jobDetails?.website"
                 :href="jobDetails.website"
                 target="_blank"
                 class="hidden md:block px-6 py-3 bg-cyan-50 text-cyan-400 rounded-md hover:bg-cyan-400 hover:text-cyan-50 transition-colors font-bold"
@@ -194,7 +188,7 @@ function toggleFavorite() {
               </a>
             </div>
             <a
-              v-if="jobDetails.website"
+              v-if="jobDetails?.website"
               :href="jobDetails.website"
               target="_blank"
               class="md:hidden block w-full py-3 bg-cyan-50 text-cyan-400 text-center hover:bg-cyan-400 hover:text-cyan-50 transition-colors font-bold"
@@ -247,13 +241,13 @@ function toggleFavorite() {
                     @click="handleApplyClick"
                     class="px-8 py-4 bg-cyan-400 text-white rounded-md hover:bg-cyan-900 transition-colors font-bold whitespace-nowrap flex items-center gap-2 justify-center"
                   >
-                    <span>{{ jobDetails.externalApply ? 'Apply' : 'Apply Now' }}</span>
-                    <ExternalLink v-if="jobDetails.externalApply" :size="18" />
+                    <span>{{ jobDetails?.externalApply ? 'Apply' : 'Apply Now' }}</span>
+                    <ExternalLink v-if="jobDetails?.externalApply" :size="18" />
                   </button>
                 </div>
 
                 <!-- Job Description -->
-                <div class="prose max-w-none">
+                <div v-if="jobDetails" class="prose max-w-none">
                   <p class="leading-loose text-grayish-cyan mb-8 whitespace-pre-line">
                     {{ jobDetails.description }}
                   </p>
@@ -338,7 +332,7 @@ function toggleFavorite() {
                         {{ item.value }}
                       </p>
                     </div>
-                    <div v-if="jobDetails.website">
+                    <div v-if="jobDetails?.website">
                       <a
                         :href="jobDetails.website"
                         target="_blank"
@@ -381,8 +375,8 @@ function toggleFavorite() {
                 @click="handleApplyClick"
                 class="w-full md:w-auto px-8 py-4 bg-cyan-400 text-white rounded-md hover:bg-cyan-900 transition-colors font-bold flex items-center gap-2 justify-center"
               >
-                <span>{{ jobDetails.externalApply ? 'Apply' : 'Apply Now' }}</span>
-                <ExternalLink v-if="jobDetails.externalApply" :size="18" />
+                <span>{{ jobDetails?.externalApply ? 'Apply' : 'Apply Now' }}</span>
+                <ExternalLink v-if="jobDetails?.externalApply" :size="18" />
               </button>
             </div>
           </div>
