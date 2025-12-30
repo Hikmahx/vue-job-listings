@@ -5,14 +5,7 @@ import { useJobStore } from '@/stores/JobStore'
 import { useFilterStore } from '@/stores/FilterStore'
 import JobItem from './JobItem.vue'
 import JobItemSkeleton from './JobItemSkeleton.vue'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
+import Paginator from '../common/Paginator.vue'
 
 const jobStore = useJobStore()
 const filterStore = useFilterStore()
@@ -46,7 +39,7 @@ watch(
 </script>
 
 <template>
-  <div class="pt-24 px-4 lg:px-10">
+  <div class="py-24 px-4 lg:px-10">
     <ul v-if="loading" class="flex flex-col gap-6">
       <JobItemSkeleton v-for="n in 6" :key="n" />
     </ul>
@@ -63,31 +56,7 @@ watch(
       <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" />
     </ul>
     <div v-if="jobs.length > 0" class="flex justify-center mt-8">
-      <Pagination
-        :items-per-page="10"
-        :total="totalPages * 10"
-        :default-page="currentPage"
-        @update:page="changePage"
-        v-slot="{ page }"
-      >
-        <PaginationContent v-slot="{ items }">
-          <PaginationPrevious />
-
-          <div v-for="(item, index) in items" :key="index">
-            <PaginationItem
-              v-if="item.type === 'page'"
-              :value="item.value"
-              :is-active="item.value === page"
-            >
-              {{ item.value }}
-            </PaginationItem>
-
-            <PaginationEllipsis v-else-if="item.type === 'ellipsis'" :index="index" />
-          </div>
-
-          <PaginationNext />
-        </PaginationContent>
-      </Pagination>
+      <Paginator :total-pages="totalPages" :current-page="currentPage" @change="changePage" />
     </div>
   </div>
 </template>
