@@ -1,37 +1,25 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useJobStore } from '@/stores/JobStore'
 import { useFilterStore } from '@/stores/FilterStore'
 import JobItem from './JobItem.vue'
 import JobItemSkeleton from './JobItemSkeleton.vue'
-import { onMounted } from 'vue'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
 
 const jobStore = useJobStore()
 const filterStore = useFilterStore()
 
-const { jobs, loading, error } = storeToRefs(jobStore)
-const { getData } = jobStore
+const { jobs, loading, error, currentPage, totalPages } = storeToRefs(jobStore)
+const { getData, changePage } = jobStore
 const { uniqueSelectedBtns } = storeToRefs(filterStore)
-
-
-// onMounted and watch used to avoid double fetching data for both of them
-onMounted(() => {
-  if (uniqueSelectedBtns.value.length == 0) {
-    getData()
-    console.log('Fetching all jobs on mount')
-  }
-})
-
-watch(
-  () => filterStore.toQueryObject(),
-  (queryObj) => {
-    if (Object.keys(queryObj).length === 0) return 
-    getData()
-  },
-  { deep: true, immediate: true },
-)
-
 
 const filteredJobs = computed(() => {
   if (uniqueSelectedBtns.value.length === 0) {
@@ -43,6 +31,18 @@ const filteredJobs = computed(() => {
     return uniqueSelectedBtns.value.every((selected) => jobAttributes.includes(selected))
   })
 })
+
+onMounted(() => {
+  getData(1)
+})
+
+watch(
+  () => filterStore.toQueryObject(),
+  () => {
+    getData(1)
+  },
+  { deep: true, immediate: true },
+)
 </script>
 
 <template>
@@ -62,6 +62,33 @@ const filteredJobs = computed(() => {
     <ul v-else class="flex flex-col gap-6">
       <JobItem v-for="job in filteredJobs" :key="job.id" :job="job" />
     </ul>
+    <div v-if="jobs.length > 0" class="flex justify-center mt-8">
+      <Pagination
+        :items-per-page="10"
+        :total="totalPages * 10"
+        :default-page="currentPage"
+        @update:page="changePage"
+        v-slot="{ page }"
+      >
+        <PaginationContent v-slot="{ items }">
+          <PaginationPrevious />
+
+          <div v-for="(item, index) in items" :key="index">
+            <PaginationItem
+              v-if="item.type === 'page'"
+              :value="item.value"
+              :is-active="item.value === page"
+            >
+              {{ item.value }}
+            </PaginationItem>
+
+            <PaginationEllipsis v-else-if="item.type === 'ellipsis'" :index="index" />
+          </div>
+
+          <PaginationNext />
+        </PaginationContent>
+      </Pagination>
+    </div>
   </div>
 </template>
 
