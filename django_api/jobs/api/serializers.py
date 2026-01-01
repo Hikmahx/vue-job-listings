@@ -101,6 +101,7 @@ class JobSerializer(serializers.ModelSerializer):
         minutes = int(seconds // 60)
         hours = int(seconds // 3600)
         days = int(seconds // 86400)
+        weeks = days // 7
         
         if minutes < 1:
             return "just now"
@@ -114,7 +115,7 @@ class JobSerializer(serializers.ModelSerializer):
             weeks = days // 7
             return f"{weeks}w ago"
         elif days < 365:
-            months = int(days / 30.44)
+            months = days // 30
             return f"{months}mo ago"
         else:
             years = int(days / 365.25)
