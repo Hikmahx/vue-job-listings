@@ -19,7 +19,7 @@ export interface FilterFields {
 }
 
 export const useFilterStore = defineStore('filterStore', {
-  state: (): FilterFields & { selectedBtns: string[] } => ({
+  state: (): FilterFields & { selectedBtns: string[]; aiMode: boolean } => ({
     search: '',
     location: '',
     minSalary: undefined,
@@ -36,12 +36,15 @@ export const useFilterStore = defineStore('filterStore', {
     sortByCompany: false,
     // Selected buttons from job cards
     selectedBtns: [],
+    aiMode: false,
   }),
 
   getters: {
     uniqueSelectedBtns: (state) => Array.from(new Set(state.selectedBtns)),
     groupedFilters: (state) => {
-      const data = Object.entries(state).filter(([key]) => key !== 'selectedBtns')
+      const data = Object.entries(state).filter(
+        ([key]) => key !== 'selectedBtns' && key !== 'aiMode',
+      )
       const mappedData = data
         .filter(
           ([key, value]) =>
@@ -104,6 +107,10 @@ export const useFilterStore = defineStore('filterStore', {
       Object.assign(this, filters)
     },
 
+    setAIMode(enabled: boolean) {
+      this.aiMode = enabled
+    },
+
     resetFilters() {
       this.search = ''
       this.location = ''
@@ -119,8 +126,8 @@ export const useFilterStore = defineStore('filterStore', {
       this.roles = []
       this.currency = ''
       this.sortByCompany = false
+      this.aiMode = false
     },
-
     // Selected buttons actions
     addSelectedBtn(value: string) {
       if (!this.selectedBtns.includes(value)) this.selectedBtns.push(value)
@@ -171,7 +178,7 @@ export const useFilterStore = defineStore('filterStore', {
     loadFromObject(data: Record<string, any>) {
       console.log('Loading filters from URL:', data)
 
-      if (data.search !== undefined) this.search = String(data.search)
+      if (data.search !== undefined) this.search = String(data.search).trim()
       if (data.location !== undefined) this.location = String(data.location)
       if (data.workType !== undefined) this.workType = String(data.workType)
       if (data.level !== undefined) this.level = String(data.level)
@@ -181,6 +188,11 @@ export const useFilterStore = defineStore('filterStore', {
       if (data.timeframe !== undefined) this.timeframe = String(data.timeframe)
       if (data.sortByCompany !== undefined) this.sortByCompany = data.sortByCompany === 'true'
 
+      // Load AI mode from URL if present
+      if (data.aiMode !== undefined) {
+        this.aiMode = data.aiMode === 'true'
+      }
+      
       if (data.skills !== undefined) {
         this.skills =
           typeof data.skills === 'string'
@@ -241,13 +253,16 @@ export const useFilterStore = defineStore('filterStore', {
     toQueryObject(): Record<string, any> {
       const query: Record<string, any> = {}
 
-      if (this.search) query.search = this.search
+      // Only include search if NOT in AI mode
+      if (!this.aiMode && this.search && String(this.search).trim() !== '')
+        query.search = String(this.search).trim()
+
       if (this.location) query.location = this.location
       if (this.workType) query.workType = this.workType
       if (this.level) query.level = this.level
       if (this.currency) query.currency = this.currency
-      if (this.minSalary !== undefined) query.minSalary = this.minSalary
-      if (this.maxSalary !== undefined) query.maxSalary = this.maxSalary
+      if (this.minSalary && this.minSalary > 0) query.minSalary = this.minSalary
+      if (this.maxSalary && this.maxSalary > 0) query.maxSalary = this.maxSalary
       if (this.timeframe) query.timeframe = this.timeframe
       if (this.sortByCompany) query.sortByCompany = 'true'
 

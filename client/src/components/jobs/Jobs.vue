@@ -12,7 +12,7 @@ const filterStore = useFilterStore()
 
 const { jobs, loading, error, currentPage, totalPages } = storeToRefs(jobStore)
 const { getData, changePage } = jobStore
-const { uniqueSelectedBtns } = storeToRefs(filterStore)
+const { uniqueSelectedBtns, aiMode } = storeToRefs(filterStore)
 
 const filteredJobs = computed(() => {
   if (uniqueSelectedBtns.value.length === 0) {
@@ -29,12 +29,16 @@ onMounted(() => {
   getData(1)
 })
 
+// Only watch filters if NOT in AI mode
 watch(
   () => filterStore.toQueryObject(),
   () => {
-    getData(1)
+    // Skip regular getData if in AI mode
+    if (!aiMode.value) {
+      getData(1)
+    }
   },
-  { deep: true, immediate: true },
+  { deep: true, immediate: false },
 )
 </script>
 
@@ -60,5 +64,3 @@ watch(
     </div>
   </div>
 </template>
-
-<style scoped></style>

@@ -3,22 +3,45 @@ import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useFilterStore } from '@/stores/FilterStore'
+import { useJobStore } from '@/stores/JobStore'
 import Filter from './Filter.vue'
 import FilterModal from './FilterModal.vue'
 import SearchAndCountry from './SearchAndCountry.vue'
+import AISearchInput from './AISearchInput.vue'
+import { Sparkles, ArrowLeftRight } from 'lucide-vue-next'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useForm } from 'vee-validate'
 
 const filterStore = useFilterStore()
+const jobStore = useJobStore()
 const route = useRoute()
 const router = useRouter()
 
-// Use watch with immediate: true to catch query params when they become available
+const { search, location, sortByCompany, aiMode } = storeToRefs(filterStore)
+
+onMounted(() => {
+  const urlAiMode = route.query.aiMode === 'true'
+  if (urlAiMode) {
+    filterStore.setAIMode(true)
+  }
+})
+
+// Toggle between AI and Regular search
+const toggleSearchMode = () => {
+  const newMode = !aiMode.value
+  filterStore.setAIMode(newMode)
+
+  // When switching TO regular mode, trigger a fresh fetch
+  if (!newMode) {
+    jobStore.getData(1)
+  }
+}
+
+// Load from URL params
 watch(
   () => route.query,
   (query) => {
-    console.log('Loading from URL params:', query)
     if (Object.keys(query).length > 0) {
       filterStore.loadFromObject(query)
     }
@@ -26,8 +49,7 @@ watch(
   { immediate: true, deep: true },
 )
 
-const { search, location, sortByCompany } = storeToRefs(filterStore)
-
+// Regular search form
 const formSchema = toTypedSchema(
   z.object({
     search: z.string().optional(),
@@ -59,7 +81,6 @@ watch(
 )
 
 const onSubmit = (values: any) => {
-  console.log('Form submitted:', values)
   filterStore.setFilters({
     search: values.search,
     location: values.location,
@@ -74,11 +95,14 @@ const onSortChange = (event: Event) => {
   filterStore.setFilters({ sortByCompany: checked })
 }
 
-// Sync to URL when filters change
 watch(
   () => filterStore.toQueryObject(),
   (queryObj) => {
-    router.push({ query: queryObj })
+    const urlQuery = { ...queryObj }
+    if (aiMode.value) {
+      urlQuery.aiMode = 'true'
+    }
+    router.push({ query: urlQuery })
   },
   { deep: true },
 )
@@ -86,21 +110,57 @@ watch(
 
 <template>
   <div class="px-4 lg:px-10 w-full max-w-3xl lg:max-w-6xl m-auto">
-    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8 -mt-12 lg:-mt-20 relative z-20">
-      <form @submit.prevent="handleFormSubmit" class="mb-6">
-        <SearchAndCountry />
-        <button type="submit" class="sr-only">Apply Search</button>
-      </form>
-      <!-- Filters buttton -->
-      <div class="">
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-8 -mt-12 lg:-mt-20 relative z-20 w-full">
+      <div class="w-full flex">
+        <!-- AI Search Mode -->
+        <div v-if="aiMode" class="w-full">
+          <AISearchInput />
+        </div>
+
+        <!-- Regular Search Mode -->
+        <div v-else class="w-full">
+          <form @submit.prevent="handleFormSubmit" class="mb-6">
+            <SearchAndCountry />
+            <button type="submit" class="sr-only">Apply Search</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Filters (shown in both modes) -->
+      <div class="mt-6">
         <Filter />
       </div>
 
-      <!-- Below the filter tags-->
+      <!-- Results count and sorting (shown in both modes) -->
       <div
         class="flex flex-wrap md:flex-nowrap flex-col md:flex-row items-center justify-between pt-6 mt-6 border-t gap-8"
       >
         <div class="flex items-center gap-2 w-full">
+          <!-- Toggle Button -->
+          <div class="flex">
+            <button
+              @click="toggleSearchMode"
+              class="group flex items-center h-12 gap-2 mr-4 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
+              :title="aiMode ? 'Switch to Regular Search' : 'Switch to AI Search'"
+            >
+              <ArrowLeftRight
+                :class="[
+                  'w-4 h-4 transition-transform duration-300',
+                  !aiMode ? 'rotate-180 text-cyan-400' : '',
+                ]"
+              />
+              <span
+                :class="[
+                  'flex items-center gap-1 text-xs relative',
+                  !aiMode ? 'text-cyan-400' : 'text-cyan-900',
+                ]"
+              >
+                <Sparkles v-if="!aiMode" class="w-2.5 h-2.5 absolute -top-2.5 -right-2.5" />
+                {{ !aiMode ? 'AI' : 'Regular' }}
+              </span>
+            </button>
+          </div>
+
           <span
             class="relative mr-6 after:content-['.'] after:ml-1 after:text-3xl after:absolute after:top-[-1rem] after:opacity-70 after:blur-[0.06rem]"
           >
