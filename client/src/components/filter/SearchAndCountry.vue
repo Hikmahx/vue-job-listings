@@ -12,10 +12,13 @@ import {
 } from '@/components/ui/combobox'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Field as VeeField } from 'vee-validate'
-import countriesData from 'countries-list-json'
-import { valLabel } from '@/utils/filters'
+import pycountry from 'countries-list-json'
 
-const countries = valLabel(Object.values(countriesData).map((country: any) => country.name))
+// Map countries to { value: code, label: name }
+const countries = Object.values(pycountry).map((country: any) => ({
+  value: country.code,  // Store 2-letter code (NG, US, GB)
+  label: country.name   // Display full name (Nigeria, United States)
+}))
 </script>
 
 <template>
