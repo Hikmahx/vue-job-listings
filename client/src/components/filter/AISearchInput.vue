@@ -78,9 +78,9 @@ const handleKeydown = (e: KeyboardEvent) => {
       Press <b>Enter</b> or <b>Ctrl + Enter</b> to search · <b>Shift + Enter</b> for new line
     </p> -->
 
-    <p v-if="loading" class="text-sm text-cyan-600">Searching with AI…</p>
+    <p v-if="loading" class="text-sm text-cyan-400">Searching with AI…</p>
 
-    <p v-if="error" class="text-sm text-red-500 bg-red-50 p-2 rounded">
+    <p v-if="error" class="text-sm text-red-500 bg-red-50/50 p-2 rounded">
       {{ error }}
     </p>
   </div>
