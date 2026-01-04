@@ -1,3 +1,138 @@
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# Create your models here.
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Email is required')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(email, password, **extra_fields)
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    """Base user model for all users"""
+    
+    ROLE_CHOICES = [
+        ('job_seeker', 'Job Seeker'),
+        ('founder', 'Founder'),  # Can post jobs and manage companies
+    ]
+    
+    GENDER_CHOICES = [
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other'),
+    ]
+    
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    phone_number = models.CharField(max_length=20, blank=True)
+    gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
+    
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='job_seeker')
+    # is_verified = models.BooleanField(default=False)  # Email verification
+    location = models.CharField(max_length=100, blank=True)
+    
+    # Django Admin
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+    
+    objects = UserManager()
+    
+    class Meta:
+        db_table = 'users'
+        verbose_name = 'User'
+        verbose_name_plural = 'Users'
+    
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
+    
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    @property
+    def is_founder(self):
+        """Check if user is a founder"""
+        return self.role == 'founder' and hasattr(self, 'founder_profile')
+    
+    @property
+    def is_job_seeker(self):
+        """Check if user is a job seeker"""
+        return self.role == 'job_seeker' and hasattr(self, 'job_seeker_profile')
+
+
+class JobSeekerProfile(models.Model):
+    """Extended profile for job seekers"""
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='job_seeker_profile',
+        limit_choices_to={'role': 'job_seeker'}  # Only job seekers can have this
+    )
+    resume = models.FileField(upload_to='resumes/', blank=True, null=True)
+    bio = models.TextField(blank=True)
+    skills = models.JSONField(default=list)
+    experience_years = models.IntegerField(default=0)
+    work_experience = models.JSONField(default=list)
+    
+    portfolio_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    
+    
+    desired_salary_min = models.IntegerField(null=True, blank=True)
+    desired_salary_max = models.IntegerField(null=True, blank=True)
+    open_to_remote = models.BooleanField(default=True)
+    
+    class Meta:
+        db_table = 'job_seeker_profiles'
+        verbose_name = 'Job Seeker Profile'
+        verbose_name_plural = 'Job Seeker Profiles'
+    
+    def __str__(self):
+        return f"{self.user.full_name} - Job Seeker"
+
+
+class FounderProfile(models.Model):
+    """Extended profile for founders (can post jobs and manage companies)"""
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='founder_profile',
+        limit_choices_to={'role': 'founder'}  # Only founders can have this
+    )
+    # Note: Company relationship is in Company model (founder field)
+    # This allows founders to create multiple companies
+    
+    position = models.CharField(max_length=100, blank=True)  # e.g., "CEO", "Co-Founder"
+    bio = models.TextField(blank=True)
+    linkedin_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    
+    # Verification for posting jobs
+    verified_employer = models.BooleanField(default=False)  # Admin can verify legit employers
+    
+    class Meta:
+        db_table = 'founder_profiles'
+        verbose_name = 'Founder Profile'
+        verbose_name_plural = 'Founder Profiles'
+    
+    def __str__(self):
+        return f"{self.user.full_name} - Founder"
