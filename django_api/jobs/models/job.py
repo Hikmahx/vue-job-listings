@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 from shortuuidfield import ShortUUIDField
 from .job_details import JobDetails
-
+from django.db.models.signals import post_save, post_delete
+from django.dispatch import receiver
 import pycountry
 # from babel.numbers import get_currency_symbol
 
@@ -139,3 +140,25 @@ class Job(models.Model):
     
     def __str__(self):
         return f"{self.company} - {self.position}"
+    
+
+@receiver(post_save, sender='jobs.Job')
+def auto_index_job(sender, instance, **kwargs):
+    """Auto-index when job is created/updated"""
+    try:
+        from jobs.api.vector_search import index_job
+        index_job(instance)
+    except Exception as e:
+        print(f"Vector indexing failed: {e}")
+
+@receiver(post_delete, sender='jobs.Job')
+def delete_job_vector(sender, instance, **kwargs):
+    """Remove vector when job deleted"""
+    try:
+        from jobs.api.vector_search import get_vector_db
+        conn = get_vector_db()
+        conn.execute("DELETE FROM job_vectors WHERE job_id = ?", (str(instance.id),))
+        conn.commit()
+        conn.close()
+    except:
+        pass
