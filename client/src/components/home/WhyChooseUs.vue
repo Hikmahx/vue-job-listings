@@ -71,7 +71,7 @@ import SectionTitle from './SectionTitle.vue'
     </div>
 
     <!-- Global Opportunities Section -->
-    <div class="grid md:grid-cols-2 gap-4 sm:gap-16 md:gap-3 lg:gap-10 items-center mt-12 lg:m-0 mb-12 lg:mb-16">
+    <div class="grid md:grid-cols-2 gap-4 sm:gap-16 md:gap-3 lg:gap-10 items-center mt-12 lg:mt-0">
       <div
         class="order-2 md:order-1 max-w-xl m-auto text-center md:text-left md:ml-auto md:mr-0 px-4"
       >
