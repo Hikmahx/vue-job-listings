@@ -46,6 +46,9 @@ Users should be able to:
 - View the optimal layout for the site depending on their device's screen size
 - See hover states for all interactive elements on the page
 - Sort jobs by posting date (newest first) or by company name
+- Search for jobs using an AI-powered search mode
+- Toggle between AI-powered search and traditional filter-based search
+
 
 ### Screenshot
 
@@ -82,6 +85,9 @@ Currently in the process of implementing the landing page design
 - [SQLite](https://www.sqlite.org/) - Lightweight database
 - [ShortUUID](https://github.com/stochastic-technologies/shortuuid) - Short UUID field for Django models
 - [PyCountry](https://pypi.org/project/pycountry/) - ISO country, subdivision, language, currency and script definitions
+- [sentence-transformers](https://www.sbert.net/) - Embedding models for semantic search
+- [sqlite-vec](https://alexgarcia.xyz/sqlite-vec/python.html) - A small vector search SQLite extension that runs anywhere.
+
 
 ### What I learned
 
@@ -106,12 +112,14 @@ In this project, I wanted to expand my knowledge of Django and take the opportun
   - Proper field naming conventions (camelCase for frontend compatibility)
   - I made sure the filters were an exact match with the frontend's query parameters, using camelCase field names in (like `minSalary`, `maxSalary`, `companySizes`, `workType`) to ensure perfect integration between the frontend filter state and backend API endpoints
 
+- **RAG pipeline implementation**: As I try transitioning into AI/ML, I decided to implement a RAG pipeline in the backend to help with a more in depth search and filtering. I used Groq as the LLM, and this also helps to auto-select filters avaialble in the filter model when in `aiMode` ie when AI search is used.
+
 ### Continued development
 
 Future improvements and features to consider:
 
 - [ ] Deploy to production environment
-- [ ] Add pagination to handle job listings better
+<!-- - [ ] Add pagination to handle job listings better -->
 - [ ] Implement user authentication and authorization
 - [ ] Add job application functionality
 - [ ] Create user profiles and saved jobs feature
@@ -129,7 +137,8 @@ Future improvements and features to consider:
 - [Django REST Framework](https://www.django-rest-framework.org/) - Official documentation for building REST APIs
 - [Pinia Documentation](https://pinia.vuejs.org/) - State management library for Vue
 - [Shubham Sarda's IMDB Clone DRF](https://github.com/ShubhamSarda/IMDB-Clone-DRF) - A great repo to learn drf better
-- [shadcn-vue](https://www.shadcn-vue.com/) - Shadcn Vue component library
+- [shadcn-vue](https://www.shadcn-vue.com/) - Shadcn Vue component library documentation
+- [RAG Crash Course for Beginners](https://www.youtube.com/watch?v=swvzKSOEluc&t=819s) - A great YouTube video explaining RAG very simply and visually
 
 ## Author
 
