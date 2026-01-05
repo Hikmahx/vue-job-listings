@@ -8,15 +8,21 @@ import SectionTitle from './SectionTitle.vue'
       <SectionTitle title="WHY CHOOSE US" />
 
       <!-- Global Opportunities Section -->
-      <div class="grid md:grid-cols-2 gap-4 sm:gap-16 md:gap-3 lg:gap-10 items-center mb-12 lg:mb-16">
-        <div class="order-2 md:order-1 max-w-xl m-auto text-center md:text-left md:ml-auto md:mr-0 px-4">
-          <h2 class="text-2xl font-semibold text-cyan-900 mb-4 tracking-[0.6px] !leading-10 sm:mt-7 md:mt-0">
+      <div
+        class="grid md:grid-cols-2 gap-4 sm:gap-16 md:gap-3 lg:gap-10 items-center mb-12 lg:mb-16"
+      >
+        <div
+          class="order-2 md:order-1 max-w-xl m-auto text-center md:text-left md:ml-auto md:mr-0 px-4"
+        >
+          <h2
+            class="text-2xl font-semibold text-cyan-900 mb-4 tracking-[0.6px] !leading-10 sm:mt-7 md:mt-0"
+          >
             Global Job Opportunities to Build a Career From Anywhere Worldwide
           </h2>
           <p class="text-grayish-cyan leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris.
+            Explore job opportunities from companies across the globe, including remote, hybrid, and
+            onsite roles. Build your career without location limits and discover positions that
+            match your goals, no matter where you are.
           </p>
         </div>
         <div class="order-1 md:order-2 relative sm:h-72 xl:h-[330px] 2xl:h-[450px]">
@@ -57,14 +63,18 @@ import SectionTitle from './SectionTitle.vue'
             />
           </div>
         </div>
-        <div class="order-1 md:order-2 max-w-xl m-auto text-center md:text-left md:mr-auto md:ml-0 px-4">
-          <h2 class="text-2xl font-semibold text-cyan-900 mb-4 tracking-[0.6px] !leading-10 mt-6 md:mt-0">
+        <div
+          class="order-1 md:order-2 max-w-xl m-auto text-center md:text-left md:mr-auto md:ml-0 px-4"
+        >
+          <h2
+            class="text-2xl font-semibold text-cyan-900 mb-4 tracking-[0.6px] !leading-10 mt-6 md:mt-0"
+          >
             High Accuracy in Sorting and Filtering jobs to your preference
           </h2>
           <p class="text-grayish-cyan leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-            exercitation ullamco laboris.
+            Narrow down job listings quickly using powerful and precise filters. From salary range
+            and work type to skills, markets, and company size, easily find roles that truly fit
+            what you’re looking for.
           </p>
         </div>
       </div>
@@ -81,9 +91,9 @@ import SectionTitle from './SectionTitle.vue'
           AI-Powered Search Filtering — switch between smart and precise
         </h2>
         <p class="text-grayish-cyan leading-relaxed">
-          Our AI-powered search goes beyond keywords to understand intent, delivering more accurate
-          job matches. Easily switch between AI search and regular filters explores the database semantically, while filters give precise control, all without losing
-          your selected preferences.
+          Go beyond keyword search with AI that understands meaning and intent. Switch seamlessly
+          between AI search and regular filters to get deeper, more relevant results or exact
+          matches—without losing your selected preferences.
         </p>
       </div>
       <div class="order-1 md:order-2 relative sm:h-72 xl:h-[330px] 2xl:h-[450px]">
@@ -92,7 +102,7 @@ import SectionTitle from './SectionTitle.vue'
         >
           <img
             src="@/assets/img/ai-powered-search.png"
-            class="relative w-[90%] md:mt-6 xl:mt-9 ml-auto  object-cover"
+            class="relative w-[90%] md:mt-6 xl:mt-9 ml-auto object-cover"
             alt="map"
           />
         </div>
