@@ -78,8 +78,8 @@ const currentYear = computed(() => new Date().getFullYear())
             </router-link>
           </div>
           <p class="text-grayish-cyan text-sm leading-relaxed mb-6">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec ante vitae purus
-            tempus egestas.
+            A modern job platform connecting talent with opportunity. Find roles faster using smart
+            filters and AI-powered search.
           </p>
           <!-- Socials -->
           <div class="flex gap-3">

@@ -17,8 +17,8 @@ import SvgSlanted from '../icons/SvgSlanted.vue'
             Ready to Get Started?
           </h2>
           <p class="text-cyan-50 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec ante vitae purus
-            tempus egestas.
+            Start exploring job opportunities tailored to your preferences today. Discover roles
+            faster using powerful filters and intelligent AI-powered search.
           </p>
           <Button
             class="bg-cyan-900 hover:bg-cyan-50 text-white hover:text-cyan-900 h-12 font-medium text-base tracking-wider w-full max-w-[168px]"
