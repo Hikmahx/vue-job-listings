@@ -48,7 +48,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'jobs',
+    'accounts',
+    'companies',
 ]
+
+# customised User model
+AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
