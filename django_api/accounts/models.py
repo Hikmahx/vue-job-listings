@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -16,6 +17,12 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
         return self.create_user(email, password, **extra_fields)
 
 
@@ -40,10 +47,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='job_seeker')
-    # is_verified = models.BooleanField(default=False)  # Email verification
     location = models.CharField(max_length=100, blank=True)
     
-    # Django Admin
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     
@@ -59,23 +64,21 @@ class User(AbstractBaseUser, PermissionsMixin):
         db_table = 'users'
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.email})"
+        return self.email
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def get_short_name(self):
+        return self.first_name
     
     @property
     def full_name(self):
-        return f"{self.first_name} {self.last_name}"
+        return self.get_full_name()
     
-    @property
-    def is_founder(self):
-        """Check if user is a founder"""
-        return self.role == 'founder' and hasattr(self, 'founder_profile')
-    
-    @property
-    def is_job_seeker(self):
-        """Check if user is a job seeker"""
-        return self.role == 'job_seeker' and hasattr(self, 'job_seeker_profile')
 
 
 class JobSeekerProfile(models.Model):
@@ -96,7 +99,6 @@ class JobSeekerProfile(models.Model):
     linkedin_url = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
     
-    
     desired_salary_min = models.IntegerField(null=True, blank=True)
     desired_salary_max = models.IntegerField(null=True, blank=True)
     open_to_remote = models.BooleanField(default=True)
@@ -109,6 +111,9 @@ class JobSeekerProfile(models.Model):
     def __str__(self):
         return f"{self.user.full_name} - Job Seeker"
 
+    def clean(self):
+        if self.user.role != 'job_seeker':
+            raise ValidationError("User role must be 'job_seeker' for JobSeekerProfile.")
 
 class FounderProfile(models.Model):
     """Extended profile for founders (can post jobs and manage companies)"""
@@ -136,3 +141,7 @@ class FounderProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.full_name} - Founder"
+    
+    def clean(self):
+        if self.user.role != 'founder':
+            raise ValidationError("User role must be 'founder' for FounderProfile.")
