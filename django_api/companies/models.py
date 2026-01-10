@@ -41,7 +41,7 @@ class Company(models.Model):
     location = models.CharField(max_length=100)
 
     # Founder (the person who created the company)
-    founder = models.ForeignKey('users.User', on_delete=models.SET_NULL, null=True, related_name='founded_companies')
+    founder = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, related_name='founded_companies')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
