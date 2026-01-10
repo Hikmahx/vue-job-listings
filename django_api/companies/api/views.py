@@ -2,7 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from companies.models import Company
 from companies.api.serializers import CompanySerializer
-from companies.api.permissions import IsCompanyFounder
+from companies.api.permissions import IsCompanyFounder, IsFounder
 
 class GetAllCompaniesAPI(generics.ListAPIView):
     queryset = Company.objects.all().order_by('-created_at')
@@ -18,17 +18,10 @@ class GetCompaniesByFounderAPI(generics.ListAPIView):
     
 class CreateCompany(generics.CreateAPIView):
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.IsAuthenticated, IsFounder]
 
-    
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # Set the founder from the request user
-        serializer.save(founder=request.user)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def perform_create(self, serializer):
+        serializer.save(founder=self.request.user)
 
 
 class UpdateCompany(generics.UpdateAPIView):
@@ -40,7 +33,7 @@ class UpdateCompany(generics.UpdateAPIView):
         IsCompanyFounder,
     ]
     
-class deleteCompany(generics.DestroyAPIView):
+class DeleteCompany(generics.DestroyAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     lookup_field = 'id'
