@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
 
 class Company(models.Model):
     INDUSTRY_CHOICES = [
@@ -23,15 +24,8 @@ class Company(models.Model):
         ('others', 'Others'),
     ]
     
-    SIZE_CHOICES = [
-        ('1-10', '1-10'),
-        ('11-50', '11-50'),
-        ('51-200', '51-200'),
-        ('201-500', '201-500'),
-        ('500+', '500+'),
-    ]
-    
     name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True, blank=True)
     logo = models.URLField(blank=True)
     description = models.TextField()
     industry = models.CharField(max_length=50, choices=INDUSTRY_CHOICES)
@@ -40,14 +34,62 @@ class Company(models.Model):
     website = models.URLField(blank=True)
     location = models.CharField(max_length=100)
 
-    # Founder (the person who created the company)
-    founder = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, related_name='founded_companies')
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        verbose_name_plural = 'Companies'
+        db_table = "companies"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    @property
+    def founders(self):
+        return self.members.filter(role="founder")
+
+    @property
+    def team(self):
+        # return self.members.all()
+        return self.members.filter(role="employee")
 
     def __str__(self):
         return self.name
+
+
+class CompanyMember(models.Model):
+    ROLE_CHOICES = [
+        ("founder", "Founder"),
+        ("employee", "Employee"),
+    ]
+
+    PERMISSION_CHOICES = [
+        ("owner", "Owner"),
+        ("admin", "Admin"),
+        ("member", "Member"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="company_memberships"
+    )
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="members"
+    )
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    permission = models.CharField(max_length=20, choices=PERMISSION_CHOICES)
+    title = models.CharField(max_length=100, blank=True)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "company")
+        db_table = "company_members"
+
+    def __str__(self):
+        return f"{self.user.email} → {self.company.name} ({self.role})"
