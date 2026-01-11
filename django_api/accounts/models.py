@@ -3,7 +3,6 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.core.exceptions import ValidationError
 
 
-
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -31,7 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     ROLE_CHOICES = [
         ('job_seeker', 'Job Seeker'),
-        ('founder', 'Founder'),  # Can post jobs and manage companies
+        ('team_member', 'Team Member'),  # Works at companies (founders or employees)
     ]
     
     GENDER_CHOICES = [
@@ -78,7 +77,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def full_name(self):
         return self.get_full_name()
-    
 
 
 class JobSeekerProfile(models.Model):
@@ -87,7 +85,7 @@ class JobSeekerProfile(models.Model):
         User, 
         on_delete=models.CASCADE, 
         related_name='job_seeker_profile',
-        limit_choices_to={'role': 'job_seeker'}  # Only job seekers can have this
+        limit_choices_to={'role': 'job_seeker'}
     )
     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
     bio = models.TextField(blank=True)
@@ -115,33 +113,37 @@ class JobSeekerProfile(models.Model):
         if self.user.role != 'job_seeker':
             raise ValidationError("User role must be 'job_seeker' for JobSeekerProfile.")
 
-class FounderProfile(models.Model):
-    """Extended profile for founders (can post jobs and manage companies)"""
+
+class TeamMemberProfile(models.Model):
+    """Extended profile for team members (founders and employees)"""
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
-        related_name='founder_profile',
-        limit_choices_to={'role': 'founder'}  # Only founders can have this
+        related_name='team_member_profile',
+        limit_choices_to={'role': 'team_member'}
     )
-    # Note: Company relationship is in Company model (founder field)
-    # This allows founders to create multiple companies
     
-    position = models.CharField(max_length=100, blank=True)  # e.g., "CEO", "Co-Founder"
     bio = models.TextField(blank=True)
+    current_position = models.CharField(max_length=100, blank=True)
+    
     linkedin_url = models.URLField(blank=True)
     twitter_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    portfolio_url = models.URLField(blank=True)
     
-    # Verification for posting jobs
-    verified_employer = models.BooleanField(default=False)  # Admin can verify legit employers
+    skills = models.JSONField(default=list)
+    experience_years = models.IntegerField(default=0)
+    
+    verified_employer = models.BooleanField(default=False)
     
     class Meta:
-        db_table = 'founder_profiles'
-        verbose_name = 'Founder Profile'
-        verbose_name_plural = 'Founder Profiles'
+        db_table = 'team_member_profiles'
+        verbose_name = 'Team Member Profile'
+        verbose_name_plural = 'Team Member Profiles'
     
     def __str__(self):
-        return f"{self.user.full_name} - Founder"
+        return f"{self.user.full_name} - Team Member"
     
     def clean(self):
-        if self.user.role != 'founder':
-            raise ValidationError("User role must be 'founder' for FounderProfile.")
+        if self.user.role != 'team_member':
+            raise ValidationError("User role must be 'team_member' for TeamMemberProfile.")

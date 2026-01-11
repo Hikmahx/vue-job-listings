@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounts.models import User, JobSeekerProfile, FounderProfile
+from accounts.models import User, JobSeekerProfile, TeamMemberProfile
 from django.contrib.auth import authenticate
 
 
@@ -18,14 +18,47 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
         exclude = ['user']
 
 
-class FounderProfileSerializer(serializers.ModelSerializer):
+class TeamMemberProfileSerializer(serializers.ModelSerializer):
+    currentPosition = serializers.CharField(source='current_position', allow_blank=True)
     linkedinUrl = serializers.URLField(source='linkedin_url', allow_blank=True)
     twitterUrl = serializers.URLField(source='twitter_url', allow_blank=True)
+    githubUrl = serializers.URLField(source='github_url', allow_blank=True)
+    portfolioUrl = serializers.URLField(source='portfolio_url', allow_blank=True)
+    experienceYears = serializers.IntegerField(source='experience_years')
     verifiedEmployer = serializers.BooleanField(source='verified_employer', read_only=True)
+
+    isFounder = serializers.SerializerMethodField()
+    companiesFounded = serializers.SerializerMethodField()
+    companiesEmployed = serializers.SerializerMethodField()
     
     class Meta:
-        model = FounderProfile
+        model = TeamMemberProfile
         exclude = ['user']
+    
+    def get_isFounder(self, obj):
+        return obj.user.company_memberships.filter(role="founder").exists()
+    
+    def get_companiesFounded(self, obj):
+        from companies.models import Company
+        from companies.api.serializers import CompanySerializer
+
+        companies = Company.objects.filter(
+            members__user=obj.user,
+            members__role="founder"
+        ).distinct()
+
+        return CompanySerializer(companies, many=True).data
+
+    def get_companiesEmployed(self, obj):
+        from companies.models import Company
+        from companies.api.serializers import CompanySerializer
+
+        companies = Company.objects.filter(
+            members__user=obj.user,
+            members__role="employee"
+        ).distinct()
+
+        return CompanySerializer(companies, many=True).data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -35,9 +68,8 @@ class UserSerializer(serializers.ModelSerializer):
     phoneNumber = serializers.CharField(source='phone_number', read_only=True)
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
     
-    # Nested profiles (conditional based on role)
     jobSeekerProfile = JobSeekerProfileSerializer(source='job_seeker_profile', read_only=True)
-    founderProfile = FounderProfileSerializer(source='founder_profile', read_only=True)
+    teamMemberProfile = TeamMemberProfileSerializer(source='team_member_profile', read_only=True)
     
     class Meta:
         model = User
@@ -52,8 +84,8 @@ class UserSerializer(serializers.ModelSerializer):
             'location',
             'phoneNumber',
             'createdAt',
-            'jobSeekerProfile',  # Only populated if role='job_seeker'
-            'founderProfile',     # Only populated if role='founder'
+            'jobSeekerProfile',
+            'teamMemberProfile',
         ]
 
 
@@ -96,8 +128,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'job_seeker'),
             location=validated_data.get('location', ''),
         )
+        if validated_data.get("role") == "job_seeker":
+            JobSeekerProfile.objects.create(user=user)
+        else:
+            TeamMemberProfile.objects.create(user=user)
         
-        # Profile is auto-created by signal
         return user
 
 
