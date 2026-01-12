@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
-from django.core.exceptions import ValidationError
 
 
 class UserManager(BaseUserManager):
@@ -45,6 +44,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20, blank=True)
     gender = models.CharField(max_length=20, choices=GENDER_CHOICES, blank=True)
     
+    bio = models.TextField(blank=True)
+    experience_years = models.IntegerField(default=0)
+    skills = models.JSONField(default=list)
+
+    linkedin_url = models.URLField(blank=True)
+    twitter_url = models.URLField(blank=True)
+    github_url = models.URLField(blank=True)
+    portfolio_url = models.URLField(blank=True)
+    
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='job_seeker')
     location = models.CharField(max_length=100, blank=True)
     
@@ -84,19 +92,11 @@ class JobSeekerProfile(models.Model):
     user = models.OneToOneField(
         User, 
         on_delete=models.CASCADE, 
-        related_name='job_seeker_profile',
-        limit_choices_to={'role': 'job_seeker'}
+        related_name='job_seeker_profile'
     )
+    
     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
-    bio = models.TextField(blank=True)
-    skills = models.JSONField(default=list)
-    experience_years = models.IntegerField(default=0)
     work_experience = models.JSONField(default=list)
-    
-    portfolio_url = models.URLField(blank=True)
-    linkedin_url = models.URLField(blank=True)
-    github_url = models.URLField(blank=True)
-    
     desired_salary_min = models.IntegerField(null=True, blank=True)
     desired_salary_max = models.IntegerField(null=True, blank=True)
     open_to_remote = models.BooleanField(default=True)
@@ -108,42 +108,15 @@ class JobSeekerProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.full_name} - Job Seeker"
-
-    def clean(self):
-        if self.user.role != 'job_seeker':
-            raise ValidationError("User role must be 'job_seeker' for JobSeekerProfile.")
-
-
 class TeamMemberProfile(models.Model):
     """Extended profile for team members (founders and employees)"""
-    user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE, 
-        related_name='team_member_profile',
-        limit_choices_to={'role': 'team_member'}
-    )
-    
-    bio = models.TextField(blank=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="team_member_profile")
     current_position = models.CharField(max_length=100, blank=True)
-    
-    linkedin_url = models.URLField(blank=True)
-    twitter_url = models.URLField(blank=True)
-    github_url = models.URLField(blank=True)
-    portfolio_url = models.URLField(blank=True)
-    
-    skills = models.JSONField(default=list)
-    experience_years = models.IntegerField(default=0)
-    
     verified_employer = models.BooleanField(default=False)
     
     class Meta:
         db_table = 'team_member_profiles'
         verbose_name = 'Team Member Profile'
         verbose_name_plural = 'Team Member Profiles'
-    
     def __str__(self):
         return f"{self.user.full_name} - Team Member"
-    
-    def clean(self):
-        if self.user.role != 'team_member':
-            raise ValidationError("User role must be 'team_member' for TeamMemberProfile.")

@@ -4,11 +4,7 @@ from django.contrib.auth import authenticate
 
 
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
-    experienceYears = serializers.IntegerField(source='experience_years')
     workExperience = serializers.JSONField(source='work_experience')
-    portfolioUrl = serializers.URLField(source='portfolio_url', allow_blank=True)
-    linkedinUrl = serializers.URLField(source='linkedin_url', allow_blank=True)
-    githubUrl = serializers.URLField(source='github_url', allow_blank=True)
     desiredSalaryMin = serializers.IntegerField(source='desired_salary_min', allow_null=True)
     desiredSalaryMax = serializers.IntegerField(source='desired_salary_max', allow_null=True)
     openToRemote = serializers.BooleanField(source='open_to_remote')
@@ -20,11 +16,6 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
 
 class TeamMemberProfileSerializer(serializers.ModelSerializer):
     currentPosition = serializers.CharField(source='current_position', allow_blank=True)
-    linkedinUrl = serializers.URLField(source='linkedin_url', allow_blank=True)
-    twitterUrl = serializers.URLField(source='twitter_url', allow_blank=True)
-    githubUrl = serializers.URLField(source='github_url', allow_blank=True)
-    portfolioUrl = serializers.URLField(source='portfolio_url', allow_blank=True)
-    experienceYears = serializers.IntegerField(source='experience_years')
     verifiedEmployer = serializers.BooleanField(source='verified_employer', read_only=True)
 
     isFounder = serializers.SerializerMethodField()
@@ -36,7 +27,7 @@ class TeamMemberProfileSerializer(serializers.ModelSerializer):
         exclude = ['user']
     
     def get_isFounder(self, obj):
-        return obj.user.company_memberships.filter(role="founder").exists()
+        return obj.user.company_memberships.filter(role='founder').exists()
     
     def get_companiesFounded(self, obj):
         from companies.models import Company
@@ -44,7 +35,7 @@ class TeamMemberProfileSerializer(serializers.ModelSerializer):
 
         companies = Company.objects.filter(
             members__user=obj.user,
-            members__role="founder"
+            members__role='founder'
         ).distinct()
 
         return CompanySerializer(companies, many=True).data
@@ -55,7 +46,7 @@ class TeamMemberProfileSerializer(serializers.ModelSerializer):
 
         companies = Company.objects.filter(
             members__user=obj.user,
-            members__role="employee"
+            members__role='employee'
         ).distinct()
 
         return CompanySerializer(companies, many=True).data
@@ -63,13 +54,19 @@ class TeamMemberProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     fullName = serializers.CharField(source='full_name', read_only=True)
-    firstName = serializers.CharField(source='first_name', read_only=True)
-    lastName = serializers.CharField(source='last_name', read_only=True)
-    phoneNumber = serializers.CharField(source='phone_number', read_only=True)
+    firstName = serializers.CharField(source='first_name')
+    lastName = serializers.CharField(source='last_name')
+    phoneNumber = serializers.CharField(source='phone_number')
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
-    
-    jobSeekerProfile = JobSeekerProfileSerializer(source='job_seeker_profile', read_only=True)
-    teamMemberProfile = TeamMemberProfileSerializer(source='team_member_profile', read_only=True)
+
+    linkedinUrl = serializers.URLField(source='linkedin_url', allow_blank=True)
+    twitterUrl = serializers.URLField(source='twitter_url', allow_blank=True)
+    githubUrl = serializers.URLField(source='github_url', allow_blank=True)
+    portfolioUrl = serializers.URLField(source='portfolio_url', allow_blank=True)
+    experienceYears = serializers.IntegerField(source='experience_years')
+
+    jobSeekerProfile = JobSeekerProfileSerializer(read_only=True)
+    teamMemberProfile = TeamMemberProfileSerializer(read_only=True)
     
     class Meta:
         model = User
@@ -83,6 +80,11 @@ class UserSerializer(serializers.ModelSerializer):
             'role',
             'location',
             'phoneNumber',
+            'linkedinUrl',
+            'twitterUrl',
+            'githubUrl',
+            'portfolioUrl',
+            'experienceYears',
             'createdAt',
             'jobSeekerProfile',
             'teamMemberProfile',
@@ -112,7 +114,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({"password": "Passwords must match."})
+            raise serializers.ValidationError({'password': 'Passwords must match.'})
         return attrs
 
     def create(self, validated_data):
@@ -128,11 +130,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             role=validated_data.get('role', 'job_seeker'),
             location=validated_data.get('location', ''),
         )
-        if validated_data.get("role") == "job_seeker":
-            JobSeekerProfile.objects.create(user=user)
-        else:
-            TeamMemberProfile.objects.create(user=user)
-        
+
+        JobSeekerProfile.objects.create(user=user)
+        TeamMemberProfile.objects.create(user=user)
+
         return user
 
 
@@ -143,7 +144,7 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(email=data['email'], password=data['password'])
         if not user:
-            raise serializers.ValidationError("Invalid email or password.")
+            raise serializers.ValidationError('Invalid email or password.')
         if not user.is_active:
-            raise serializers.ValidationError("User account is disabled.")
+            raise serializers.ValidationError('User account is disabled.')
         return user
