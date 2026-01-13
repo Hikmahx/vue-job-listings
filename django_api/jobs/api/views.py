@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
@@ -9,6 +9,10 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from jobs.api.filters import JobFilter
 from jobs.api.pagination import JobPagination
 from jobs.api.ai_search import extract_filters_from_query
+from jobs.api.permissions import CanManageJob
+from companies.models import CompanyMember
+from rest_framework.exceptions import PermissionDenied
+
 
 class GetAllJobsAPI(generics.ListAPIView):
     # queryset = Job.objects.all().order_by('-posted_at')
@@ -17,14 +21,14 @@ class GetAllJobsAPI(generics.ListAPIView):
     pagination_class = JobPagination
     # filterset_fields = ('level', 'contract', 'location', 'role', 'company')
     filterset_class = JobFilter
-    search_fields = ['company', 'position', 'role', 'level', 'skills', 'location']
+    search_fields = ['company__name', 'position', 'role', 'level', 'skills', 'location']
     
     def get_queryset(self):
         queryset = Job.objects.select_related('details').all()
         ordering = '-posted_at'
         sort_by_company = self.request.query_params.get('sortByCompany', '').lower()
         if sort_by_company == 'true':
-            ordering = 'company'
+            ordering = 'company__name'
             
         return queryset.order_by(ordering)
 
@@ -69,9 +73,11 @@ class AISearchAPI(generics.ListAPIView):
                 else:
                     queryset = queryset.filter(skills__contains=[skill])
         if filters.get('markets'):
-            queryset = queryset.filter(market__in=filters['markets'])
+            queryset = queryset.filter(company__market__in=filters['markets'])
+
         if filters.get('companySizes'):
-            queryset = queryset.filter(company_size__in=filters['companySizes'])
+            queryset = queryset.filter(company__team_size__in=filters['companySizes'])
+
         if filters.get('workType'):
             queryset = queryset.filter(work_type=filters['workType'])
         
@@ -106,17 +112,33 @@ class GetJobWithDetails(generics.RetrieveAPIView):
 
 
 class CreateJobAPI(generics.CreateAPIView):
-    queryset = Job.objects.all()
     serializer_class = JobSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        company = user.team_member_profile.active_company
+
+        try:
+            membership = CompanyMember.objects.get(user=user, company=company)
+        except CompanyMember.DoesNotExist:
+            raise PermissionDenied("You are not a member of this company")
+
+        if membership.permission not in ["owner", "admin"]:
+            raise PermissionDenied("You do not have permission to post jobs")
+
+        serializer.save(company=company)
 
 
 class UpdateJobAPI(generics.UpdateAPIView):
-    queryset = Job.objects.select_related('details')
+    queryset = Job.objects.select_related('details', 'company')
     serializer_class = JobSerializer
+    permission_classes = [permissions.IsAuthenticated, CanManageJob]
     lookup_field = 'id'
 
 
 class DeleteJobAPI(generics.DestroyAPIView):
-    queryset = Job.objects.all()
+    queryset = Job.objects.select_related('company')
     serializer_class = JobSerializer
+    permission_classes = [permissions.IsAuthenticated, CanManageJob]
     lookup_field = 'id'

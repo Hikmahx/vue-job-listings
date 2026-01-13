@@ -6,7 +6,10 @@ from jobs.models import Job, JobDetails
 class JobDetailsSerializer(serializers.ModelSerializer):
     externalApply = serializers.BooleanField(source='external_apply')
     experienceRequired = serializers.CharField(source='experience_required', allow_blank=True, required=False)
-    foundedYear = serializers.IntegerField(source='founded_year', allow_null=True, required=False)
+    # foundedYear = serializers.IntegerField(source='job.company.founded_year', allow_null=True, required=False)
+    # website = serializers.URLField(source='job.company.website', allow_null=True, required=False)
+    foundedYear = serializers.SerializerMethodField()
+    website = serializers.SerializerMethodField()
     
     class Meta:
         model = JobDetails
@@ -20,6 +23,20 @@ class JobDetailsSerializer(serializers.ModelSerializer):
             'foundedYear',
             'website'
         ]
+        exclude = ('job',)
+        
+    def get_foundedYear(self, obj):
+        try:
+            return obj.job.company.founded_year
+        except:
+            return None
+    
+    def get_website(self, obj):
+        try:
+            return obj.job.company.website
+        except:
+            return None
+    
     
     def validate_requirements(self, value):
         if not value:
@@ -58,11 +75,14 @@ class JobSerializer(serializers.ModelSerializer):
     # Rename field from underscore to camelCase to match frontend and serializer
     minSalary = serializers.IntegerField(source='min_salary', required=False, default=0)
     maxSalary = serializers.IntegerField(source='max_salary', required=False, default=0)
-    companySize = serializers.CharField(source='company_size', required=False, allow_blank=True)
+    company = serializers.CharField(source='company.name', read_only=True)
+    logo = serializers.URLField(source='company.logo', read_only=True)
+    companySize = serializers.CharField(source='company.team_size', read_only=True)
+    market = serializers.CharField(source='company.market', read_only=True)
     workType = serializers.CharField(source='work_type', required=False, allow_blank=True)
     
     # Removed read_only=True to allow writes for CRUD
-    jobDetails = JobDetailsSerializer(source='details', required=False, allow_null=True)
+    details = JobDetailsSerializer(required=True)
     
     class Meta:
         model = Job
@@ -86,9 +106,10 @@ class JobSerializer(serializers.ModelSerializer):
             "companySize",
             "workType",
             "skills",
-            "jobDetails",
+            "details",
         ]
         # read_only_fields = ['jobDetails']
+        
     
     def get_postedAt(self, obj):
         now = timezone.now()
@@ -148,28 +169,24 @@ class JobSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
-        details_data = validated_data.pop('details', None)
+        details_data = validated_data.pop("details")
         job = Job.objects.create(**validated_data)
-
-        if details_data:
-            JobDetails.objects.create(job=job, **details_data)
-        
+        JobDetails.objects.create(job=job, **details_data)
         return job
-    
+
     def update(self, instance, validated_data):
-        details_data = validated_data.pop('details', None)
-        
+        details_data = validated_data.pop("details", None)
+
+        # Update Job
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
-        if details_data is not None:
-            if instance.details:
-                for attr, value in details_data.items():
-                    setattr(instance.details, attr, value)
-                instance.details.save()
-            else:
-                # Create new JobDetails
-                JobDetails.objects.create(job=instance, **details_data)
-        
+
+        # Update JobDetails
+        if details_data:
+            details = instance.details
+            for attr, value in details_data.items():
+                setattr(details, attr, value)
+            details.save()
+
         return instance

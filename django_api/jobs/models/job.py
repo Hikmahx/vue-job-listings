@@ -108,8 +108,13 @@ class Job(models.Model):
 
     
     id = ShortUUIDField(primary_key=True)
-    company = models.CharField(max_length=50)
-    logo = models.URLField()
+
+    company = models.ForeignKey(
+        "companies.Company",
+        on_delete=models.CASCADE,
+        related_name="jobs"
+    )
+
     featured = models.BooleanField(default=False)
     position = models.CharField(max_length=100)
     role = models.CharField(max_length=50)
@@ -123,26 +128,16 @@ class Job(models.Model):
     currency = models.CharField(max_length=50, choices=CURRENCY_CHOICES, blank=True, default='')
     min_salary = models.IntegerField(default=0)
     max_salary = models.IntegerField(default=0)
-    timeframe = models.CharField(
-        max_length=16, choices=TIMEFRAME_CHOICES, blank=True, default='year'
-    )
-    market = models.CharField(max_length=50, choices=MARKET_CHOICES, default='')
-    company_size = models.CharField(max_length=50, choices=COMPANYSIZE_CHOICES, default='')
+    timeframe = models.CharField(max_length=16, choices=TIMEFRAME_CHOICES, blank=True, default='year')
+
     work_type = models.CharField(max_length=50, choices=WORKTYPE_CHOICES, default='')
     skills = models.JSONField(default=list)
-    details = models.OneToOneField(
-        JobDetails, 
-        on_delete=models.CASCADE, 
-        related_name='job',
-        null=True,
-        blank=True
-    )
     
     def __str__(self):
         return f"{self.company} - {self.position}"
     
 
-@receiver(post_save, sender='jobs.Job')
+@receiver(post_save, sender=Job)
 def auto_index_job(sender, instance, **kwargs):
     """Auto-index when job is created/updated"""
     try:
@@ -151,7 +146,7 @@ def auto_index_job(sender, instance, **kwargs):
     except Exception as e:
         print(f"Vector indexing failed: {e}")
 
-@receiver(post_delete, sender='jobs.Job')
+@receiver(post_delete, sender=Job)
 def delete_job_vector(sender, instance, **kwargs):
     """Remove vector when job deleted"""
     try:
