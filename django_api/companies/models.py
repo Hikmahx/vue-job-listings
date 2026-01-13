@@ -3,7 +3,7 @@ from django.conf import settings
 from django.utils.text import slugify
 
 class Company(models.Model):
-    INDUSTRY_CHOICES = [
+    MARKET_CHOICES = [
         ('saas', 'SaaS'),
         ('fintech', 'FinTech'),
         ('healthtech', 'HealthTech'),
@@ -28,7 +28,7 @@ class Company(models.Model):
     slug = models.SlugField(max_length=120, unique=True, blank=True)
     logo = models.URLField(blank=True)
     description = models.TextField()
-    industry = models.CharField(max_length=50, choices=INDUSTRY_CHOICES)
+    market = models.CharField(max_length=50, choices=MARKET_CHOICES)
     team_size = models.PositiveIntegerField(blank=True, null=True)
     founded_year = models.PositiveIntegerField(blank=True, null=True)
     website = models.URLField(blank=True)

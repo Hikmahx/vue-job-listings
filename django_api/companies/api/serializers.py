@@ -15,7 +15,7 @@ class CompanySerializer(serializers.ModelSerializer):
             'slug',
             'logo',
             'description',
-            'industry',
+            'market',
             'teamSize',
             'foundedYear',
             'website',
