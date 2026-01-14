@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
-const isHovered = ref(false)
+
 
 const navLinks = [
   { to: '/jobs', label: 'Jobs' },
@@ -29,9 +29,7 @@ const navigateTo = (path: string) => {
 
 <template>
   <nav
-    class="relative lg:absolute top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out lg:hover:bg-white/20"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false"
+    class="relative lg:absolute top-0 left-0 w-full z-50 transition-all duration-300 ease-in-out"
   >
     <div class="container mx-auto max-w-3xl lg:max-w-6xl 2xl:max-w-7xl px-4 py-8 lg:py-10">
       <div class="flex items-center justify-between">
@@ -45,8 +43,7 @@ const navigateTo = (path: string) => {
               v-for="link in navLinks"
               :key="link.to"
               :to="link.to"
-              class="transition-colors duration-300"
-              :class="isHovered ? 'text-cyan-900' : 'text-white'"
+              class="transition-colors duration-300 text-white"
             >
               {{ link.label }}
             </router-link>
@@ -57,8 +54,7 @@ const navigateTo = (path: string) => {
           <router-link to="/login">
             <Button
               variant="ghost"
-              class="border-0 px-6 lg:px-7 h-12 transition-all duration-300"
-              :class="isHovered ? 'text-cyan-900 hover:bg-cyan-50' : 'text-white hover:bg-cyan-900/50'"
+              class="border-0 px-6 lg:px-7 h-12 transition-all duration-300 text-white"
             >
               Login
             </Button>
@@ -67,9 +63,7 @@ const navigateTo = (path: string) => {
           <router-link to="/signup">
             <Button
               class="px-6 lg:px-7 h-12 transition-all duration-300"
-              :class="isHovered 
-                ? 'bg-cyan-50 text-cyan-900 hover:bg-cyan-100' 
-                : 'bg-cyan-900 text-white hover:bg-cyan-800'"
+
             >
               Signup
             </Button>
@@ -78,7 +72,6 @@ const navigateTo = (path: string) => {
 
         <button
           class="md:hidden transition-colors duration-300"
-          :class="isHovered ? 'text-cyan-900' : 'text-white'"
           @click="isMobileMenuOpen = true"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,7 +114,7 @@ const navigateTo = (path: string) => {
             <router-link to="/login">
               <Button
                 variant="outline"
-                class="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-50"
+                class="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-400/30"
                 @click="closeMobileMenu"
               >
                 Login
@@ -130,7 +123,7 @@ const navigateTo = (path: string) => {
 
             <router-link to="/signup">
               <Button
-                class="w-full bg-cyan-400 hover:bg-cyan-900 text-white"
+                class="w-full bg-cyan-400 hover:bg-cyan-900 text-white hover:text-cyan-400"
                 @click="closeMobileMenu"
               >
                 Signup
