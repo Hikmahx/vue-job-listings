@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import SearchAndCountry from '@/components/filter/SearchAndCountry.vue'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
-import { X, Search } from 'lucide-vue-next'
+import { Search } from 'lucide-vue-next'
+import Navbar from '@/components/common/Navbar.vue'
 
 // trusted company logos
 import awsLogo from '@/assets/img/trustedby/aws.svg'
@@ -19,13 +18,6 @@ import microsoftLogo from '@/assets/img/trustedby/microsoft.svg'
 import vercelLogo from '@/assets/img/trustedby/vercel.svg'
 
 const router = useRouter()
-const isMobileMenuOpen = ref(false)
-
-const navLinks = [
-  { to: '/jobs', label: 'Jobs' },
-  { to: '#companies', label: 'Companies' },
-  { to: '#about', label: 'About' }
-]
 
 const formSchema = toTypedSchema(
   z.object({
@@ -58,10 +50,6 @@ const trustedCompanies = [
   { name: 'GitHub', logo: githubLogo },
   { name: 'Microsoft', logo: microsoftLogo },
 ]
-
-const closeMobileMenu = () => {
-  isMobileMenuOpen.value = false
-}
 </script>
 
 <template>
@@ -73,91 +61,14 @@ const closeMobileMenu = () => {
     />
     <img
       src="@/assets/img/bg-hero-desktop.svg"
-          class="absolute inset-0 hidden lg:flex w-full h-full"
+      class="absolute inset-0 hidden lg:flex w-full h-full"
       alt="bg-hero-desktop"
     />
     <!-- Header Navigation -->
-    <header class="container mx-auto max-w-3xl lg:max-w-6xl 2xl:max-w-7xl px-4 py-8 lg:py-10 relative">
-      <nav class="flex items-center justify-between">
-        <div class="flex items-center justify-between gap-20">
-          <router-link to="/" class="flex items-center">
-            <img src="/logo.svg" alt="JobList Logo" class="h-5" />
-          </router-link>
-          <div class="hidden md:flex items-center gap-6 ml-[84px]">
-            <router-link 
-              v-for="link in navLinks" 
-              :key="link.to"
-              :to="link.to" 
-              class="hover:text-cyan-900/80 transition-all"
-            >
-              {{ link.label }}
-            </router-link>
-          </div>
-        </div>
-        <div class="hidden md:flex items-center gap-4">
-          <Button variant="ghost" class="text-white hover:bg-cyan-900/50 hover:text-cyan-50 border-0 px-6 lg:px-7 h-12"> Login </Button>
-          <Button class="bg-cyan-900 hover:bg-cyan-50 text-white hover:text-cyan-900 px-6 lg:px-7 h-12"> Signup </Button>
-        </div>
-        <button class="md:hidden" @click="isMobileMenuOpen = true">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      </nav>
-
-      <!-- Mobile Menu  -->
-      <Dialog :open="isMobileMenuOpen" @update:open="(value) => (isMobileMenuOpen = value)">
-        <DialogContent
-          class="!fixed !right-0 !top-0 !left-auto !h-full !w-[300px] !max-w-full !translate-x-0 !translate-y-0 !rounded-none border-l data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right [&>button]:hidden"
-        >
-          <div class="flex flex-col h-full">
-            <div class="flex items-center justify-between mb-8">
-              <button
-                @click="closeMobileMenu"
-                class="text-cyan-900 hover:text-cyan-400 transition-colors ml-auto"
-              >
-                <X class="w-6 h-6" />
-              </button>
-            </div>
-            <nav class="flex flex-col gap-6 flex-1">
-              <router-link
-                v-for="link in navLinks"
-                :key="link.to"
-                :to="link.to"
-                @click="closeMobileMenu"
-                class="text-cyan-900 font-medium hover:text-cyan-400 transition-colors"
-              >
-                {{ link.label }}
-              </router-link>
-            </nav>
-            <div class="flex flex-col gap-4 pt-6 border-t">
-              <Button
-                variant="outline"
-                class="w-full border-cyan-400 text-cyan-400 hover:bg-cyan-50"
-                @click="closeMobileMenu"
-              >
-                Login
-              </Button>
-              <Button
-                class="w-full bg-cyan-400 hover:bg-cyan-900 text-white"
-                @click="closeMobileMenu"
-              >
-                Signup
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </header>
-
+    <Navbar />
     <!-- Hero Content -->
     <div class="container mx-auto px-4 pb-16 lg:pb-24 pt-8 lg:pt-16 relative">
-      <div class="max-w-4xl mx-auto text-center">
+      <div class="max-w-4xl mx-auto text-center mt-32">
         <h1
           class="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 lg:mb-6 leading-[60px] sm:!leading-[76px] tracking-[0.6px] max-w-80 sm:max-w-[20rem] md:max-w-[28rem] lg:max-w-[39rem] mx-auto"
         >

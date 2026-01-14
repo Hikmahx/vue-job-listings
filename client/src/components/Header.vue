@@ -7,11 +7,13 @@
 // provide('filters', filters)
 import { useAttrs } from 'vue'
 
+import Navbar from '@/components/common/Navbar.vue'
 const attrs = useAttrs()
 </script>
 
 <template>
   <div>
+    <Navbar />
     <header
       class="h-40 md:h-[250px] w-full bg-cyan-400"
       v-bind="attrs"
