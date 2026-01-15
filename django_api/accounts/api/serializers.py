@@ -58,6 +58,7 @@ class UserSerializer(serializers.ModelSerializer):
     lastName = serializers.CharField(source='last_name')
     phoneNumber = serializers.CharField(source='phone_number')
     createdAt = serializers.DateTimeField(source='created_at', read_only=True)
+    dateOfBirth = serializers.DateField(source='date_of_birth', allow_null=True)
 
     linkedinUrl = serializers.URLField(source='linkedin_url', allow_blank=True)
     twitterUrl = serializers.URLField(source='twitter_url', allow_blank=True)
@@ -77,6 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
             'fullName',
             'email',
             'gender',
+            'dateOfBirth',
             'role',
             'location',
             'phoneNumber',
@@ -97,6 +99,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     firstName = serializers.CharField(source='first_name')
     lastName = serializers.CharField(source='last_name')
     phoneNumber = serializers.CharField(source='phone_number', required=False, allow_blank=True)
+    dateOfBirth = serializers.DateField(source='date_of_birth', allow_null=True, required=False)
 
     class Meta:
         model = User
@@ -108,6 +111,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             'password2',
             'phoneNumber',
             'gender',
+            'dateOfBirth',
             'role',
             'location',
         ]
@@ -127,6 +131,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             last_name=validated_data['last_name'],
             phone_number=validated_data.get('phone_number', ''),
             gender=validated_data.get('gender', ''),
+            date_of_birth=validated_data.get('date_of_birth'),
             role=validated_data.get('role', 'job_seeker'),
             location=validated_data.get('location', ''),
         )
