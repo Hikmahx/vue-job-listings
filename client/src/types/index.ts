@@ -37,3 +37,15 @@ export interface JobDetails {
   foundedYear: number | null
   website: string | null
 }
+
+
+export interface JobApplication {
+  job: number
+  fullName: string
+  email: string
+  phone?: string
+  resumeUrl: string
+  coverLetter?: string
+  portfolioUrl?: string
+  linkedinUrl?: string
+}
