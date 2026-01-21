@@ -6,14 +6,17 @@ withDefaults(
     title: string
     subtitle?: string
     showDivider?: boolean
-    currentStep: number
-    signupPage: boolean
+    currentStep?: number
+    signupPage?: boolean
   }>(),
   {
     showDivider: true,
+    signupPage: false,
+    currentStep: 1,
   },
 )
 </script>
+
 
 <template>
   <div class="flex h-screen overflow-hidden bg-cyan-50">
@@ -29,6 +32,7 @@ withDefaults(
         </router-link>
       </div>
       <!-- Step Indicator -->
+       
       <StepIndicator :current-step="currentStep" :signup-page="signupPage" :title="title" />
       <!-- Form Container with Scroll -->
       <div class="flex-1 overflow-y-auto">
