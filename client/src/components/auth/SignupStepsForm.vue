@@ -245,39 +245,10 @@ watch(() => props.currentStep, () => {
 
 <template>
   <div class="w-full space-y-6">
-    <!-- Step Indicator -->
-    <div class="space-y-4">
-      <div class="flex items-center justify-start gap-4">
-        <div v-for="step in 3" :key="step" class="flex items-center">
-          <div
-            :class="[
-              'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all',
-              currentStep === step || currentStep > step
-                ? 'bg-cyan-400 text-white'
-                : 'bg-gray-300 text-grayish-cyan',
-            ]"
-          >
-            {{ step }}
-          </div>
-          <div v-if="step < 3" class="w-12 h-px bg-gray-300 mx-2"></div>
-        </div>
-      </div>
-      <div>
-        <p class="text-sm text-grayish-cyan mb-2">Step {{ currentStep }}/3</p>
-        <h2 class="text-3xl font-bold text-cyan-900">
-          {{
-            currentStep === 1
-              ? 'Create Account'
-              : currentStep === 2
-                ? 'Choose an Account'
-                : 'Complete Registration'
-          }}
-        </h2>
-      </div>
-    </div>
+
 
     <!-- STEP 1: Create Account -->
-    <form v-if="currentStep === 1" @submit.prevent="onStep1Submit" class="space-y-5">
+    <form v-if="currentStep === 1" @submit.prevent="onStep1Submit" class="space-y-4">
       <!-- First and Last Name Row -->
       <div class="grid grid-cols-2 gap-4">
         <TextInput
@@ -354,7 +325,7 @@ watch(() => props.currentStep, () => {
     </form>
 
     <!-- STEP 2: Account Type -->
-    <form v-else-if="currentStep === 2" @submit.prevent="onStep2Submit" class="space-y-5">
+    <form v-else-if="currentStep === 2" @submit.prevent="onStep2Submit" class="space-y-4">
       <!-- Account Type Options Display -->
       <div class="space-y-3 mt-6">
         <div
@@ -394,7 +365,7 @@ watch(() => props.currentStep, () => {
     </form>
 
     <!-- STEP 3: Profile Details -->
-    <form v-else-if="currentStep === 3" @submit.prevent="onStep3Submit" class="space-y-5">
+    <form v-else-if="currentStep === 3" @submit.prevent="onStep3Submit" class="space-y-4">
       <!-- Years of Experience -->
       <TextInput
         :model-value="step3Form.values.experience"
