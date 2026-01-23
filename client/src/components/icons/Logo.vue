@@ -3,6 +3,7 @@ defineProps<{
   iconClass?: string
   textClass?: string
   hideText?: boolean
+  logoClass?: string
 }>()
 </script>
 
@@ -12,7 +13,8 @@ defineProps<{
     height="30"
     viewBox="0 0 180 30"
     xmlns="http://www.w3.org/2000/svg"
-    class="w-[175px] h-[30px]"
+    :class="'w-[175px] h-[30px] ' + logoClass"
+
   >
     <g class="fill-current" :class="iconClass">
       <rect
