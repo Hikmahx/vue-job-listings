@@ -4,15 +4,15 @@ import { useRouter } from 'vue-router'
 import { Button } from '@/components/ui/button'
 import { X } from 'lucide-vue-next'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import Logo from '../icons/Logo.vue'
 
 const router = useRouter()
 const isMobileMenuOpen = ref(false)
 
-
 const navLinks = [
   { to: '/jobs', label: 'Jobs' },
   { to: '#companies', label: 'Companies' },
-  { to: '#about', label: 'About' }
+  { to: '#about', label: 'About' },
 ]
 
 const closeMobileMenu = () => {
@@ -34,8 +34,9 @@ const navigateTo = (path: string) => {
     <div class="container mx-auto max-w-3xl lg:max-w-6xl 2xl:max-w-7xl px-4 py-8 lg:py-10">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-20">
-          <router-link to="/" class="flex items-center flex-shrink-0">
-            <img src="/logo.svg" alt="JobList Logo" class="h-5" />
+          <router-link to="/" class="flex flex-col items-center flex-shrink-0">
+            <!-- <img src="/logo.svg" alt="JobList Logo" class="h-5" /> -->
+            <Logo icon-class="fill-cyan-50" text-class="fill-white" logo-class="!h-5" />
           </router-link>
 
           <div class="hidden md:flex items-center gap-6 ml-[84px]">
@@ -61,19 +62,11 @@ const navigateTo = (path: string) => {
           </router-link>
 
           <router-link to="/signup">
-            <Button
-              class="px-6 lg:px-7 h-12 transition-all duration-300"
-
-            >
-              Signup
-            </Button>
+            <Button class="px-6 lg:px-7 h-12 transition-all duration-300"> Signup </Button>
           </router-link>
         </div>
 
-        <button
-          class="md:hidden transition-colors duration-300"
-          @click="isMobileMenuOpen = true"
-        >
+        <button class="md:hidden transition-colors duration-300" @click="isMobileMenuOpen = true">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
