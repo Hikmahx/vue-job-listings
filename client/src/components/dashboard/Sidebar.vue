@@ -34,7 +34,7 @@ const isExpanded = ref(false)
   >
     <!-- {/* Logo */} -->
 
-    <div class="py-6 pl-6 border-b border-gray-200">
+    <div class="py-6 pl-3 border-b border-gray-200">
       <a href="/" class="group transition-all duration-300">
         <Logo
           :icon-class="!isExpanded ? 'fill-white' : 'fill-cyan-400'"
