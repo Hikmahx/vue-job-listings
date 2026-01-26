@@ -7,7 +7,7 @@ import SignupView from "@/views/SignupView.vue"
 // import type { RouteRecordRaw } from 'vue-router'
 // import MainLayout from '@/layouts/MainLayout.vue'
 // import DashboardOverviewView from '@/views/DashboardOverview.vue'
-import JobBoardView from '@/views/JobBoard.vue'
+import AppliedJobsView from '@/views/AppliedJobs.vue'
 import SettingsView from '@/views/Settings.vue'
 import CreateJobView from '@/views/CreateJob.vue'
 import NotFoundView from '@/views/NotFound.vue'
@@ -37,9 +37,9 @@ const routes = [
         name: 'Dashboard'
       },
       {
-        path: 'jobs',
-        component: JobBoardView,
-        name: 'JobBoard'
+        path: 'applied-jobs',
+        component: AppliedJobsView,
+        name: 'AppliedJobs'
       },
       {
         path: 'settings',
