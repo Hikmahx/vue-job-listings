@@ -28,7 +28,7 @@ const isExpanded = ref(false)
 
 <template>
   <aside
-    class="fixed md:w-20 w-20 h-[calc(100vh-1rem)] m-2 rounded-sm bg-cyan-900 border-r border-gray-300 transition-all duration-300 ease-in-out z-40 hover:w-64"
+    class="fixed md:w-20 w-20 h-screen bg-cyan-900 transition-all duration-300 ease-in-out z-40 hover:w-64"
     @mouseenter="isExpanded = true"
     @mouseleave="isExpanded = false"
   >

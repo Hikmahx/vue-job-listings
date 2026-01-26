@@ -34,7 +34,7 @@ const navigateTo = (path: string) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-cyan-50">
     
     <div class="flex h-screen">
       <Sidebar 
@@ -55,7 +55,7 @@ const navigateTo = (path: string) => {
           <Menu class="w-6 h-6" />
         </button>
 
-        <div class="p-6 md:p-12">
+        <div class="p-6 md:p-12 pl-[104px] md:pl-32">
           <RouterView />
         </div>
       </div>
