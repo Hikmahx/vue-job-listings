@@ -13,11 +13,13 @@ import CreateJobView from '@/views/CreateJob.vue'
 import NotFoundView from '@/views/NotFound.vue'
 import MainLayout from '../components/dashboard/MainLayout.vue'
 import Dashboard from '../views/Dashboard.vue'
+import JobApplicationView from '../views/JobApplicationView.vue'
 
 const routes = [
   { path: "/", component: HomeView },
   { path: "/jobs", component: JobsView },
   { path: "/jobs/:id", component: JobDetailView, name: "job-detail" },
+    { path: "/jobs/:jobId/apply", component: JobApplicationView, name: "apply" },
   { path: "/login", component: LoginView, name: "login" },
   { path: "/signup", component: SignupView, name: "signup" },
   // { path: "/apply/:jobId", component: JobApplicationView, name: "apply" },

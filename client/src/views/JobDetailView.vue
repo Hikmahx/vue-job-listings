@@ -2,7 +2,6 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Heart, Share2, MapPin, Clock, Briefcase, ExternalLink } from 'lucide-vue-next'
-import ApplicationModal from '@/components/jobs/ApplicationModal.vue'
 import Header from '@/components/Header.vue'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { getSalaryDisplay } from '@/utils/salaryFormatter'
@@ -11,7 +10,6 @@ import { useJobStore } from '@/stores/JobStore'
 const jobStore = useJobStore()
 const route = useRoute()
 const router = useRouter()
-const showApplicationModal = ref(false)
 const isFavorited = ref(false)
 
 const jobId = computed(() => route.params.id as string)
@@ -106,7 +104,7 @@ function handleApplyClick() {
   if (jobDetails.value?.externalApply && jobDetails.value?.apply) {
     window.open(jobDetails.value.apply, '_blank')
   } else {
-    showApplicationModal.value = true
+    router.push({ name: 'apply', params: { jobId: jobId.value } })
   }
 }
 
@@ -383,12 +381,5 @@ function toggleFavorite() {
         </div>
       </div>
     </Header>
-
-    <!-- Application Modal -->
-    <ApplicationModal
-      v-if="showApplicationModal && jobDetail"
-      :job="jobDetail"
-      @close="showApplicationModal = false"
-    />
   </div>
 </template>
