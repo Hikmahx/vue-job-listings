@@ -130,6 +130,9 @@ Future improvements and features to consider:
 - [ ] Implement dark mode theme
 - [ ] Add unit and integration tests
 - [ ] Add analytics and job view tracking
+- [ ] **AI mock interviewer**: prepares you for your next interview based on the job description and the company you want to interview with. You can ask the AI for all the previous interview questions the company has asked candidates in the past (if they exist). The AI can then quiz you on your knowledge later on and give feedback on where to improve.
+- [ ] **Cold email tracker**: A structured outreach tracker with company details, CEO/founder emails, role applied for, 1–5 follow-up dates, read indicators, response status (green highlight on reply), status tags, reminders, and CSV export.
+- [] **Cover letter generation**: creates cover letter based on user's resume, job description, and company information.
 
 ### Useful resources
 
