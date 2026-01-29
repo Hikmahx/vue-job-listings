@@ -134,25 +134,23 @@ function toggleFavorite() {
           ← Back to Jobs
         </button>
       </div> -->
-      <div class="relative max-w-6xl mx-auto px-4 h-full flex items-center">
-        <!-- Loading State -->
-        <div v-if="loading" class="max-w-6xl mx-auto px-4 -mt-8">
-          <div class="bg-white rounded-md shadow-md p-8 animate-pulse">
-            <div class="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div class="h-6 bg-gray-200 rounded w-1/2 mb-6"></div>
-            <div class="h-32 bg-gray-200 rounded"></div>
-          </div>
+      <!-- Loading State -->
+      <div v-if="loading" class="max-w-6xl mx-auto px-4">
+        <div class="p-8 text-center">
+          <p class="leading-loose text-grayish-cyan font-semibold">Loading job details...</p>
         </div>
+      </div>
 
-        <!-- Error State -->
-        <div v-else-if="error" class="max-w-6xl mx-auto px-4 -mt-8">
-          <div class="bg-white rounded-md shadow-md p-8 text-center">
-            <p class="leading-loose text-red-500 font-semibold">{{ error }}</p>
-          </div>
+      <!-- Error State -->
+      <div v-else-if="error" class="max-w-6xl mx-auto px-4">
+        <div class="p-8 text-center">
+          <p class="leading-loose text-red-500 font-semibold">{{ error }}</p>
         </div>
+      </div>
+      <div v-else-if="jobDetail" class="relative max-w-6xl mx-auto px-4 h-full flex items-center">
 
         <!-- Content -->
-        <div v-else-if="jobDetail" class="max-w-6xl mx-auto px-4 relative -top-20 pb-12">
+        <div class="max-w-6xl mx-auto px-4 relative -top-20 pb-12">
           <!-- Company Header Card -->
           <div class="bg-white rounded-md shadow-md mb-8 overflow-hidden">
             <div class="flex items-center justify-between p-8 md:p-12">
