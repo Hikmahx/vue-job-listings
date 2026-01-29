@@ -43,7 +43,6 @@ const genderOptions = [
 
 const accountTypeOptions = [
   { value: 'job_seeker', label: 'Job Seeker' },
-  { value: 'team_member', label: 'Team Member' },
   { value: 'founder', label: 'Founder' },
   { value: 'employee', label: 'Employee' },
 ]
