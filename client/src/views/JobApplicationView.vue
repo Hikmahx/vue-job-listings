@@ -11,6 +11,7 @@ import * as z from 'zod'
 import Navbar from '@/components/common/Navbar.vue'
 import { ChevronRight } from 'lucide-vue-next'
 import { useJobStore } from '@/stores/JobStore'
+import Header from '../components/Header.vue'
 
 // Hooks
 const router = useRouter()
@@ -48,7 +49,7 @@ const onSubmit = handleSubmit(async (formValues) => {
 const breadcrumbs = computed(() => [
   { label: 'Jobs', to: '/jobs' },
   { label: jobDetail.value?.position || 'Job', to: `/jobs/${jobId.value}` },
-  { label: 'Apply', to: '#' },
+  { label: 'Apply', to: '' },
 ])
 
 onMounted(async () => {
@@ -58,15 +59,15 @@ onMounted(async () => {
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <Navbar />
-    
-    <div class="container mx-auto max-w-4xl px-4 py-12">
+    <Header />
+        
+    <div class="container mx-auto max-w-4xl px-4 py-12 -mt-32 relative">
       <div class="flex items-center gap-2 mb-8">
         <router-link v-for="(crumb, index) in breadcrumbs" :key="crumb.label" :to="crumb.to" class="flex items-center gap-2">
-          <span :class="{ 'text-cyan-400 font-medium': index === breadcrumbs.length - 1, 'text-gray-600 hover:text-cyan-400': index !== breadcrumbs.length - 1 }">
+          <span :class="{ 'text-cyan-50/60 font-medium': index === breadcrumbs.length - 1, 'text-white hover:underline': index !== breadcrumbs.length - 1 }">
             {{ crumb.label }}
           </span>
-          <ChevronRight v-if="index < breadcrumbs.length - 1" class="w-4 h-4 text-gray-400" />
+          <ChevronRight v-if="index < breadcrumbs.length - 1" class="w-4 h-4 text-cyan-50" />
         </router-link>
       </div>
 
