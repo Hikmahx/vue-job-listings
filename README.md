@@ -119,6 +119,7 @@ In this project, I wanted to expand my knowledge of Django and take the opportun
 Future improvements and features to consider:
 
 - [ ] Deploy to production environment
+- [ ] MERN implementation of current project
 <!-- - [ ] Add pagination to handle job listings better -->
 - [ ] Implement user authentication and authorization
 - [ ] Add job application functionality
