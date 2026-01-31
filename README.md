@@ -121,7 +121,7 @@ Future improvements and features to consider:
 - [ ] Deploy to production environment
 - [ ] MERN implementation of current project
 <!-- - [ ] Add pagination to handle job listings better -->
-- [ ] Implement user authentication and authorization
+<!-- - [ ] Implement user authentication and authorization -->
 - [ ] Add job application functionality
 - [ ] Create user profiles and saved jobs feature
 - [ ] Add email notifications for new job postings matching user preferences and when after a user successfully applies too
