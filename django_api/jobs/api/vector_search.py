@@ -1,12 +1,28 @@
 import sqlite3
 import numpy as np
 from pathlib import Path
+from datetime import date
 from django.conf import settings
 from sentence_transformers import SentenceTransformer
 import sqlite_vec
 
 # Load model once (global)
 _model = SentenceTransformer('all-MiniLM-L6-v2')
+
+# Map company team_size integer to band string for semantic search
+def _team_size_band(size):
+    if size is None:
+        return ""
+    if size <= 10:
+        return "1-10 employees small"
+    if size <= 50:
+        return "11-50 employees"
+    if size <= 200:
+        return "51-200 employees"
+    if size <= 500:
+        return "201-500 employees"
+    return "500+ employees large"
+
 
 def get_vector_db():
     """Get database connection with vec extension"""
@@ -26,19 +42,60 @@ def get_vector_db():
     conn.commit()
     return conn
 
-def index_job(job):
-    """Index a single job (called automatically on save)"""
-    # Build searchable text
-    text = f"{job.position} {job.company} {job.role} {job.level}"
+    
+def _build_job_index_text(job):
+    """Build rich searchable text for a job including company and team context (for RAG)."""
+    parts = [job.position, job.role, job.level]
     if job.skills:
-        text += " " + " ".join(job.skills)
-    if hasattr(job, 'details') and job.details and job.details.description:
-        text += " " + job.details.description[:300]
-    
-    # Generate embedding
+        parts.extend(job.skills)
+    # Job location
+    parts.append(job.location or "")
+    # Company: name, market, size, founded year
+    company = getattr(job, "company", None)
+    if company:
+        parts.append(getattr(company, "name", "") or "")
+        parts.append(getattr(company, "market", "") or "")
+        if getattr(company, "team_size", None) is not None:
+            parts.append(_team_size_band(company.team_size))
+        if getattr(company, "founded_year", None) is not None:
+            parts.append(f"founded {company.founded_year} established")
+        # Founder/CEO and employee context (gender, experience, age) for semantic match
+        try:
+            from companies.models import CompanyMember
+            founders = list(
+                CompanyMember.objects.filter(company=company, role="founder")
+                .select_related("user")
+            )
+            for m in founders:
+                u = getattr(m, "user", None)
+                if u and getattr(u, "gender", None):
+                    parts.append(f"founder ceo {u.gender}")
+            employees = list(
+                CompanyMember.objects.filter(company=company, role="employee")
+                .select_related("user")
+            )
+            for m in employees:
+                u = getattr(m, "user", None)
+                if u:
+                    exp = getattr(u, "experience_years", None)
+                    if exp is not None and exp > 0:
+                        parts.append(f"employee experience {exp} years")
+                    dob = getattr(u, "date_of_birth", None)
+                    if dob:
+                        age = (date.today() - dob).days // 365
+                        parts.append(f"employee age {age} years")
+        except Exception:
+            pass
+    # Description snippet
+    if hasattr(job, "details") and job.details and getattr(job.details, "description", None):
+        parts.append(job.details.description[:400])
+    return " ".join(str(p) for p in parts if p)
+
+
+def index_job(job):
+    """Index a single job (called automatically on save). Uses company + accounts context for RAG."""
+    text = _build_job_index_text(job)
     vector = _model.encode(text).astype(np.float32).tobytes()
-    
-    # Store
     conn = get_vector_db()
     conn.execute("INSERT OR REPLACE INTO job_vectors VALUES (?, ?)", (str(job.id), vector))
     conn.commit()
