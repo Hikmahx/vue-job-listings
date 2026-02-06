@@ -17,8 +17,8 @@ interface AuthRequest extends Request {
 }
 
 // Generate JWT Token
-const generateToken = (id: string): string => {
-  return jwt.sign({ user: { id, role: 'user' } }, process.env.JWT_SECRET as string, {
+const generateToken = (id: string, role: string): string => {
+  return jwt.sign({ user: { id, role } }, process.env.JWT_SECRET as string, {
     expiresIn: process.env.JWT_EXPIRE || '7d',
   });
 };
@@ -82,7 +82,7 @@ export const registerUser = async (req: Request, res: Response) => {
     await JobSeekerProfile.create({ user: user._id });
     await TeamMemberProfile.create({ user: user._id });
 
-    const token = generateToken(user._id.toString());
+    const token = generateToken(user._id.toString(), user.role);
 
     res.status(201).json({
       user: {
@@ -159,7 +159,10 @@ export const authenticateUser = async (req: Request, res: Response) => {
       (error, token) => {
         if (error) throw error;
         res.json({
-          token,
+          tokens: {
+            access: token,
+            refresh: token,
+          },
           user: {
             id: user._id,
             firstName: user.firstName,

@@ -2,6 +2,7 @@ import express from 'express';
 import { body } from 'express-validator';
 import {
   getAllCompanies,
+  getMyCompanies,
   getCompanyBySlug,
   getCompanyPeople,
   createCompany,
@@ -15,6 +16,9 @@ const router = express.Router();
 
 // GET ALL COMPANIES
 router.get('/', getAllCompanies);
+
+// GET MY COMPANIES (for logged in founder)
+router.get('/my-companies', verifyToken, getMyCompanies);
 
 // GET COMPANY BY SLUG
 router.get('/:slug', getCompanyBySlug);

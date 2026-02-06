@@ -31,8 +31,42 @@ export const getAllCompanies = async (req: Request, res: Response) => {
   }
 };
 
+// @route   GET /api/companies/my-companies
+// @desc    Get companies for logged in founder
+// @access  Private
+export const getMyCompanies = async (req: AuthRequest, res: Response) => {
+  try {
+    const memberships = await CompanyMember.find({
+      user: req.user?.id,
+      role: 'founder',
+    })
+      .populate('company')
+      .lean();
+
+    const companies = memberships.map((m: any) => ({
+      id: m.company._id,
+      name: m.company.name,
+      slug: m.company.slug,
+      logo: m.company.logo || '',
+      description: m.company.description,
+      market: m.company.market,
+      location: m.company.location,
+      teamSize: m.company.teamSize,
+      foundedYear: m.company.foundedYear,
+      website: m.company.website,
+      permission: m.permission,
+      createdAt: m.company.createdAt,
+    }));
+
+    res.json(companies);
+  } catch (error: any) {
+    console.error('Get my companies error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @route   GET /api/companies/:slug
-// @desc    Get company by slug
+// @desc    Get company by slug with full details
 // @access  Public
 export const getCompanyBySlug = async (req: Request, res: Response) => {
   try {
@@ -40,7 +74,61 @@ export const getCompanyBySlug = async (req: Request, res: Response) => {
     if (!company) {
       return res.status(404).json({ message: 'Company not found' });
     }
-    res.json(company);
+
+    const founders = await CompanyMember.find({
+      company: company._id,
+      role: 'founder',
+    })
+      .populate('user', 'firstName lastName email')
+      .lean();
+
+    const team = await CompanyMember.find({
+      company: company._id,
+      role: 'employee',
+    })
+      .populate('user', 'firstName lastName email')
+      .lean();
+
+    res.json({
+      id: company._id,
+      name: company.name,
+      slug: company.slug,
+      logo: company.logo || '',
+      description: company.description,
+      market: company.market,
+      location: company.location,
+      teamSize: company.teamSize,
+      foundedYear: company.foundedYear,
+      website: company.website,
+      createdAt: company.createdAt,
+      updatedAt: company.updatedAt,
+      founders: founders.map((f: any) => ({
+        id: f._id,
+        user: {
+          id: f.user._id,
+          firstName: f.user.firstName,
+          lastName: f.user.lastName,
+          email: f.user.email,
+        },
+        role: f.role,
+        permission: f.permission,
+        title: f.title,
+        joinedAt: f.joinedAt,
+      })),
+      team: team.map((t: any) => ({
+        id: t._id,
+        user: {
+          id: t.user._id,
+          firstName: t.user.firstName,
+          lastName: t.user.lastName,
+          email: t.user.email,
+        },
+        role: t.role,
+        permission: t.permission,
+        title: t.title,
+        joinedAt: t.joinedAt,
+      })),
+    });
   } catch (error: any) {
     console.error('Get company error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
