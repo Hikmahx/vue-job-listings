@@ -18,8 +18,10 @@ interface AuthRequest extends Request {
 
 // Generate JWT Token
 const generateToken = (id: string, role: string): string => {
-  return jwt.sign({ user: { id, role } }, process.env.JWT_SECRET as string, {
-    expiresIn: process.env.JWT_EXPIRE || '7d',
+  const secret = process.env.JWT_SECRET as string;
+  const expiresIn = process.env.JWT_EXPIRE ?? '7d';
+  return jwt.sign({ user: { id, role } }, secret, {
+    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
   });
 };
 
@@ -150,12 +152,12 @@ export const authenticateUser = async (req: Request, res: Response) => {
       },
     };
 
+    const secret = process.env.JWT_SECRET as string;
+    const expiresIn = (process.env.JWT_EXPIRE ?? '7d') as jwt.SignOptions['expiresIn'];
     jwt.sign(
       payload,
-      process.env.JWT_SECRET as string,
-      {
-        expiresIn: process.env.JWT_EXPIRE || '7d',
-      },
+      secret,
+      { expiresIn },
       (error, token) => {
         if (error) throw error;
         res.json({

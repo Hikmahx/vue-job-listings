@@ -6,22 +6,15 @@ import authRoutes from './routes/auth';
 import jobsRoutes from './routes/jobs';
 import companiesRoutes from './routes/companies';
 
-// Load environment variables
-dotenv.config();
-
-// Connect to database
+dotenv.config({ path: "./config/config.env" });
 connectDB();
 
-const app: Express = express();
+const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
-}));
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// CORS
+app.use(cors());
 
 // Routes
 app.use('/api/accounts', authRoutes);
