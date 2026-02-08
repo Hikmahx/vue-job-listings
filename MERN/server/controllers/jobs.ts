@@ -144,7 +144,7 @@ export const getAllJobs = async (req: Request, res: Response) => {
         const sizes = Array.isArray(req.query.companySizes)
           ? req.query.companySizes
           : (req.query.companySizes as string).split(',');
-        const sizeRanges = sizes.map((size) => COMPANY_SIZE_RANGES[size]).filter(Boolean);
+        const sizeRanges = sizes.map((size) => COMPANY_SIZE_RANGES[size as string]).filter(Boolean);
         if (sizeRanges.length > 0) {
           companyFilter.$or = sizeRanges.map((range) => ({
             teamSize: range.max
@@ -201,14 +201,14 @@ export const getAllJobs = async (req: Request, res: Response) => {
       companySize: job.company.teamSize?.toString() || '',
       workType: job.workType || '',
       skills: job.skills || [],
-      jobDetails: job.details
+      jobDetails: (job as any).details
         ? {
-            description: job.details.description,
-            requirements: job.details.requirements,
-            responsibilities: job.details.responsibilities,
-            externalApply: job.details.externalApply,
-            apply: job.details.apply || null,
-            experienceRequired: job.details.experienceRequired || null,
+            description: (job as any).details.description,
+            requirements: (job as any).details.requirements,
+            responsibilities: (job as any).details.responsibilities,
+            externalApply: (job as any).details.externalApply,
+            apply: (job as any).details.apply || null,
+            experienceRequired: (job as any).details.experienceRequired || null,
             foundedYear: job.company.foundedYear || null,
             website: job.company.website || null,
           }
@@ -264,14 +264,14 @@ export const getJobById = async (req: Request, res: Response) => {
       companySize: (job.company as any).teamSize?.toString() || '',
       workType: job.workType || '',
       skills: job.skills || [],
-      jobDetails: job.details
+      jobDetails: (job as any).details
         ? {
-            description: (job.details as any).description,
-            requirements: (job.details as any).requirements,
-            responsibilities: (job.details as any).responsibilities,
-            externalApply: (job.details as any).externalApply,
-            apply: (job.details as any).apply || null,
-            experienceRequired: (job.details as any).experienceRequired || null,
+            description: ((job as any).details as any).description,
+            requirements: ((job as any).details as any).requirements,
+            responsibilities: ((job as any).details as any).responsibilities,
+            externalApply: ((job as any).details as any).externalApply,
+            apply: ((job as any).details as any).apply || null,
+            experienceRequired: ((job as any).details as any).experienceRequired || null,
             foundedYear: (job.company as any).foundedYear || null,
             website: (job.company as any).website || null,
           }
@@ -374,14 +374,14 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       companySize: (populatedJob!.company as any).teamSize?.toString() || '',
       workType: populatedJob!.workType || '',
       skills: populatedJob!.skills || [],
-      jobDetails: populatedJob!.details
+      jobDetails: (populatedJob as any).details
         ? {
-            description: (populatedJob!.details as any).description,
-            requirements: (populatedJob!.details as any).requirements,
-            responsibilities: (populatedJob!.details as any).responsibilities,
-            externalApply: (populatedJob!.details as any).externalApply,
-            apply: (populatedJob!.details as any).apply || null,
-            experienceRequired: (populatedJob!.details as any).experienceRequired || null,
+            description: ((populatedJob as any).details as any).description,
+            requirements: ((populatedJob as any).details as any).requirements,
+            responsibilities: ((populatedJob as any).details as any).responsibilities,
+            externalApply: ((populatedJob as any).details as any).externalApply,
+            apply: ((populatedJob as any).details as any).apply || null,
+            experienceRequired: ((populatedJob as any).details as any).experienceRequired || null,
             foundedYear: (populatedJob!.company as any).foundedYear || null,
             website: (populatedJob!.company as any).website || null,
           }
@@ -488,14 +488,14 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
       companySize: (populatedJob!.company as any).teamSize?.toString() || '',
       workType: populatedJob!.workType || '',
       skills: populatedJob!.skills || [],
-      jobDetails: populatedJob!.details
+      jobDetails: (populatedJob as any).details
         ? {
-            description: (populatedJob!.details as any).description,
-            requirements: (populatedJob!.details as any).requirements,
-            responsibilities: (populatedJob!.details as any).responsibilities,
-            externalApply: (populatedJob!.details as any).externalApply,
-            apply: (populatedJob!.details as any).apply || null,
-            experienceRequired: (populatedJob!.details as any).experienceRequired || null,
+            description: ((populatedJob as any).details as any).description,
+            requirements: ((populatedJob as any).details as any).requirements,
+            responsibilities: ((populatedJob as any).details as any).responsibilities,
+            externalApply: ((populatedJob as any).details as any).externalApply,
+            apply: ((populatedJob as any).details as any).apply || null,
+            experienceRequired: ((populatedJob as any).details as any).experienceRequired || null,
             foundedYear: (populatedJob!.company as any).foundedYear || null,
             website: (populatedJob!.company as any).website || null,
           }
