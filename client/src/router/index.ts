@@ -14,6 +14,9 @@ import NotFoundView from '@/views/NotFound.vue'
 import MainLayout from '../components/dashboard/MainLayout.vue'
 import Dashboard from '../views/Dashboard.vue'
 import JobApplicationView from '../views/JobApplicationView.vue'
+import CompaniesView from '../views/CompaniesView.vue'
+import CompanyFormView from '../views/CompanyFormView.vue'
+import CompanyDetailView from '../views/CompanyDetailView.vue'
 
 const routes = [
   { path: "/", component: HomeView },
@@ -52,6 +55,26 @@ const routes = [
         path: 'create-job',
         component: CreateJobView,
         name: 'CreateJob'
+      },
+      {
+        path: 'companies',
+        component: CompaniesView,
+        name: 'Companies'
+      },
+      {
+        path: 'companies/create',
+        component: CompanyFormView,
+        name: 'CreateCompany'
+      },
+      {
+        path: 'companies/:slug',
+        component: CompanyDetailView,
+        name: 'CompanyDetail'
+      },
+      {
+        path: 'companies/:slug/edit',
+        component: CompanyFormView,
+        name: 'EditCompany'
       }
     ]
   },
