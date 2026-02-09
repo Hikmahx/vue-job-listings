@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { BarChart3, Briefcase, Settings, LogOut, Menu, X } from 'lucide-vue-next'
+import { BarChart3, Briefcase, Settings, LogOut, Menu, X, Building2 } from 'lucide-vue-next'
 import Sidebar from './Sidebar.vue'
 import Navbar from './Navbar.vue'
 
@@ -11,6 +11,7 @@ const isSidebarOpen = ref(false)
 
 const sidebarItems = [
   { id: 'overview', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+  { id: 'companies', label: 'Companies', icon: Building2, path: '/dashboard/companies' },
   { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/dashboard/applied-jobs' },
   { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },
 ]
@@ -18,6 +19,7 @@ const sidebarItems = [
 const activeItem = computed(() => {
   const path = route.path
   if (path === '/dashboard') return 'overview'
+  if (path.includes('companies')) return 'companies'
   if (path.includes('applied-jobs')) return 'applied-jobs'
   if (path.includes('settings')) return 'settings'
   return 'overview'
