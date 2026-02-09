@@ -83,7 +83,7 @@ const CompanyDetail = () => {
               <MapPin className="w-5 h-5 text-cyan-400 mt-1" />
               <div>
                 <p className="text-sm text-gray-500 mb-1">Location</p>
-                <p className="font-semibold text-gray-900">{{ currentCompany.location }}</p>
+                <p className="font-semibold text-gray-900">{currentCompany.location}</p>
               </div>
             </div>
 
@@ -102,7 +102,7 @@ const CompanyDetail = () => {
                 <Calendar className="w-5 h-5 text-cyan-400 mt-1" />
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Founded</p>
-                  <p className="font-semibold text-gray-900">{{ currentCompany.foundedYear }}</p>
+                  <p className="font-semibold text-gray-900">{currentCompany.foundedYear}</p>
                 </div>
               </div>
             )}
@@ -151,7 +151,7 @@ const CompanyDetail = () => {
                         </p>
                         <p className="text-sm text-gray-600">{founder.user.email}</p>
                         {founder.title && (
-                          <p className="text-sm text-gray-500 mt-1">{{ founder.title }}</p>
+                          <p className="text-sm text-gray-500 mt-1">{founder.title}</p>
                         )}
                       </div>
                       <span
@@ -187,9 +187,9 @@ const CompanyDetail = () => {
                         <p className="font-semibold text-gray-900">
                           {member.user.firstName} {member.user.lastName}
                         </p>
-                        <p className="text-sm text-gray-600">{{ member.user.email }}</p>
+                        <p className="text-sm text-gray-600">{member.user.email}</p>
                         {member.title && (
-                          <p className="text-sm text-gray-500 mt-1">{{ member.title }}</p>
+                          <p className="text-sm text-gray-500 mt-1">{member.title}</p>
                         )}
                       </div>
                       <span
