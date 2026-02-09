@@ -208,13 +208,27 @@ export const createCompany = async (req: AuthRequest, res: Response) => {
     });
 
     // Creator becomes OWNER founder
-    await CompanyMember.create({
-      user: req.user?.id,
-      company: company._id,
-      role: 'founder',
-      permission: 'owner',
-      title: 'Founder',
-    });
+    if (!req.user?.id) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    try {
+      await CompanyMember.create({
+        user: req.user.id,
+        company: company._id,
+        role: 'founder',
+        permission: 'owner',
+        title: 'Founder',
+      });
+    } catch (memberError: any) {
+      console.error('Error creating company member:', memberError);
+      // If CompanyMember creation fails, delete the company
+      await Company.deleteOne({ _id: company._id });
+      return res.status(500).json({ 
+        message: 'Failed to create company membership', 
+        error: memberError.message 
+      });
+    }
 
     res.status(201).json(company);
   } catch (error: any) {

@@ -5,9 +5,85 @@ import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { JobSeekerProfile } from '../models/JobSeekerProfile';
 import { TeamMemberProfile } from '../models/TeamMemberProfile';
+import { CompanyMember } from '../models/CompanyMember';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+/** Company payload for profile (companiesFounded / companiesEmployed) */
+function toCompanyPayload(company: any) {
+  return {
+    id: company._id,
+    name: company.name,
+    slug: company.slug,
+    logo: company.logo || '',
+    description: company.description,
+    market: company.market,
+    teamSize: company.teamSize,
+    foundedYear: company.foundedYear,
+    website: company.website,
+    location: company.location,
+    createdAt: company.createdAt,
+    updatedAt: company.updatedAt,
+  };
+}
+
+/** Build full profile: user + jobSeekerProfile + teamMemberProfile (isFounder, companiesFounded, companiesEmployed). Founder/employee come from CompanyMember, not stored on User. */
+async function buildUserProfileResponse(user: any) {
+  const userId = user._id;
+
+  const [jobSeekerProfile, teamMemberProfile, founderMemberships, employeeMemberships] =
+    await Promise.all([
+      JobSeekerProfile.findOne({ user: userId }).lean(),
+      TeamMemberProfile.findOne({ user: userId }).lean(),
+      CompanyMember.find({ user: userId, role: 'founder' }).populate('company').lean(),
+      CompanyMember.find({ user: userId, role: 'employee' }).populate('company').lean(),
+    ]);
+
+  const isFounder = founderMemberships.length > 0;
+  const companiesFounded = founderMemberships.map((m: any) => toCompanyPayload(m.company));
+  const companiesEmployed = employeeMemberships.map((m: any) => toCompanyPayload(m.company));
+
+  const jobSeekerPayload = jobSeekerProfile
+    ? {
+        workExperience: (jobSeekerProfile as any).workExperience ?? [],
+        desiredSalaryMin: (jobSeekerProfile as any).desiredSalaryMin ?? null,
+        desiredSalaryMax: (jobSeekerProfile as any).desiredSalaryMax ?? null,
+        openToRemote: (jobSeekerProfile as any).openToRemote ?? true,
+      }
+    : null;
+
+  const teamMemberPayload = teamMemberProfile
+    ? {
+        currentPosition: (teamMemberProfile as any).currentPosition ?? '',
+        verifiedEmployer: (teamMemberProfile as any).verifiedEmployer ?? false,
+        isFounder,
+        companiesFounded,
+        companiesEmployed,
+      }
+    : null;
+
+  return {
+    id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    fullName: user.getFullName(),
+    email: user.email,
+    gender: user.gender,
+    dateOfBirth: user.dateOfBirth,
+    role: user.role,
+    location: user.location,
+    phoneNumber: user.phoneNumber,
+    linkedinUrl: user.linkedinUrl,
+    twitterUrl: user.twitterUrl,
+    githubUrl: user.githubUrl,
+    portfolioUrl: user.portfolioUrl,
+    experienceYears: user.experienceYears,
+    createdAt: user.createdAt,
+    jobSeekerProfile: jobSeekerPayload,
+    teamMemberProfile: teamMemberPayload,
+  };
+}
 
 interface AuthRequest extends Request {
   user?: {
@@ -193,37 +269,16 @@ export const authenticateUser = async (req: Request, res: Response) => {
 };
 
 // @route   GET /api/accounts/profile
-// @desc    Get current user profile
+// @desc    Get current user profile (user + jobSeekerProfile + teamMemberProfile with isFounder, companiesFounded, companiesEmployed)
 // @access  Private
 export const getLoggedInUser = async (req: AuthRequest, res: Response) => {
   try {
-    const user = await User.findById(req.user?.id)
-      .populate('jobSeekerProfile')
-      .populate('teamMemberProfile')
-      .select('-password');
-
+    const user = await User.findById(req.user?.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    res.json({
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      fullName: user.getFullName(),
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-      gender: user.gender,
-      dateOfBirth: user.dateOfBirth,
-      location: user.location,
-      experienceYears: user.experienceYears,
-      linkedinUrl: user.linkedinUrl,
-      twitterUrl: user.twitterUrl,
-      githubUrl: user.githubUrl,
-      portfolioUrl: user.portfolioUrl,
-      createdAt: user.createdAt,
-    });
+    const payload = await buildUserProfileResponse(user);
+    res.json(payload);
   } catch (error: any) {
     console.error('Get profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -272,24 +327,8 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
 
     await user.save();
 
-    res.json({
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      fullName: user.getFullName(),
-      email: user.email,
-      role: user.role,
-      phoneNumber: user.phoneNumber,
-      gender: user.gender,
-      dateOfBirth: user.dateOfBirth,
-      location: user.location,
-      experienceYears: user.experienceYears,
-      linkedinUrl: user.linkedinUrl,
-      twitterUrl: user.twitterUrl,
-      githubUrl: user.githubUrl,
-      portfolioUrl: user.portfolioUrl,
-      createdAt: user.createdAt,
-    });
+    const payload = await buildUserProfileResponse(user);
+    res.json(payload);
   } catch (error: any) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
