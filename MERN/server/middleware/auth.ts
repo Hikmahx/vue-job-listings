@@ -16,7 +16,8 @@ export const verifyToken = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.header("x-auth-token");
+  const authHeader = req.header("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
 
   if (!token) {
     return res.status(401).json({ message: "No token, authorization denied" });
@@ -44,7 +45,8 @@ export const verifyTokenAndUser = async (
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.header("x-auth-token");
+  const authHeader = req.header("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null;
 
   if (!token) {
     return res.status(401).json({ message: "No token, authorization denied" });
