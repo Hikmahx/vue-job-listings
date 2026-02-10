@@ -4,17 +4,26 @@ import { useRouter, useRoute } from 'vue-router'
 import { BarChart3, Briefcase, Settings, LogOut, Menu, X, Building2 } from 'lucide-vue-next'
 import Sidebar from './Sidebar.vue'
 import Navbar from './Navbar.vue'
+import { authService } from '@/services/authService'
 
 const router = useRouter()
 const route = useRoute()
 const isSidebarOpen = ref(false)
 
-const sidebarItems = [
-  { id: 'overview', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-  { id: 'companies', label: 'Companies', icon: Building2, path: '/dashboard/companies' },
-  { id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/dashboard/applied-jobs' },
-  { id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' },
-]
+const sidebarItems = computed(() => {
+  const role = authService.getStoredUser()?.role
+  const items: Array<{ id: string; label: string; icon: any; path: string }> = [
+    { id: 'overview', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+  ]
+  if (role === 'team_member') {
+    items.push({ id: 'companies', label: 'Companies', icon: Building2, path: '/dashboard/companies' })
+  }
+  if (role === 'job_seeker') {
+    items.push({ id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/dashboard/applied-jobs' })
+  }
+  items.push({ id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' })
+  return items
+})
 
 const activeItem = computed(() => {
   const path = route.path

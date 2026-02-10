@@ -1,39 +1,33 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { BarChart3, Briefcase, Settings, Menu, Building2 } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
-import { useDispatch } from 'react-redux'
-import { AppDispatch } from '../../redux/store'
+import { useDispatch, useSelector } from 'react-redux'
+import { AppDispatch, RootState } from '../../redux/store'
 import { logout } from '../../redux/reducers/authSlice'
 
 const MainLayout = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useDispatch<AppDispatch>()
+  const { user } = useSelector((state: RootState) => state.auth)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  const sidebarItems = [
-    { id: 'overview', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
-    {
-      id: 'companies',
-      label: 'Companies',
-      icon: Building2,
-      path: '/dashboard/companies',
-    },
-    {
-      id: 'applied-jobs',
-      label: 'Applied Jobs',
-      icon: Briefcase,
-      path: '/dashboard/applied-jobs',
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      icon: Settings,
-      path: '/dashboard/settings',
-    },
-  ]
+  const sidebarItems = useMemo(() => {
+    const role = user?.role
+    const items: Array<{ id: string; label: string; icon: typeof BarChart3; path: string }> = [
+      { id: 'overview', label: 'Dashboard', icon: BarChart3, path: '/dashboard' },
+    ]
+    if (role === 'team_member') {
+      items.push({ id: 'companies', label: 'Companies', icon: Building2, path: '/dashboard/companies' })
+    }
+    if (role === 'job_seeker') {
+      items.push({ id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/dashboard/applied-jobs' })
+    }
+    items.push({ id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' })
+    return items
+  }, [user?.role])
 
   const activeItem = (() => {
     const path = location.pathname
