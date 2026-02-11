@@ -48,6 +48,18 @@ export const fetchJobById = createAsyncThunk(
   }
 );
 
+export const createJob = createAsyncThunk(
+  'jobs/createJob',
+  async (jobData: any, { rejectWithValue }) => {
+    try {
+      const job = await jobService.createJob(jobData);
+      return job;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create job');
+    }
+  }
+);
+
 const jobSlice = createSlice({
   name: 'jobs',
   initialState,
@@ -85,6 +97,18 @@ const jobSlice = createSlice({
         state.currentJob = action.payload;
       })
       .addCase(fetchJobById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(createJob.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createJob.fulfilled, (state, action) => {
+        state.loading = false;
+        // Optionally add the new job to the list
+      })
+      .addCase(createJob.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
