@@ -41,14 +41,30 @@ const isNewJob = (date: Date): boolean => {
   return diffDays <= 2;
 };
 
+// Build jobDetails payload from a JobDetails doc and company (no populate)
+function buildJobDetailsPayload(details: any, company: any) {
+  if (!details) return null;
+  return {
+    description: details.description,
+    requirements: details.requirements,
+    responsibilities: details.responsibilities,
+    externalApply: details.externalApply,
+    apply: details.apply || null,
+    experienceRequired: details.experienceRequired || null,
+    foundedYear: company?.foundedYear || null,
+    website: company?.website || null,
+  };
+}
+
 // Map company size ranges
-const COMPANY_SIZE_RANGES: Record<string, { min: number; max: number | null }> = {
-  '1-10': { min: 1, max: 10 },
-  '11-50': { min: 11, max: 50 },
-  '51-200': { min: 51, max: 200 },
-  '201-500': { min: 201, max: 500 },
-  '500+': { min: 501, max: null },
-};
+const COMPANY_SIZE_RANGES: Record<string, { min: number; max: number | null }> =
+  {
+    '1-10': { min: 1, max: 10 },
+    '11-50': { min: 11, max: 50 },
+    '51-200': { min: 51, max: 200 },
+    '201-500': { min: 201, max: 500 },
+    '500+': { min: 501, max: null },
+  };
 
 // @route   GET /api/jobs
 // @desc    Get all jobs with filtering and pagination
@@ -144,7 +160,9 @@ export const getAllJobs = async (req: Request, res: Response) => {
         const sizes = Array.isArray(req.query.companySizes)
           ? req.query.companySizes
           : (req.query.companySizes as string).split(',');
-        const sizeRanges = sizes.map((size) => COMPANY_SIZE_RANGES[size as string]).filter(Boolean);
+        const sizeRanges = sizes
+          .map((size) => COMPANY_SIZE_RANGES[size as string])
+          .filter(Boolean);
         if (sizeRanges.length > 0) {
           companyFilter.$or = sizeRanges.map((range) => ({
             teamSize: range.max
@@ -168,52 +186,49 @@ export const getAllJobs = async (req: Request, res: Response) => {
     // Get total count
     const totalCount = await Job.countDocuments(filter);
 
-    // Get jobs
+    // Get jobs (no details populate – fetch separately)
     const jobs = await Job.find(filter)
       .populate({
         path: 'company',
         select: 'name logo market teamSize foundedYear website',
       })
-      .populate('details')
       .sort(sortBy)
       .skip(skip)
       .limit(pageSize)
       .lean();
 
+    const jobIds = jobs.map((j: any) => j._id);
+    const detailsList = await JobDetails.find({ job: { $in: jobIds } }).lean();
+    const detailsByJobId = new Map(
+      detailsList.map((d: any) => [d.job.toString(), d])
+    );
+
     // Format response
-    const formattedJobs = jobs.map((job: any) => ({
-      id: job._id,
-      company: job.company.name,
-      logo: job.company.logo || '',
-      new: isNewJob(job.postedAt),
-      featured: job.featured,
-      position: job.position,
-      role: job.role,
-      level: job.level,
-      postedAt: formatPostedAt(job.postedAt),
-      contract: job.contract,
-      location: job.location,
-      currency: job.currency || '',
-      minSalary: job.minSalary,
-      maxSalary: job.maxSalary,
-      timeframe: job.timeframe,
-      market: job.company.market,
-      companySize: job.company.teamSize?.toString() || '',
-      workType: job.workType || '',
-      skills: job.skills || [],
-      jobDetails: (job as any).details
-        ? {
-            description: (job as any).details.description,
-            requirements: (job as any).details.requirements,
-            responsibilities: (job as any).details.responsibilities,
-            externalApply: (job as any).details.externalApply,
-            apply: (job as any).details.apply || null,
-            experienceRequired: (job as any).details.experienceRequired || null,
-            foundedYear: job.company.foundedYear || null,
-            website: job.company.website || null,
-          }
-        : null,
-    }));
+    const formattedJobs = jobs.map((job: any) => {
+      const details = detailsByJobId.get(job._id.toString());
+      return {
+        id: job._id,
+        company: job.company.name,
+        logo: job.company.logo || '',
+        new: isNewJob(job.postedAt),
+        featured: job.featured,
+        position: job.position,
+        role: job.role,
+        level: job.level,
+        postedAt: formatPostedAt(job.postedAt),
+        contract: job.contract,
+        location: job.location,
+        currency: job.currency || '',
+        minSalary: job.minSalary,
+        maxSalary: job.maxSalary,
+        timeframe: job.timeframe,
+        market: job.company.market,
+        companySize: job.company.teamSize?.toString() || '',
+        workType: job.workType || '',
+        skills: job.skills || [],
+        jobDetails: buildJobDetailsPayload(details, job.company),
+      };
+    });
 
     res.json({
       count: totalCount,
@@ -237,12 +252,13 @@ export const getJobById = async (req: Request, res: Response) => {
         path: 'company',
         select: 'name logo market teamSize foundedYear website',
       })
-      .populate('details')
       .lean();
 
     if (!job) {
       return res.status(404).json({ message: 'Job not found' });
     }
+
+    const details = await JobDetails.findOne({ job: job._id }).lean();
 
     const formattedJob = {
       id: job._id,
@@ -264,18 +280,7 @@ export const getJobById = async (req: Request, res: Response) => {
       companySize: (job.company as any).teamSize?.toString() || '',
       workType: job.workType || '',
       skills: job.skills || [],
-      jobDetails: (job as any).details
-        ? {
-            description: ((job as any).details as any).description,
-            requirements: ((job as any).details as any).requirements,
-            responsibilities: ((job as any).details as any).responsibilities,
-            externalApply: ((job as any).details as any).externalApply,
-            apply: ((job as any).details as any).apply || null,
-            experienceRequired: ((job as any).details as any).experienceRequired || null,
-            foundedYear: (job.company as any).foundedYear || null,
-            website: (job.company as any).website || null,
-          }
-        : null,
+      jobDetails: buildJobDetailsPayload(details, job.company),
     };
 
     res.json(formattedJob);
@@ -307,11 +312,15 @@ export const createJob = async (req: AuthRequest, res: Response) => {
     });
 
     if (!membership) {
-      return res.status(403).json({ message: 'You are not a member of this company' });
+      return res
+        .status(403)
+        .json({ message: 'You are not a member of this company' });
     }
 
     if (!['owner', 'admin'].includes(membership.permission)) {
-      return res.status(403).json({ message: 'You do not have permission to post jobs' });
+      return res
+        .status(403)
+        .json({ message: 'You do not have permission to post jobs' });
     }
 
     // Create job
@@ -338,7 +347,10 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       job: job._id,
       description: req.body.details.description,
       requirements: req.body.details.requirements || { content: '', items: [] },
-      responsibilities: req.body.details.responsibilities || { content: '', items: [] },
+      responsibilities: req.body.details.responsibilities || {
+        content: '',
+        items: [],
+      },
       externalApply: req.body.details.externalApply || false,
       apply: req.body.details.apply || '',
       experienceRequired: req.body.details.experienceRequired || '',
@@ -351,8 +363,9 @@ export const createJob = async (req: AuthRequest, res: Response) => {
         path: 'company',
         select: 'name logo market teamSize foundedYear website',
       })
-      .populate('details')
       .lean();
+
+    const details = await JobDetails.findOne({ job: job._id }).lean();
 
     const formattedJob = {
       id: populatedJob!._id,
@@ -374,18 +387,7 @@ export const createJob = async (req: AuthRequest, res: Response) => {
       companySize: (populatedJob!.company as any).teamSize?.toString() || '',
       workType: populatedJob!.workType || '',
       skills: populatedJob!.skills || [],
-      jobDetails: (populatedJob as any).details
-        ? {
-            description: ((populatedJob as any).details as any).description,
-            requirements: ((populatedJob as any).details as any).requirements,
-            responsibilities: ((populatedJob as any).details as any).responsibilities,
-            externalApply: ((populatedJob as any).details as any).externalApply,
-            apply: ((populatedJob as any).details as any).apply || null,
-            experienceRequired: ((populatedJob as any).details as any).experienceRequired || null,
-            foundedYear: (populatedJob!.company as any).foundedYear || null,
-            website: (populatedJob!.company as any).website || null,
-          }
-        : null,
+      jobDetails: buildJobDetailsPayload(details, populatedJob!.company),
     };
 
     res.status(201).json(formattedJob);
@@ -412,7 +414,9 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     });
 
     if (!membership || !['owner', 'admin'].includes(membership.permission)) {
-      return res.status(403).json({ message: 'You do not have permission to update this job' });
+      return res
+        .status(403)
+        .json({ message: 'You do not have permission to update this job' });
     }
 
     // Update job fields
@@ -465,8 +469,9 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
         path: 'company',
         select: 'name logo market teamSize foundedYear website',
       })
-      .populate('details')
       .lean();
+
+    const details = await JobDetails.findOne({ job: job._id }).lean();
 
     const formattedJob = {
       id: populatedJob!._id,
@@ -488,18 +493,7 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
       companySize: (populatedJob!.company as any).teamSize?.toString() || '',
       workType: populatedJob!.workType || '',
       skills: populatedJob!.skills || [],
-      jobDetails: (populatedJob as any).details
-        ? {
-            description: ((populatedJob as any).details as any).description,
-            requirements: ((populatedJob as any).details as any).requirements,
-            responsibilities: ((populatedJob as any).details as any).responsibilities,
-            externalApply: ((populatedJob as any).details as any).externalApply,
-            apply: ((populatedJob as any).details as any).apply || null,
-            experienceRequired: ((populatedJob as any).details as any).experienceRequired || null,
-            foundedYear: (populatedJob!.company as any).foundedYear || null,
-            website: (populatedJob!.company as any).website || null,
-          }
-        : null,
+      jobDetails: buildJobDetailsPayload(details, populatedJob!.company),
     };
 
     res.json(formattedJob);
@@ -526,7 +520,9 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
     });
 
     if (!membership || !['owner', 'admin'].includes(membership.permission)) {
-      return res.status(403).json({ message: 'You do not have permission to delete this job' });
+      return res
+        .status(403)
+        .json({ message: 'You do not have permission to delete this job' });
     }
 
     // Delete job details first
