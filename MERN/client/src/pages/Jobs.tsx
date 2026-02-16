@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { fetchJobs, setCurrentPage } from '../redux/reducers/jobSlice';
 import Header from '../components/layout/Header';
-import Footer from '../components/Home/Footer';
 import SearchFilter from '../components/filter/SearchFilter';
 import JobItem from '../components/Jobs/JobItem';
 import JobItemSkeleton from '../components/Jobs/JobItemSkeleton';
@@ -40,12 +39,12 @@ const Jobs = () => {
   }, [dispatch, currentPage, filters]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div>
       <Header>
         <SearchFilter />
       </Header>
 
-      <div className="max-w-3xl lg:max-w-6xl mx-auto flex-grow">
+      <div className="max-w-3xl lg:max-w-6xl mx-auto">
         <div className="py-24 px-4 lg:px-10">
           {loading ? (
             <ul className="flex flex-col gap-6">
@@ -87,7 +86,6 @@ const Jobs = () => {
           )}
         </div>
       </div>
-      <Footer />
     </div>
   );
 };

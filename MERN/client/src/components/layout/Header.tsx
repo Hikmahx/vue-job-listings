@@ -21,9 +21,9 @@ const Header = ({ children }: HeaderProps) => {
             className="absolute inset-0 hidden lg:flex h-full"
             alt="bg-header-desktop"
           />
-          {children}
         </div>
       </header>
+      {children}
     </div>
   );
 };
