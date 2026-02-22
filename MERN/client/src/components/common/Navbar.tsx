@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { X, Menu } from 'lucide-react';
 import Logo from '../icons/Logo';
+import { RootState } from '../../redux/store';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const navLinks = [
     { to: '/jobs', label: 'Jobs' },
@@ -47,17 +50,29 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <Link to="/login">
-              <button className="border-0 px-6 lg:px-7 h-12 transition-all duration-300 text-white bg-transparent hover:opacity-80">
-                Login
-              </button>
-            </Link>
-
-            <Link to="/signup">
-              <button className="inline-flex items-center justify-center rounded-md text-sm font-medium shadow bg-primary text-primary-foreground hover:bg-primary/90 px-6 lg:px-7 h-12 transition-all duration-300">
-                Signup
-              </button>
-            </Link>
+            {user ? (
+              <Link to="/dashboard" className="flex items-center gap-3 rounded-full focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-cyan-400">
+                {/* <span className="text-sm font-medium text-white truncate max-w-[120px]">
+                  {user.fullName?.split(' ')[0]}
+                </span> */}
+                <span className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-cyan-900 font-bold text-sm shrink-0">
+                  {user.fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                </span>
+              </Link>
+            ) : (
+              <>
+                <Link to="/login">
+                  <button className="border-0 px-6 lg:px-7 h-12 transition-all duration-300 text-white bg-transparent hover:opacity-80">
+                    Login
+                  </button>
+                </Link>
+                <Link to="/signup">
+                  <button className="inline-flex items-center justify-center rounded-md text-sm font-medium shadow bg-primary text-primary-foreground hover:bg-primary/90 px-6 lg:px-7 h-12 transition-all duration-300">
+                    Signup
+                  </button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -97,23 +112,38 @@ const Navbar = () => {
               </nav>
 
               <div className="flex flex-col gap-4 pt-6 border-t">
-                <Link to="/login">
-                  <button
-                    className="w-full border border-cyan-400 text-cyan-400 hover:bg-cyan-400/30 px-4 py-2 rounded-lg"
-                    onClick={closeMobileMenu}
-                  >
-                    Login
-                  </button>
-                </Link>
-
-                <Link to="/signup">
-                  <button
-                    className="w-full bg-cyan-400 hover:bg-cyan-900 text-white hover:text-cyan-400 px-4 py-2 rounded-lg transition-colors"
-                    onClick={closeMobileMenu}
-                  >
-                    Signup
-                  </button>
-                </Link>
+                {user ? (
+                  <Link to="/dashboard" onClick={closeMobileMenu}>
+                    <div className="flex items-center gap-3 w-full px-4 py-3 rounded-lg bg-cyan-50 border border-cyan-200">
+                      <span className="w-10 h-10 rounded-full bg-cyan-400 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                        {user.fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      </span>
+                      <div className="text-left min-w-0">
+                        <p className="font-semibold text-cyan-900 truncate">{user.fullName || 'User'}</p>
+                        <p className="text-xs text-cyan-700">Go to Dashboard</p>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login">
+                      <button
+                        className="w-full border border-cyan-400 text-cyan-400 hover:bg-cyan-400/30 px-4 py-2 rounded-lg"
+                        onClick={closeMobileMenu}
+                      >
+                        Login
+                      </button>
+                    </Link>
+                    <Link to="/signup">
+                      <button
+                        className="w-full bg-cyan-400 hover:bg-cyan-900 text-white hover:text-cyan-400 px-4 py-2 rounded-lg transition-colors"
+                        onClick={closeMobileMenu}
+                      >
+                        Signup
+                      </button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
