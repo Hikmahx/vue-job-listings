@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Navbar from '../common/Navbar';
@@ -24,11 +25,15 @@ const trustedCompanies = [
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [location, setLocation] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission handled by SearchAndCountry component
-    navigate('/jobs');
+    const params = new URLSearchParams();
+    if (search.trim()) params.set('search', search.trim());
+    if (location) params.set('location', location);
+    navigate(`/jobs${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   return (
@@ -59,7 +64,12 @@ const HeroSection = () => {
           <form onSubmit={handleSubmit} className="w-full max-w-[856px] mx-auto">
             <div className="bg-white rounded-lg p-8 shadow-lg flex flex-col sm:flex-row gap-2">
               <div className="flex-1 min-w-0 text-cyan-900">
-                <SearchAndCountry />
+                <SearchAndCountry
+                  searchValue={search}
+                  locationValue={location}
+                  onSearchChange={setSearch}
+                  onLocationChange={setLocation}
+                />
               </div>
               <button
                 type="submit"

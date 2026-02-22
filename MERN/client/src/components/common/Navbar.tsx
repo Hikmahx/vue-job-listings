@@ -54,7 +54,7 @@ const Navbar = () => {
             </Link>
 
             <Link to="/signup">
-              <button className="px-6 lg:px-7 h-12 transition-all duration-300 bg-white text-cyan-900 rounded-lg font-semibold hover:bg-cyan-50">
+              <button className="inline-flex items-center justify-center rounded-md text-sm font-medium shadow bg-primary text-primary-foreground hover:bg-primary/90 px-6 lg:px-7 h-12 transition-all duration-300">
                 Signup
               </button>
             </Link>
@@ -108,7 +108,7 @@ const Navbar = () => {
 
                 <Link to="/signup">
                   <button
-                    className="w-full bg-cyan-400 hover:bg-cyan-900 text-white px-4 py-2 rounded-lg"
+                    className="w-full bg-cyan-400 hover:bg-cyan-900 text-white hover:text-cyan-400 px-4 py-2 rounded-lg transition-colors"
                     onClick={closeMobileMenu}
                   >
                     Signup

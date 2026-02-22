@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { fetchJobById } from '../redux/reducers/jobSlice';
 import Header from '../components/layout/Header';
-import Footer from '../components/Home/Footer';
 import { Heart, Share2, MapPin, Clock, Briefcase, ExternalLink } from 'lucide-react';
 import { getSalaryDisplay } from '../utils/salaryFormatter';
 
@@ -14,9 +13,11 @@ const JobDetail = () => {
   const navigate = useNavigate();
   const { currentJob, loading, error } = useSelector((state: RootState) => state.jobs);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [logoError, setLogoError] = useState(false);
 
   useEffect(() => {
     if (id) {
+      setLogoError(false);
       dispatch(fetchJobById(id));
     }
   }, [dispatch, id]);
@@ -134,12 +135,19 @@ const JobDetail = () => {
                 <div className="flex items-center justify-between p-8 md:p-12">
                   <div className="flex items-center gap-6">
                     <div>
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                        <img
-                          src={currentJob.logo}
-                          alt={currentJob.company}
-                          className="w-full h-full object-contain p-2"
-                        />
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                        {currentJob.logo && !logoError ? (
+                          <img
+                            src={currentJob.logo}
+                            alt={currentJob.company}
+                            className="w-full h-full object-contain p-2"
+                            onError={() => setLogoError(true)}
+                          />
+                        ) : (
+                          <span className="text-lg font-bold text-grayish-cyan">
+                            {currentJob.company.charAt(0)}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div>
@@ -383,7 +391,6 @@ const JobDetail = () => {
           </div>
         )}
       </Header>
-      <Footer />
     </div>
   );
 };

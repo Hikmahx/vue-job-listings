@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { Plus, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react'
@@ -14,6 +15,7 @@ const Companies = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [companyToDelete, setCompanyToDelete] = useState<string | null>(null)
   const [showMenu, setShowMenu] = useState<string | null>(null)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
     dispatch(fetchMyCompanies())
@@ -56,9 +58,28 @@ const Companies = () => {
     setCompanyToDelete(null)
   }
 
-  const toggleMenu = (slug: string) => {
-    setShowMenu(showMenu === slug ? null : slug)
+  const toggleMenu = (slug: string, el: HTMLButtonElement | null) => {
+    if (showMenu === slug) {
+      setShowMenu(null)
+      return
+    }
+    if (el) {
+      const rect = el.getBoundingClientRect()
+      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 150 })
+    }
+    setShowMenu(slug)
   }
+
+  useEffect(() => {
+    if (!showMenu) return
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Element
+      if (target.closest('[data-companies-action-menu]') || target.closest('[data-companies-menu-trigger]')) return
+      setShowMenu(null)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showMenu])
 
   return (
     <div className='bg-white rounded-lg shadow-md p-8'>
@@ -184,36 +205,43 @@ const Companies = () => {
                   <td className='py-4 px-4'>
                     <div className='flex justify-end relative'>
                       <button
-                        onClick={() => toggleMenu(company.slug)}
+                        data-companies-menu-trigger
+                        onClick={(e) => toggleMenu(company.slug, e.currentTarget)}
                         className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
                       >
                         <MoreVertical className='w-5 h-5 text-gray-600' />
                       </button>
-                      {showMenu === company.slug && (
-                        <div className='absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[150px]'>
-                          <button
-                            onClick={() => handleView(company.slug)}
-                            className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700'
+                      {showMenu === company.slug &&
+                        createPortal(
+                          <div
+                            data-companies-action-menu
+                            className='fixed z-[100] bg-white border border-gray-200 rounded-lg shadow-lg min-w-[150px]'
+                            style={{ top: menuPosition.top, left: menuPosition.left }}
                           >
-                            <Eye className='w-4 h-4' />
-                            View
-                          </button>
-                          <button
-                            onClick={() => handleEdit(company.slug)}
-                            className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700'
-                          >
-                            <Edit className='w-4 h-4' />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(company.slug)}
-                            className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600'
-                          >
-                            <Trash2 className='w-4 h-4' />
-                            Delete
-                          </button>
-                        </div>
-                      )}
+                            <button
+                              onClick={() => handleView(company.slug)}
+                              className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700'
+                            >
+                              <Eye className='w-4 h-4' />
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleEdit(company.slug)}
+                              className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-gray-700'
+                            >
+                              <Edit className='w-4 h-4' />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(company.slug)}
+                              className='w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-2 text-red-600'
+                            >
+                              <Trash2 className='w-4 h-4' />
+                              Delete
+                            </button>
+                          </div>,
+                          document.body,
+                        )}
                     </div>
                   </td>
                 </tr>
