@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { AppDispatch, RootState } from '../../redux/store';
 import { fetchJobs } from '../../redux/reducers/jobSlice';
 import SectionTitle from './SectionTitle';
@@ -8,7 +8,6 @@ import JobItem from '../Jobs/JobItem';
 
 const JobsForYou = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
   const { jobs, loading } = useSelector((state: RootState) => state.jobs);
 
   useEffect(() => {
@@ -36,12 +35,12 @@ const JobsForYou = () => {
               ))}
             </ul>
             <div className="text-center">
-              <button
-                onClick={() => navigate('/jobs')}
-                className="bg-cyan-400 hover:bg-cyan-900 text-white px-8 py-6 h-12 font-medium text-base tracking-wider w-full max-w-[168px] rounded-lg"
+              <Link
+                to="/jobs"
+                className="inline-flex items-center justify-center bg-cyan-400 hover:bg-cyan-900 text-white px-8 h-12 font-medium text-base tracking-wider w-full max-w-[168px] rounded-lg transition-colors"
               >
                 More Jobs
-              </button>
+              </Link>
             </div>
           </>
         ) : (
