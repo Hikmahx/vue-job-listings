@@ -32,6 +32,9 @@ const handleFormSubmit = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
+    // Map founder and employee to team_member role
+    const role = formData.value.accountType === 'job_seeker' ? 'job_seeker' : 'team_member'
+
     const payload: RegisterPayload = {
       firstName: formData.value.firstName,
       lastName: formData.value.lastName,
@@ -41,7 +44,7 @@ const handleFormSubmit = async () => {
       phoneNumber: formData.value.phone,
       gender: formData.value.gender,
       dateOfBirth: formData.value.dob,
-      role: formData.value.accountType,
+      role: role,
       location: '',
       experienceYears: parseInt(formData.value.experience) || 0,
       linkedinUrl: formData.value.linkedin,

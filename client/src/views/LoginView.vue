@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
+import { authService } from '@/services/authService'
 import AuthLayout from '@/components/auth/AuthLayout.vue'
 import TextInput from '@/components/auth/TextInput.vue'
 import PasswordInput from '@/components/auth/PasswordInput.vue'
@@ -30,10 +31,13 @@ const onSubmit = handleSubmit(async (formValues) => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    await authService.login({
+      email: formValues.email,
+      password: formValues.password,
+    })
     router.push('/dashboard')
   } catch (error: any) {
-    errorMessage.value = error.detail || 'Login failed. Please try again.'
+    errorMessage.value = error.response?.data?.message || error.detail || 'Login failed. Please try again.'
   } finally {
     isLoading.value = false
   }
