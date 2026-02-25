@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../redux/store';
 import { addRole, setLevel, addSkill } from '../../redux/reducers/filterSlice';
@@ -34,11 +35,22 @@ const JobItem = ({ job }: JobItemProps) => {
           : ''
       }`}
     >
-      <img
-        src={job.logo}
-        alt="banner"
-        className="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -mt-14 md:mt-0 mb-[-16px]"
-      />
+      <div className="relative w-16 h-16 lg:w-[88px] lg:h-[88px] -mt-14 md:mt-0 mb-[-16px] flex-shrink-0">
+        {job.logo ? (
+          <img
+            src={job.logo}
+            alt={`${job.company} logo`}
+            className="w-16 h-16 object-contain rounded-lg"
+          />
+        ) : (
+          <div
+            className="w-16 h-16 my-auto rounded-full bg-grayish-cyan/10 text-cyan-400/60 flex items-center justify-center text-2xl font-bold"
+            aria-hidden
+          >
+            <p className="my-auto">{job.company.trim().charAt(0).toUpperCase()}</p>
+          </div>
+        )}
+      </div>
       <div className="flex-1 flex flex-col lg:flex-row lg:items-center">
         <div className="">
           <div className="flex items-center justify-start gap-1 flex-wrap">
