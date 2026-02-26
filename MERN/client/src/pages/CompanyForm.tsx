@@ -246,7 +246,24 @@ const CompanyForm = () => {
             Company Logo
           </label>
           <div className='flex flex-wrap gap-3 items-center'>
-            {logoMode === 'url' ? (
+            {formData.logo ? (
+              /* Has logo: show only preview + remove (no file input, no "No file chosen") */
+              <div className='flex-1 min-w-0 flex items-center gap-3'>
+                <img
+                  src={formData.logo}
+                  alt='Logo preview'
+                  className='w-12 h-12 rounded-full object-cover border border-gray-200 shrink-0'
+                />
+                <button
+                  type='button'
+                  onClick={() => setFormData({ ...formData, logo: '' })}
+                  className='p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors'
+                  aria-label='Remove logo'
+                >
+                  <ion-icon name='trash-outline' style={{ fontSize: '1.25rem' }} />
+                </button>
+              </div>
+            ) : logoMode === 'url' ? (
               <input
                 type='url'
                 value={formData.logo}
@@ -257,6 +274,7 @@ const CompanyForm = () => {
                 placeholder='https://example.com/logo.png'
               />
             ) : (
+              /* Upload mode, no logo yet: visible button + hidden file input */
               <div className='flex-1 min-w-0 flex items-center gap-2'>
                 <input
                   ref={fileInputRef}
@@ -264,11 +282,16 @@ const CompanyForm = () => {
                   accept='image/*'
                   onChange={handleLogoFileChange}
                   disabled={logoUploading}
-                  className='block w-full min-w-0 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100'
+                  className='hidden'
+                  id='company-logo-upload'
                 />
-                {logoUploading && (
-                  <span className='text-sm text-gray-500 shrink-0'>Uploading…</span>
-                )}
+                <label
+                  htmlFor='company-logo-upload'
+                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium cursor-pointer transition-colors border-cyan-400 bg-cyan-50 text-cyan-900 hover:bg-cyan-100 ${logoUploading ? 'pointer-events-none opacity-70' : ''}`}
+                >
+                  <Upload className='w-4 h-4' />
+                  {logoUploading ? 'Uploading…' : 'Choose image'}
+                </label>
               </div>
             )}
             <div className='flex gap-2 shrink-0'>
@@ -299,20 +322,9 @@ const CompanyForm = () => {
             </div>
           </div>
           {formData.logo && (
-            <div className='mt-3 flex items-center gap-3'>
-              <img
-                src={formData.logo}
-                alt='Logo preview'
-                className='w-12 h-12 rounded-full object-cover border border-gray-200'
-              />
-              <button
-                type='button'
-                onClick={() => setFormData({ ...formData, logo: '' })}
-                className='text-sm text-red-600 hover:text-red-700'
-              >
-                Remove logo
-              </button>
-            </div>
+            <p className='mt-1.5 text-xs text-gray-500'>
+              Logo set. Switch to &quot;Paste link&quot; or &quot;Upload image&quot; to change, or remove above.
+            </p>
           )}
         </div>
 
