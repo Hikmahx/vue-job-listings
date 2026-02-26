@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, Link as LinkIcon, Upload } from 'lucide-react'
 import { AppDispatch, RootState } from '../redux/store'
 import {
   fetchCompanyBySlug,
   createCompany,
   updateCompany,
 } from '../redux/reducers/companySlice'
+import { uploadImage } from '../utils/cloudinary'
 
 const CompanyForm = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -29,6 +30,9 @@ const CompanyForm = () => {
     website: '',
   })
   const [formErrors, setFormErrors] = useState<string[]>([])
+  const [logoMode, setLogoMode] = useState<'url' | 'upload'>('url')
+  const [logoUploading, setLogoUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const marketOptions = [
     { value: 'saas', label: 'SaaS' },
@@ -124,6 +128,27 @@ const CompanyForm = () => {
     navigate('/dashboard/companies')
   }
 
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setFormErrors((prev) => [...prev, 'Please select an image file (e.g. JPG, PNG)'])
+      return
+    }
+    setLogoUploading(true)
+    setFormErrors((prev) => prev.filter((x) => x !== 'Logo upload failed.'))
+    try {
+      const url = await uploadImage(file)
+      setFormData((prev) => ({ ...prev, logo: url }))
+    } catch (err: any) {
+      setFormErrors((prev) => [...prev, err?.message || 'Logo upload failed.'])
+    } finally {
+      setLogoUploading(false)
+      e.target.value = ''
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className='bg-white rounded-lg shadow-md p-8'>
       <button
@@ -215,35 +240,95 @@ const CompanyForm = () => {
           </div>
         </div>
 
-        <div className='grid md:grid-cols-2 gap-6'>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Logo URL
-            </label>
-            <input
-              type='url'
-              value={formData.logo}
-              onChange={(e) =>
-                setFormData({ ...formData, logo: e.target.value })
-              }
-              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent'
-            />
+        {/* Company Logo: toggle between paste link or upload */}
+        <div>
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
+            Company Logo
+          </label>
+          <div className='flex flex-wrap gap-3 items-center'>
+            {logoMode === 'url' ? (
+              <input
+                type='url'
+                value={formData.logo}
+                onChange={(e) =>
+                  setFormData({ ...formData, logo: e.target.value })
+                }
+                className='flex-1 min-w-0 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent'
+                placeholder='https://example.com/logo.png'
+              />
+            ) : (
+              <div className='flex-1 min-w-0 flex items-center gap-2'>
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  accept='image/*'
+                  onChange={handleLogoFileChange}
+                  disabled={logoUploading}
+                  className='block w-full min-w-0 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100'
+                />
+                {logoUploading && (
+                  <span className='text-sm text-gray-500 shrink-0'>Uploading…</span>
+                )}
+              </div>
+            )}
+            <div className='flex gap-2 shrink-0'>
+              <button
+                type='button'
+                onClick={() => setLogoMode('url')}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
+                  logoMode === 'url'
+                    ? 'border-cyan-400 bg-cyan-50 text-cyan-900'
+                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <LinkIcon className='w-4 h-4' />
+                Paste link
+              </button>
+              <button
+                type='button'
+                onClick={() => setLogoMode('upload')}
+                className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium transition-colors ${
+                  logoMode === 'upload'
+                    ? 'border-cyan-400 bg-cyan-50 text-cyan-900'
+                    : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                <Upload className='w-4 h-4' />
+                Upload image
+              </button>
+            </div>
           </div>
+          {formData.logo && (
+            <div className='mt-3 flex items-center gap-3'>
+              <img
+                src={formData.logo}
+                alt='Logo preview'
+                className='w-12 h-12 rounded-full object-cover border border-gray-200'
+              />
+              <button
+                type='button'
+                onClick={() => setFormData({ ...formData, logo: '' })}
+                className='text-sm text-red-600 hover:text-red-700'
+              >
+                Remove logo
+              </button>
+            </div>
+          )}
+        </div>
 
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>
-              Website
-            </label>
-            <input
-              type='url'
-              value={formData.website}
-              onChange={(e) =>
-                setFormData({ ...formData, website: e.target.value })
-              }
-              className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent'
-              placeholder='https://example.com'
-            />
-          </div>
+        <div>
+          <label className='block text-sm font-medium text-gray-700 mb-2'>
+            Website
+          </label>
+          <input
+            type='url'
+            value={formData.website}
+            onChange={(e) =>
+              setFormData({ ...formData, website: e.target.value })
+            }
+            className='w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-transparent'
+            placeholder='https://example.com'
+          />
         </div>
 
         <div className='grid md:grid-cols-2 gap-6'>

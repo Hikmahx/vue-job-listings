@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { validationResult, Result } from 'express-validator';
 import { Company } from '../models/Company';
 import { CompanyMember } from '../models/CompanyMember';
+import { deleteImageByUrl, isCloudinaryUrl } from '../utils/cloudinary';
 
 interface AuthRequest extends Request {
   user?: {
@@ -222,7 +223,13 @@ export const createCompany = async (req: AuthRequest, res: Response) => {
       });
     } catch (memberError: any) {
       console.error('Error creating company member:', memberError);
-      // If CompanyMember creation fails, delete the company
+      if (company.logo) {
+        try {
+          await deleteImageByUrl(company.logo);
+        } catch (e) {
+          console.error('Cloudinary logo cleanup on rollback failed:', e);
+        }
+      }
       await Company.deleteOne({ _id: company._id });
       return res.status(500).json({ 
         message: 'Failed to create company membership', 
@@ -281,6 +288,18 @@ export const updateCompany = async (req: AuthRequest, res: Response) => {
       company.slug = newSlug;
     }
 
+    // If logo is being changed/removed, delete old Cloudinary image to avoid orphans
+    if (req.body.logo !== undefined && company.logo && isCloudinaryUrl(company.logo)) {
+      const newLogo = req.body.logo || '';
+      if (newLogo !== company.logo) {
+        try {
+          await deleteImageByUrl(company.logo);
+        } catch (err) {
+          console.error('Cloudinary logo cleanup on update failed:', err);
+        }
+      }
+    }
+
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
         (company as any)[field] = req.body[field];
@@ -314,6 +333,15 @@ export const deleteCompany = async (req: AuthRequest, res: Response) => {
 
     if (!membership) {
       return res.status(403).json({ message: 'Only the owner can delete the company' });
+    }
+
+    // Remove company logo from Cloudinary if it was uploaded there (avoid orphan assets)
+    if (company.logo) {
+      try {
+        await deleteImageByUrl(company.logo);
+      } catch (err) {
+        console.error('Cloudinary logo cleanup failed:', err);
+      }
     }
 
     await Company.deleteOne({ _id: company._id });
