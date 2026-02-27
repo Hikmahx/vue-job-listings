@@ -41,7 +41,7 @@ export const fetchCompanyBySlug = createAsyncThunk(
 
 export const createCompany = createAsyncThunk(
   'companies/createCompany',
-  async (data: CreateCompanyData, { rejectWithValue }) => {
+  async (data: CreateCompanyData | FormData, { rejectWithValue }) => {
     try {
       const company = await companyService.createCompany(data);
       return company;
@@ -53,7 +53,7 @@ export const createCompany = createAsyncThunk(
 
 export const updateCompany = createAsyncThunk(
   'companies/updateCompany',
-  async ({ slug, data }: { slug: string; data: Partial<CreateCompanyData> }, { rejectWithValue }) => {
+  async ({ slug, data }: { slug: string; data: Partial<CreateCompanyData> | FormData }, { rejectWithValue }) => {
     try {
       const company = await companyService.updateCompany(slug, data);
       return company;

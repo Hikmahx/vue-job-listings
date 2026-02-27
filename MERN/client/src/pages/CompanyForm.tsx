@@ -8,7 +8,6 @@ import {
   createCompany,
   updateCompany,
 } from '../redux/reducers/companySlice'
-import { uploadImage } from '../utils/cloudinary'
 
 const CompanyForm = () => {
   const { slug } = useParams<{ slug: string }>()
@@ -31,7 +30,8 @@ const CompanyForm = () => {
   })
   const [formErrors, setFormErrors] = useState<string[]>([])
   const [logoMode, setLogoMode] = useState<'url' | 'upload'>('url')
-  const [logoUploading, setLogoUploading] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const marketOptions = [
@@ -96,21 +96,40 @@ const CompanyForm = () => {
     }
 
     try {
-      const data: any = {
-        name: formData.name,
-        description: formData.description,
-        market: formData.market,
-        location: formData.location,
-      }
-      if (formData.logo) data.logo = formData.logo
-      if (formData.teamSize) data.teamSize = formData.teamSize
-      if (formData.foundedYear) data.foundedYear = formData.foundedYear
-      if (formData.website) data.website = formData.website
+      if (logoFile) {
+        // Send logo as file so server uploads to Cloudinary only on save (no orphans)
+        const formDataToSend = new FormData()
+        formDataToSend.append('name', formData.name)
+        formDataToSend.append('description', formData.description)
+        formDataToSend.append('market', formData.market)
+        formDataToSend.append('location', formData.location)
+        formDataToSend.append('logo', logoFile)
+        if (formData.teamSize != null) formDataToSend.append('teamSize', String(formData.teamSize))
+        if (formData.foundedYear != null) formDataToSend.append('foundedYear', String(formData.foundedYear))
+        if (formData.website) formDataToSend.append('website', formData.website)
 
-      if (isEdit && slug) {
-        await dispatch(updateCompany({ slug, data })).unwrap()
+        if (isEdit && slug) {
+          await dispatch(updateCompany({ slug, data: formDataToSend })).unwrap()
+        } else {
+          await dispatch(createCompany(formDataToSend)).unwrap()
+        }
       } else {
-        await dispatch(createCompany(data)).unwrap()
+        const data: any = {
+          name: formData.name,
+          description: formData.description,
+          market: formData.market,
+          location: formData.location,
+        }
+        if (formData.logo) data.logo = formData.logo
+        if (formData.teamSize) data.teamSize = formData.teamSize
+        if (formData.foundedYear) data.foundedYear = formData.foundedYear
+        if (formData.website) data.website = formData.website
+
+        if (isEdit && slug) {
+          await dispatch(updateCompany({ slug, data })).unwrap()
+        } else {
+          await dispatch(createCompany(data)).unwrap()
+        }
       }
       navigate('/dashboard/companies')
     } catch (err: any) {
@@ -128,26 +147,29 @@ const CompanyForm = () => {
     navigate('/dashboard/companies')
   }
 
-  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
       setFormErrors((prev) => [...prev, 'Please select an image file (e.g. JPG, PNG)'])
       return
     }
-    setLogoUploading(true)
-    setFormErrors((prev) => prev.filter((x) => x !== 'Logo upload failed.'))
-    try {
-      const url = await uploadImage(file)
-      setFormData((prev) => ({ ...prev, logo: url }))
-    } catch (err: any) {
-      setFormErrors((prev) => [...prev, err?.message || 'Logo upload failed.'])
-    } finally {
-      setLogoUploading(false)
-      e.target.value = ''
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    }
+    if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+    setLogoFile(file)
+    setLogoPreviewUrl(URL.createObjectURL(file))
+    setFormData((prev) => ({ ...prev, logo: '' }))
   }
+
+  const handleRemoveLogo = () => {
+    if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+    setLogoFile(null)
+    setLogoPreviewUrl(null)
+    setFormData((prev) => ({ ...prev, logo: '' }))
+  }
+
+  useEffect(() => () => {
+    if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+  }, [logoPreviewUrl])
 
   return (
     <div className='bg-white rounded-lg shadow-md p-8'>
@@ -246,17 +268,17 @@ const CompanyForm = () => {
             Company Logo
           </label>
           <div className='flex flex-wrap gap-3 items-center'>
-            {formData.logo ? (
-              /* Has logo: show only preview + remove (no file input, no "No file chosen") */
+            {formData.logo || logoPreviewUrl ? (
+              /* Has logo (URL or selected file): show only preview + remove; no upload until save */
               <div className='flex-1 min-w-0 flex items-center gap-3'>
                 <img
-                  src={formData.logo}
+                  src={logoPreviewUrl || formData.logo}
                   alt='Logo preview'
                   className='w-12 h-12 rounded-full object-cover border border-gray-200 shrink-0'
                 />
                 <button
                   type='button'
-                  onClick={() => setFormData({ ...formData, logo: '' })}
+                  onClick={handleRemoveLogo}
                   className='p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors'
                   aria-label='Remove logo'
                 >
@@ -274,23 +296,22 @@ const CompanyForm = () => {
                 placeholder='https://example.com/logo.png'
               />
             ) : (
-              /* Upload mode, no logo yet: visible button + hidden file input */
+              /* Upload mode, no logo yet: visible button + hidden file input (file sent on save, no orphan) */
               <div className='flex-1 min-w-0 flex items-center gap-2'>
                 <input
                   ref={fileInputRef}
                   type='file'
                   accept='image/*'
                   onChange={handleLogoFileChange}
-                  disabled={logoUploading}
                   className='hidden'
                   id='company-logo-upload'
                 />
                 <label
                   htmlFor='company-logo-upload'
-                  className={`inline-flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium cursor-pointer transition-colors border-cyan-400 bg-cyan-50 text-cyan-900 hover:bg-cyan-100 ${logoUploading ? 'pointer-events-none opacity-70' : ''}`}
+                  className='inline-flex items-center gap-2 px-4 py-3 rounded-lg border text-sm font-medium cursor-pointer transition-colors border-cyan-400 bg-cyan-50 text-cyan-900 hover:bg-cyan-100'
                 >
                   <Upload className='w-4 h-4' />
-                  {logoUploading ? 'Uploading…' : 'Choose image'}
+                  Choose image
                 </label>
               </div>
             )}
@@ -321,9 +342,9 @@ const CompanyForm = () => {
               </button>
             </div>
           </div>
-          {formData.logo && (
+          {(formData.logo || logoPreviewUrl) && (
             <p className='mt-1.5 text-xs text-gray-500'>
-              Logo set. Switch to &quot;Paste link&quot; or &quot;Upload image&quot; to change, or remove above.
+              {logoFile ? 'Image will be uploaded when you save.' : 'Logo set. Switch to &quot;Paste link&quot; or &quot;Upload image&quot; to change, or remove above.'}
             </p>
           )}
         </div>

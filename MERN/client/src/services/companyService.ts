@@ -64,13 +64,19 @@ export const companyService = {
     return res.data;
   },
 
-  async createCompany(data: CreateCompanyData): Promise<Company> {
-    const res = await api.post('/companies/create', data);
+  async createCompany(data: CreateCompanyData | FormData): Promise<Company> {
+    const isFormData = data instanceof FormData;
+    const res = await api.post('/companies/create', data, {
+      headers: isFormData ? { 'Content-Type': undefined } as any : undefined,
+    });
     return res.data;
   },
 
-  async updateCompany(slug: string, data: Partial<CreateCompanyData>): Promise<Company> {
-    const res = await api.put(`/companies/${slug}/update`, data);
+  async updateCompany(slug: string, data: Partial<CreateCompanyData> | FormData): Promise<Company> {
+    const isFormData = data instanceof FormData;
+    const res = await api.put(`/companies/${slug}/update`, data, {
+      headers: isFormData ? { 'Content-Type': undefined } as any : undefined,
+    });
     return res.data;
   },
 

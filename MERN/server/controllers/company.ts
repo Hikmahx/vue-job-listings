@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { validationResult, Result } from 'express-validator';
 import { Company } from '../models/Company';
 import { CompanyMember } from '../models/CompanyMember';
-import { deleteImageByUrl, isCloudinaryUrl } from '../utils/cloudinary';
+import { deleteImageByUrl, isCloudinaryUrl, uploadLogoFile } from '../utils/cloudinary';
 
 interface AuthRequest extends Request {
   user?: {
@@ -188,6 +188,18 @@ export const createCompany = async (req: AuthRequest, res: Response) => {
   }
 
   try {
+    // If logo was uploaded as file (multipart), upload to Cloudinary only now so we never create orphans
+    if ((req as any).file) {
+      try {
+        req.body.logo = await uploadLogoFile((req as any).file);
+      } catch (err: any) {
+        return res.status(400).json({ message: err?.message || 'Logo upload failed' });
+      }
+    }
+
+    const teamSize = req.body.teamSize != null ? (typeof req.body.teamSize === 'string' ? parseInt(req.body.teamSize, 10) : req.body.teamSize) : undefined;
+    const foundedYear = req.body.foundedYear != null ? (typeof req.body.foundedYear === 'string' ? parseInt(req.body.foundedYear, 10) : req.body.foundedYear) : undefined;
+
     const slug = generateSlug(req.body.name);
 
     // Check if slug already exists
@@ -203,8 +215,8 @@ export const createCompany = async (req: AuthRequest, res: Response) => {
       market: req.body.market,
       location: req.body.location,
       logo: req.body.logo || '',
-      teamSize: req.body.teamSize || undefined,
-      foundedYear: req.body.foundedYear || undefined,
+      teamSize: Number.isNaN(teamSize) ? undefined : teamSize,
+      foundedYear: Number.isNaN(foundedYear) ? undefined : foundedYear,
       website: req.body.website || '',
     });
 
@@ -267,6 +279,23 @@ export const updateCompany = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'You are not a founder of this company' });
     }
 
+    // If logo was uploaded as file (multipart), upload to Cloudinary only now so we never create orphans
+    if ((req as any).file) {
+      try {
+        req.body.logo = await uploadLogoFile((req as any).file);
+      } catch (err: any) {
+        return res.status(400).json({ message: err?.message || 'Logo upload failed' });
+      }
+      // Remove old logo from Cloudinary if it was there
+      if (company.logo && isCloudinaryUrl(company.logo)) {
+        try {
+          await deleteImageByUrl(company.logo);
+        } catch (err) {
+          console.error('Cloudinary logo cleanup on update failed:', err);
+        }
+      }
+    }
+
     const allowedUpdates = [
       'name',
       'description',
@@ -288,7 +317,7 @@ export const updateCompany = async (req: AuthRequest, res: Response) => {
       company.slug = newSlug;
     }
 
-    // If logo is being changed/removed, delete old Cloudinary image to avoid orphans
+    // If logo is being changed/removed (via URL or cleared), delete old Cloudinary image
     if (req.body.logo !== undefined && company.logo && isCloudinaryUrl(company.logo)) {
       const newLogo = req.body.logo || '';
       if (newLogo !== company.logo) {
@@ -298,6 +327,16 @@ export const updateCompany = async (req: AuthRequest, res: Response) => {
           console.error('Cloudinary logo cleanup on update failed:', err);
         }
       }
+    }
+
+    // Normalize number fields from form-data (strings)
+    if (req.body.teamSize !== undefined) {
+      req.body.teamSize = typeof req.body.teamSize === 'string' ? parseInt(req.body.teamSize, 10) : req.body.teamSize;
+      if (Number.isNaN(req.body.teamSize)) req.body.teamSize = undefined;
+    }
+    if (req.body.foundedYear !== undefined) {
+      req.body.foundedYear = typeof req.body.foundedYear === 'string' ? parseInt(req.body.foundedYear, 10) : req.body.foundedYear;
+      if (Number.isNaN(req.body.foundedYear)) req.body.foundedYear = undefined;
     }
 
     allowedUpdates.forEach((field) => {

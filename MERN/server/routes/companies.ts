@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 import { body } from 'express-validator';
 import {
   getAllCompanies,
@@ -14,6 +15,30 @@ import { isCompanyFounder, isCompanyOwner } from '../middleware/company';
 
 const router = express.Router();
 
+// Multer: parse multipart/form-data so we get the logo file (req.file) to upload to Cloudinary.
+// Only run when client sends FormData; otherwise JSON body is used for "paste link".
+const logoParser = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (
+    _req: express.Request,
+    file: { mimetype: string },
+    cb: (error: Error | null, acceptFile: boolean) => void
+  ) => {
+    if (!file.mimetype.startsWith('image/')) {
+      return cb(new Error('Only image files are allowed'), false);
+    }
+    cb(null, true);
+  },
+}).single('logo');
+
+const optionalLogoUpload = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (req.is('multipart/form-data')) {
+    return logoParser(req, res, next);
+  }
+  next();
+};
+
 // GET ALL COMPANIES
 router.get('/', getAllCompanies);
 
@@ -26,10 +51,11 @@ router.get('/:slug', getCompanyBySlug);
 // GET COMPANY PEOPLE
 router.get('/:slug/people', getCompanyPeople);
 
-// CREATE COMPANY
+// CREATE COMPANY (accepts JSON with logo URL or multipart with logo file)
 router.post(
   '/create',
   verifyToken,
+  optionalLogoUpload,
   [
     body('name').trim().notEmpty().withMessage('Company name is required'),
     body('description').trim().notEmpty().withMessage('Description is required'),
@@ -58,8 +84,8 @@ router.post(
   createCompany
 );
 
-// UPDATE COMPANY
-router.put('/:slug/update', verifyToken, isCompanyFounder, updateCompany);
+// UPDATE COMPANY (accepts JSON with logo URL or multipart with logo file)
+router.put('/:slug/update', verifyToken, isCompanyFounder, optionalLogoUpload, updateCompany);
 
 // DELETE COMPANY
 router.delete('/:slug/delete', verifyToken, isCompanyOwner, deleteCompany);
