@@ -12,7 +12,7 @@ declare module 'multer' {
     fileFilter?(
       req: unknown,
       file: { mimetype: string; fieldname: string; originalname: string; size: number },
-      callback: (error: Error | null, acceptFile: boolean) => void
+      callback: (error: Error | null, acceptFile?: boolean) => void
     ): void;
   }
 

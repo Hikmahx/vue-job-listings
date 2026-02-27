@@ -20,13 +20,9 @@ const router = express.Router();
 const logoParser = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
-  fileFilter: (
-    _req: express.Request,
-    file: { mimetype: string },
-    cb: (error: Error | null, acceptFile: boolean) => void
-  ) => {
+  fileFilter: (_req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Only image files are allowed'), false);
+      return cb(new Error('Only image files are allowed'));
     }
     cb(null, true);
   },
