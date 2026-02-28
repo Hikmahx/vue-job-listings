@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useLocation, useNavigate, Outlet } from 'react-router-dom'
-import { BarChart3, Briefcase, Settings, Menu, Building2 } from 'lucide-react'
+import { BarChart3, Briefcase, Settings, Menu, Building2, Mail } from 'lucide-react'
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
 import { useDispatch, useSelector } from 'react-redux'
@@ -25,6 +25,7 @@ const MainLayout = () => {
     if (role === 'job_seeker') {
       items.push({ id: 'applied-jobs', label: 'Applied Jobs', icon: Briefcase, path: '/dashboard/applied-jobs' })
     }
+    items.push({ id: 'cold-email-tracker', label: 'Cold Email Tracker', icon: Mail, path: '/dashboard/cold-email-tracker' })
     items.push({ id: 'settings', label: 'Settings', icon: Settings, path: '/dashboard/settings' })
     return items
   }, [user?.role])
@@ -34,6 +35,7 @@ const MainLayout = () => {
     if (path === '/dashboard') return 'overview'
     if (path.includes('companies')) return 'companies'
     if (path.includes('applied-jobs')) return 'applied-jobs'
+    if (path.includes('cold-email-tracker')) return 'cold-email-tracker'
     if (path.includes('settings')) return 'settings'
     return 'overview'
   })()

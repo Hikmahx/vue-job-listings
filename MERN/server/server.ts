@@ -5,6 +5,7 @@ import connectDB from './config/db';
 import authRoutes from './routes/auth';
 import jobsRoutes from './routes/jobs';
 import companiesRoutes from './routes/companies';
+import coldEmailsRoutes from './routes/coldEmails';
 
 dotenv.config({ path: "./config/config.env" });
 connectDB();
@@ -20,6 +21,7 @@ app.use(cors());
 app.use('/api/accounts', authRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/companies', companiesRoutes);
+app.use('/api/cold-emails', coldEmailsRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

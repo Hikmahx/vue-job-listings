@@ -12,6 +12,8 @@ import CompanyForm from './pages/CompanyForm'
 import AppliedJobs from './pages/AppliedJobs'
 import Settings from './pages/Settings'
 import CreateJob from './pages/CreateJob'
+import ColdEmailTracker from './pages/ColdEmailTracker'
+import ColdEmailEntryPage from './pages/ColdEmailEntryPage'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -33,6 +35,9 @@ function App() {
           </Route>
         </Route>
         <Route path='applied-jobs' element={<AppliedJobs />} />
+        <Route path='cold-email-tracker/new' element={<ColdEmailEntryPage />} />
+        <Route path='cold-email-tracker/:id' element={<ColdEmailEntryPage />} />
+        <Route path='cold-email-tracker' element={<ColdEmailTracker />} />
         <Route path='settings' element={<Settings />} />
         <Route path='create-job' element={<CreateJob />} />
       </Route>
