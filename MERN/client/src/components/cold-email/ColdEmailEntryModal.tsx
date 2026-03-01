@@ -193,21 +193,21 @@ export default function ColdEmailEntryModal({
                   value={r.fullName}
                   onChange={(e) => updateRecipient(i, { fullName: e.target.value })}
                   placeholder="Full name"
-                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 />
                 <input
                   type="email"
                   value={r.email}
                   onChange={(e) => updateRecipient(i, { email: e.target.value })}
                   placeholder="Email"
-                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 />
                 <button type="button" onClick={() => removeRecipient(i)} className="p-2 text-slate-400 hover:text-red-600" title="Remove">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
-            <button type="button" onClick={addRecipient} className="text-sm text-cyan-600 hover:underline flex items-center gap-1">
+            <button type="button" onClick={addRecipient} className="text-sm text-cyan-400 hover:text-cyan-500 hover:underline flex items-center gap-1">
               <Plus className="w-4 h-4" /> Add recipient
             </button>
           </div>
@@ -219,7 +219,7 @@ export default function ColdEmailEntryModal({
                 type="text"
                 value={form.company ?? ''}
                 onChange={(e) => update({ company: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 placeholder="Company name"
               />
             </div>
@@ -229,7 +229,7 @@ export default function ColdEmailEntryModal({
                 type="text"
                 value={form.roleApplyingFor ?? ''}
                 onChange={(e) => update({ roleApplyingFor: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 placeholder="e.g. Product Manager"
               />
             </div>
@@ -243,7 +243,7 @@ export default function ColdEmailEntryModal({
                 type="text"
                 value={form.message?.subject ?? ''}
                 onChange={(e) => updateMessage({ subject: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 placeholder="Email subject"
               />
             </div>
@@ -254,7 +254,7 @@ export default function ColdEmailEntryModal({
                   type="date"
                   value={formatDateForInput(form.message?.date ?? '')}
                   onChange={(e) => updateMessage({ date: e.target.value || '' })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 />
               </div>
               <div className="flex items-end gap-4">
@@ -273,7 +273,7 @@ export default function ColdEmailEntryModal({
               <textarea
                 value={form.message?.emailSent ?? ''}
                 onChange={(e) => updateMessage({ emailSent: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm min-h-[80px] focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm min-h-[80px] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
                 placeholder="Paste or type the email you sent…"
                 rows={3}
               />
@@ -284,7 +284,7 @@ export default function ColdEmailEntryModal({
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-slate-700">Follow-ups</h3>
               {(form.followUps ?? []).length < 4 && (
-                <button type="button" onClick={addFollowUp} className="text-sm text-cyan-600 hover:underline flex items-center gap-1">
+                <button type="button" onClick={addFollowUp} className="text-sm text-cyan-400 hover:text-cyan-500 hover:underline flex items-center gap-1">
                   <Plus className="w-4 h-4" /> Add follow-up
                 </button>
               )}
@@ -296,7 +296,7 @@ export default function ColdEmailEntryModal({
                   type="date"
                   value={formatDateForInput(fu.date)}
                   onChange={(e) => updateFollowUp(i, { date: e.target.value || '' })}
-                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400"
                 />
                 <label className="flex items-center gap-2 text-sm text-slate-600">
                   <input type="checkbox" checked={!!fu.read} onChange={(e) => updateFollowUp(i, { read: e.target.checked })} className="rounded border-slate-300 text-cyan-600" />
@@ -316,7 +316,7 @@ export default function ColdEmailEntryModal({
             <select
               value={form.status ?? 'ignored'}
               onChange={(e) => update({ status: e.target.value as ColdEmailEntry['status'] })}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>{STATUS_LABELS[s]}</option>
@@ -341,7 +341,7 @@ export default function ColdEmailEntryModal({
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
                 placeholder="Add tag (e.g. Hot Lead)"
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
               />
               <button type="button" onClick={addTag} className="px-3 py-2 bg-slate-100 rounded-lg text-sm font-medium text-slate-700">Add</button>
             </div>
@@ -352,7 +352,7 @@ export default function ColdEmailEntryModal({
             <textarea
               value={form.notes ?? ''}
               onChange={(e) => update({ notes: e.target.value })}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm min-h-[60px] focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm min-h-[60px] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
               placeholder="Optional notes…"
               rows={2}
             />
@@ -364,13 +364,13 @@ export default function ColdEmailEntryModal({
               type="date"
               value={formatDateForInput(form.followUpDate ?? '')}
               onChange={(e) => update({ followUpDate: e.target.value || '' })}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500"
+              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-5 border-t border-slate-100">
             <button type="button" onClick={onClose} className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Cancel</button>
-            <button type="submit" disabled={saving} className="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium disabled:opacity-50 flex items-center gap-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors">
+            <button type="submit" disabled={saving} className="px-4 py-2.5 bg-cyan-400 hover:bg-cyan-500 text-white rounded-lg font-medium disabled:opacity-50 flex items-center gap-2 shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:ring-offset-2 transition-colors">
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {isEdit ? 'Save changes' : 'Create entry'}
             </button>

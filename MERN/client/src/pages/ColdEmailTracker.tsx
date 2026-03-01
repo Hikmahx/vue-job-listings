@@ -388,7 +388,7 @@ export default function ColdEmailTracker() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-10 h-10 text-cyan-500 animate-spin mb-4" />
+        <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-4" />
         <p className="text-slate-500 font-medium">Loading…</p>
       </div>
     );
@@ -407,7 +407,7 @@ export default function ColdEmailTracker() {
             <button
               type="button"
               onClick={() => setAddDropdownOpen((o) => !o)}
-              className="inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 transition-colors"
+              className="inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:ring-offset-2 transition-colors"
             >
               <Plus className="w-4 h-4" />
               Add entry
@@ -423,7 +423,7 @@ export default function ColdEmailTracker() {
                     disabled={importing}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-slate-700 hover:bg-slate-50 text-sm transition-colors disabled:opacity-60"
                   >
-                    {importing ? <Loader2 className="w-4 h-4 animate-spin shrink-0" /> : <FileUp className="w-4 h-4 shrink-0 text-slate-400" />}
+                    {importing ? <Loader2 className="w-4 h-4 animate-spin shrink-0 text-cyan-400" /> : <FileUp className="w-4 h-4 shrink-0 text-slate-400" />}
                     Import CSV
                   </button>
                   <button
@@ -469,7 +469,7 @@ export default function ColdEmailTracker() {
             placeholder="Search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 bg-white"
+            className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400 bg-white"
           />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -602,7 +602,7 @@ export default function ColdEmailTracker() {
                 ) : (
                   allTags.map((t) => (
                     <label key={t} className="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 cursor-pointer">
-                      <input type="checkbox" checked={selectedTags.includes(t)} onChange={() => toggleTagFilter(t)} className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-500" />
+                      <input type="checkbox" checked={selectedTags.includes(t)} onChange={() => toggleTagFilter(t)} className="rounded border-slate-300 text-cyan-600 focus:ring-cyan-400" />
                       <span className="text-sm text-slate-700">{t}</span>
                     </label>
                   ))
@@ -649,7 +649,7 @@ export default function ColdEmailTracker() {
                       <p className="font-medium text-slate-600">{entries.length === 0 ? 'No entries yet' : 'No matches'}</p>
                       <p className="text-sm mt-1 max-w-sm">{entries.length === 0 ? 'Add an entry or import CSV to get started.' : 'Try changing your filters.'}</p>
                       {entries.length === 0 && (
-                        <button type="button" onClick={handleAddManual} className="mt-5 inline-flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium">
+                        <button type="button" onClick={handleAddManual} className="mt-5 inline-flex items-center gap-2 bg-cyan-400 hover:bg-cyan-500 text-white px-4 py-2.5 rounded-lg text-sm font-medium">
                           <Plus className="w-4 h-4" /> Add entry
                         </button>
                       )}
