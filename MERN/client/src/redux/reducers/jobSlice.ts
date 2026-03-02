@@ -31,9 +31,11 @@ export const fetchJobs = createAsyncThunk(
       const response = await jobService.getJobs(filters);
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch jobs');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch jobs',
+      );
     }
-  }
+  },
 );
 
 export const fetchJobById = createAsyncThunk(
@@ -43,9 +45,11 @@ export const fetchJobById = createAsyncThunk(
       const job = await jobService.getJobById(id);
       return job;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch job');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch job',
+      );
     }
-  }
+  },
 );
 
 export const createJob = createAsyncThunk(
@@ -55,9 +59,11 @@ export const createJob = createAsyncThunk(
       const job = await jobService.createJob(jobData);
       return job;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to create job');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to create job',
+      );
     }
-  }
+  },
 );
 
 const jobSlice = createSlice({
@@ -104,7 +110,7 @@ const jobSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createJob.fulfilled, (state, action) => {
+      .addCase(createJob.fulfilled, (state) => {
         state.loading = false;
         // Optionally add the new job to the list
       })

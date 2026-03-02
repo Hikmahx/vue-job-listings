@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { User } from '../../types';
 import { authService, RegisterPayload, LoginPayload } from '../../services/authService';
 
@@ -86,7 +86,7 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(register.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state) => {
         state.loading = false;
         // Don't set user/auth state on registration - user needs to login
         // Clear any stored tokens

@@ -106,7 +106,7 @@ const SearchAndCountry = ({
         <input
           type="text"
           placeholder="Search by role, skill, or company..."
-          className="w-full pl-9 h-12 pr-4 py-4 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400 border border-gray-300 rounded-md text-cyan-900"
+          className="w-full pl-9 h-12 py-1 px-3 pr-4 transition-all focus:outline-none focus:border-gray-400 border border-gray-200 rounded-md text-cyan-900 placeholder:text-slate-400"
           value={search}
           onChange={handleSearchChange}
         />
@@ -119,12 +119,12 @@ const SearchAndCountry = ({
             ref={locationTriggerRef}
             type="button"
             onClick={() => setIsLocationOpen(!isLocationOpen)}
-            className="relative w-full pl-9 h-12 pr-4 py-2 border border-gray-300 rounded-md text-left focus:outline-none focus:ring-2 focus:ring-cyan-400 text-cyan-900 bg-white"
+            className="relative w-full pl-9 h-12 pr-4 py-1 px-3 border border-gray-200 rounded-md text-left focus:outline-none focus:border-gray-400 bg-white"
           >
             <span className="absolute start-0 inset-y-0 flex items-center justify-center px-3">
               <MapPin className="size-4 text-muted-foreground" />
             </span>
-            <span className="block truncate">
+            <span className={`block truncate ${selectedLocation?.label ? 'text-cyan-900' : 'text-slate-400'}`}>
               {selectedLocation?.label || 'Select location...'}
             </span>
           </button>
