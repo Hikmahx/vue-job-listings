@@ -7,14 +7,16 @@ import { AppDispatch, RootState } from '../redux/store';
 import { createJob } from '../redux/reducers/jobSlice';
 import { fetchMyCompanies } from '../redux/reducers/companySlice';
 
-const countryOptions: Array<{ value: string; label: string }> = Object.values(countries)
-  .map((c: { name: string; code: string }) => ({ value: c.name, label: c.name }))
+type CountryRecord = { name: string; code: string };
+const countriesList = Object.values(countries) as unknown as CountryRecord[];
+const countryOptions: Array<{ value: string; label: string }> = countriesList
+  .map((c) => ({ value: c.name, label: c.name }))
   .sort((a, b) => a.label.localeCompare(b.label));
 
 const CreateJob = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error } = useSelector((state: RootState) => state.jobs);
+  const { loading } = useSelector((state: RootState) => state.jobs);
   const { companies } = useSelector((state: RootState) => state.companies);
 
   const [formData, setFormData] = useState({

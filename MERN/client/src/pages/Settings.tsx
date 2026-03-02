@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { getProfile, updateProfile } from '../redux/reducers/authSlice';
 import { Save } from 'lucide-react';
+import type { User } from '../types';
 
 const Settings = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -69,7 +70,7 @@ const Settings = () => {
     }
 
     try {
-      await dispatch(updateProfile(formData)).unwrap();
+      await dispatch(updateProfile(formData as Partial<User>)).unwrap();
       setSuccessMessage('Profile updated successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {

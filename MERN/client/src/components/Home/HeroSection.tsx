@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import Navbar from '../common/Navbar';
 import SearchAndCountry from '../filter/SearchAndCountry';

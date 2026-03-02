@@ -5,7 +5,6 @@ import { RootState } from '../../redux/store';
 
 const Navbar = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const notifications = 5;
 
   return (
     <nav className="relative bg-cyan-400 shadow-sm border-b border-gray-200 h-20 flex items-center px-6 md:px-12">

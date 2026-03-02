@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Briefcase, Settings, LogOut, Info } from 'lucide-react';
+import { LogOut, Info } from 'lucide-react';
 import Logo from '../icons/Logo';
 
 interface SidebarItem {

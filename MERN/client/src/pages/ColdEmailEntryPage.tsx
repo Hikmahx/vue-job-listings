@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Loader2, AlertCircle, CheckCheck, MessageCircle, Plus } from 'lucide-react';
+import { ArrowLeft, Trash2, Loader2, AlertCircle, CheckCheck, MessageCircle, Plus } from 'lucide-react';
 import type { ColdEmailEntry, ColdEmailMessage, ColdEmailRecipient, ColdEmailFollowUp } from '../types';
 import { coldEmailService } from '../services/coldEmailService';
 

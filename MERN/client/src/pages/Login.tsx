@@ -3,9 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { AppDispatch, RootState } from '../redux/store';
 import { login } from '../redux/reducers/authSlice';
-import AuthLayout from '../components/auth/AuthLayout';
-import TextInput from '../components/auth/TextInput';
-import PasswordInput from '../components/auth/PasswordInput';
+import AuthLayout from '../components/Auth/AuthLayout';
+import TextInput from '../components/Auth/TextInput';
+import PasswordInput from '../components/Auth/PasswordInput';
 
 const Login = () => {
   const [email, setEmail] = useState('');

@@ -13,7 +13,6 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({
   title,
-  subtitle,
   showDivider = true,
   signupPage = false,
   currentStep = 1,
