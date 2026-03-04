@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, CheckCheck, MessageCircle, Loader2, Plus, Trash2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import type { ColdEmailEntry, ColdEmailMessage, ColdEmailRecipient, ColdEmailFollowUp } from '../../types';
+import { RecipientsList } from './RecipientsList';
+import { MessageSection } from './MessageSection';
+import { FollowUpsList } from './FollowUpsList';
+import { TagsInput } from './TagsInput';
+import { TextInput } from './TextInput';
+import { DateInput } from './DateInput';
 
 const STATUS_OPTIONS: ColdEmailEntry['status'][] = ['ignored', 'opened', 'replied', 'booked'];
 const STATUS_LABELS: Record<ColdEmailEntry['status'], string> = {
@@ -21,12 +27,6 @@ const emptyMessage = (): ColdEmailMessage => ({
 const emptyFollowUp = (): ColdEmailFollowUp => ({ date: '', read: false });
 
 const emptyRecipient = (): ColdEmailRecipient => ({ fullName: '', email: '', avatar: '' });
-
-function formatDateForInput(value: string): string {
-  if (!value) return '';
-  const s = String(value).slice(0, 10);
-  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
-}
 
 interface ColdEmailEntryModalProps {
   open: boolean;
@@ -56,7 +56,6 @@ export default function ColdEmailEntryModal({
     notes: '',
     followUpDate: '',
   });
-  const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
     if (!open) return;
@@ -87,7 +86,6 @@ export default function ColdEmailEntryModal({
         followUpDate: '',
       });
     }
-    setTagInput('');
   }, [open, entry]);
 
   const update = (patch: Partial<ColdEmailEntry>) => {
@@ -113,11 +111,8 @@ export default function ColdEmailEntryModal({
     });
   };
 
-  const addTag = () => {
-    const t = tagInput.trim();
-    if (!t) return;
-    setForm((prev) => ({ ...prev, tags: [...(prev.tags ?? []), t] }));
-    setTagInput('');
+  const addTag = (tag: string) => {
+    setForm((prev) => ({ ...prev, tags: [...(prev.tags ?? []), tag] }));
   };
 
   const removeTag = (index: number) => {
@@ -184,132 +179,39 @@ export default function ColdEmailEntryModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Recipients</label>
-            {(form.recipients ?? []).map((r, i) => (
-              <div key={i} className="flex gap-2 items-start mb-2">
-                <input
-                  type="text"
-                  value={r.fullName}
-                  onChange={(e) => updateRecipient(i, { fullName: e.target.value })}
-                  placeholder="Full name"
-                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                />
-                <input
-                  type="email"
-                  value={r.email}
-                  onChange={(e) => updateRecipient(i, { email: e.target.value })}
-                  placeholder="Email"
-                  className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                />
-                <button type="button" onClick={() => removeRecipient(i)} className="p-2 text-slate-400 hover:text-red-600" title="Remove">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-            <button type="button" onClick={addRecipient} className="text-sm text-cyan-400 hover:text-cyan-500 hover:underline flex items-center gap-1">
-              <Plus className="w-4 h-4" /> Add recipient
-            </button>
-          </div>
+          <RecipientsList
+            recipients={form.recipients ?? []}
+            onUpdate={updateRecipient}
+            onAdd={addRecipient}
+            onRemove={removeRecipient}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Company</label>
-              <input
-                type="text"
-                value={form.company ?? ''}
-                onChange={(e) => update({ company: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                placeholder="Company name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Role applying for</label>
-              <input
-                type="text"
-                value={form.roleApplyingFor ?? ''}
-                onChange={(e) => update({ roleApplyingFor: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                placeholder="e.g. Product Manager"
-              />
-            </div>
+            <TextInput
+              label="Company"
+              value={form.company ?? ''}
+              onChange={(value) => update({ company: value })}
+              placeholder="Company name"
+            />
+            <TextInput
+              label="Role applying for"
+              value={form.roleApplyingFor ?? ''}
+              onChange={(value) => update({ roleApplyingFor: value })}
+              placeholder="e.g. Product Manager"
+            />
           </div>
 
-          <div className="border border-slate-200 rounded-lg p-4 space-y-3 bg-slate-50/50">
-            <h3 className="text-sm font-semibold text-slate-700">Message</h3>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Subject</label>
-              <input
-                type="text"
-                value={form.message?.subject ?? ''}
-                onChange={(e) => updateMessage({ subject: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                placeholder="Email subject"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-500 mb-1">Date sent</label>
-                <input
-                  type="date"
-                  value={formatDateForInput(form.message?.date ?? '')}
-                  onChange={(e) => updateMessage({ date: e.target.value || '' })}
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                />
-              </div>
-              <div className="flex items-end gap-4">
-                <label className="flex items-center gap-2 text-sm text-slate-600">
-                  <input type="checkbox" checked={!!form.message?.read} onChange={(e) => updateMessage({ read: e.target.checked })} className="rounded border-slate-300 text-cyan-600" />
-                  <CheckCheck className="w-4 h-4" /> Read
-                </label>
-                <label className="flex items-center gap-2 text-sm text-slate-600">
-                  <input type="checkbox" checked={!!form.message?.response} onChange={(e) => updateMessage({ response: e.target.checked })} className="rounded border-slate-300 text-cyan-600" />
-                  <MessageCircle className="w-4 h-4" /> Response
-                </label>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Email sent (content)</label>
-              <textarea
-                value={form.message?.emailSent ?? ''}
-                onChange={(e) => updateMessage({ emailSent: e.target.value })}
-                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm min-h-[80px] placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-                placeholder="Paste or type the email you sent…"
-                rows={3}
-              />
-            </div>
-          </div>
+          <MessageSection
+            message={form.message}
+            onUpdate={updateMessage}
+          />
 
-          <div className="border border-slate-200 rounded-lg p-4 space-y-3 bg-slate-50/50">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-700">Follow-ups</h3>
-              {(form.followUps ?? []).length < 4 && (
-                <button type="button" onClick={addFollowUp} className="text-sm text-cyan-400 hover:text-cyan-500 hover:underline flex items-center gap-1">
-                  <Plus className="w-4 h-4" /> Add follow-up
-                </button>
-              )}
-            </div>
-            {(form.followUps ?? [emptyFollowUp()]).map((fu, i) => (
-              <div key={i} className="flex items-center gap-3 flex-wrap">
-                <span className="text-xs font-medium text-slate-500 w-16">Flw-up {i + 1}</span>
-                <input
-                  type="date"
-                  value={formatDateForInput(fu.date)}
-                  onChange={(e) => updateFollowUp(i, { date: e.target.value || '' })}
-                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400"
-                />
-                <label className="flex items-center gap-2 text-sm text-slate-600">
-                  <input type="checkbox" checked={!!fu.read} onChange={(e) => updateFollowUp(i, { read: e.target.checked })} className="rounded border-slate-300 text-cyan-600" />
-                  <CheckCheck className="w-4 h-4" /> Read
-                </label>
-                {(form.followUps ?? []).length > 1 && (
-                  <button type="button" onClick={() => removeFollowUp(i)} className="p-1 text-slate-400 hover:text-red-600" title="Remove follow-up">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+          <FollowUpsList
+            followUps={form.followUps ?? []}
+            onUpdate={updateFollowUp}
+            onAdd={addFollowUp}
+            onRemove={removeFollowUp}
+          />
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
@@ -324,28 +226,11 @@ export default function ColdEmailEntryModal({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Tags</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {(form.tags ?? []).map((t, i) => (
-                <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
-                  {t}
-                  <button type="button" onClick={() => removeTag(i)} className="text-slate-500 hover:text-red-600">&times;</button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                placeholder="Add tag (e.g. Hot Lead)"
-                className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-              />
-              <button type="button" onClick={addTag} className="px-3 py-2 bg-slate-100 rounded-lg text-sm font-medium text-slate-700">Add</button>
-            </div>
-          </div>
+          <TagsInput
+            tags={form.tags ?? []}
+            onAdd={addTag}
+            onRemove={removeTag}
+          />
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
@@ -358,15 +243,11 @@ export default function ColdEmailEntryModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Follow-up date</label>
-            <input
-              type="date"
-              value={formatDateForInput(form.followUpDate ?? '')}
-              onChange={(e) => update({ followUpDate: e.target.value || '' })}
-              className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
-            />
-          </div>
+          <DateInput
+            label="Follow-up date"
+            value={form.followUpDate}
+            onChange={(value) => update({ followUpDate: value })}
+          />
 
           <div className="flex justify-end gap-3 pt-5 border-t border-slate-100">
             <button type="button" onClick={onClose} className="px-4 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">Cancel</button>
