@@ -1,10 +1,10 @@
 interface TextInputProps {
-  label?: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  type?: string;
-  required?: boolean;
+  label?: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  type?: string
+  required?: boolean
 }
 
 export function TextInput({
@@ -18,9 +18,9 @@ export function TextInput({
   return (
     <div>
       {label && (
-        <label className="block text-sm font-medium text-slate-700 mb-1">
+        <label className='block text-sm font-medium text-slate-700 mb-1'>
           {label}
-          {required && <span className="text-red-500">*</span>}
+          {required && <span className='text-red-500'>*</span>}
         </label>
       )}
       <input
@@ -28,8 +28,8 @@ export function TextInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400"
+        className='w-full border border-slate-200 rounded-lg px-3 py-2 text-sm placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400'
       />
     </div>
-  );
+  )
 }
