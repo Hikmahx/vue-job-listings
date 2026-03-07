@@ -48,7 +48,6 @@ const AuthLayout = ({
         )}
       </div>
 
-      {/* Right Side: Cyan Container (hidden on mobile/tablet) */}
       {showDivider && (
         <div className="hidden lg:flex w-1/2 bg-cyan-400 rounded-3xl m-6 flex-col justify-between p-12 relative overflow-hidden">
           {/* Decorative Circles */}

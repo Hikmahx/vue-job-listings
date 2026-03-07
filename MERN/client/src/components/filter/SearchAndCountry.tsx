@@ -8,6 +8,11 @@ const countryList = Object.values(countries).map((country: any) => ({
   label: country.name,
 }));
 
+const locationOptions = [
+  { value: '', label: 'Worldwide' },
+  ...countryList,
+];
+
 interface SearchAndCountryProps {
   onSearchChange?: (search: string) => void;
   onLocationChange?: (location: string) => void;
@@ -71,7 +76,7 @@ const SearchAndCountry = ({
     onLocationChange?.(countryCode);
   };
 
-  const selectedLocation = countryList.find((c) => c.value === location);
+  const selectedLocation = locationOptions.find((c) => c.value === location);
 
   const dropdownContent = isLocationOpen && (
     <div
@@ -83,7 +88,7 @@ const SearchAndCountry = ({
         width: dropdownPosition.width,
       }}
     >
-      {countryList.map((country) => (
+      {locationOptions.map((country) => (
         <button
           key={country.value}
           type="button"
@@ -125,7 +130,7 @@ const SearchAndCountry = ({
               <MapPin className="size-4 text-muted-foreground" />
             </span>
             <span className={`block truncate ${selectedLocation?.label ? 'text-cyan-900' : 'text-slate-400'}`}>
-              {selectedLocation?.label || 'Select location...'}
+              {selectedLocation?.label ?? 'Select location...'}
             </span>
           </button>
 
