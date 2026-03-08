@@ -35,7 +35,10 @@ export const verifyToken = async (
     next();
   } catch (error) {
     console.error(error);
-    return res.status(403).json({ message: "Token is not valid" });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(403).json({ message: "Token is not valid", errorType: "TOKEN_EXPIRED" });
+    }
+    return res.status(403).json({ message: "Token is not valid", errorType: "INVALID_TOKEN" });
   }
 };
 
@@ -69,6 +72,9 @@ export const verifyTokenAndUser = async (
     next();
   } catch (error) {
     console.error(error);
-    return res.status(403).json({ message: "Token is not valid" });
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(403).json({ message: "Token is not valid", errorType: "TOKEN_EXPIRED" });
+    }
+    return res.status(403).json({ message: "Token is not valid", errorType: "INVALID_TOKEN" });
   }
 };
