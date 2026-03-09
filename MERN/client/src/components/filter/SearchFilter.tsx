@@ -54,6 +54,7 @@ const SearchFilter = () => {
     filters.roles,
     filters.companySizes,
     filters.contract,
+    filters.aiFilters,
     setSearchParams,
   ]);
 
