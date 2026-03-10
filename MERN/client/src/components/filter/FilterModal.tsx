@@ -111,7 +111,7 @@ const FilterModal = () => {
       });
       setSalaryError(undefined);
     }
-  }, [showModal]);
+  }, [showModal, filters]);
 
   const updateForm = (patch: Partial<FormValues>) => {
     setForm((prev) => ({ ...prev, ...patch }));
