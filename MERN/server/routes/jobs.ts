@@ -6,6 +6,7 @@ import {
   createJob,
   updateJob,
   deleteJob,
+  parseQuery,
 } from '../controllers/jobs';
 import { verifyToken } from '../middleware/auth';
 import { canManageJob } from '../middleware/job';
@@ -14,6 +15,9 @@ const router = express.Router();
 
 // GET ALL JOBS
 router.get('/', getAllJobs);
+
+// RAG: parse natural language to filters (must be before /:id)
+router.post('/parse-query', parseQuery);
 
 // GET JOB BY ID
 router.get('/:id', getJobById);

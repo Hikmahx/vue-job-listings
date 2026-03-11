@@ -14,7 +14,7 @@ import type { FilterState } from '../../redux/reducers/filterSlice';
 
 function getGroupedFilters(state: FilterState): Array<Record<string, unknown>> {
   const data = Object.entries(state).filter(
-    ([key]) => key !== 'selectedBtns' && key !== 'aiMode',
+    ([key]) => key !== 'selectedBtns' && key !== 'aiMode' && key !== 'aiFilters',
   );
   const mappedData = data
     .filter(
@@ -165,6 +165,33 @@ const Filter = () => {
           }
           break;
         }
+        case 'foundedYearMin':
+          if (filters.aiMode) {
+            btns.push({
+              text: `Founded after ${value}`,
+              key: 'foundedYearMin',
+              value: undefined,
+            });
+          }
+          break;
+        case 'foundedYearMax':
+          if (filters.aiMode) {
+            btns.push({
+              text: `Founded before ${value}`,
+              key: 'foundedYearMax',
+              value: undefined,
+            });
+          }
+          break;
+        case 'founderGender':
+          if (filters.aiMode) {
+            btns.push({
+              text: `Founder: ${String(value).charAt(0).toUpperCase() + String(value).slice(1)}`,
+              key: 'founderGender',
+              value: '',
+            });
+          }
+          break;
         default:
           break;
       }
@@ -174,21 +201,21 @@ const Filter = () => {
 
   const removeBtn = (btnText: string) => {
     const btnToRemove = selectedBtns.find((btn) => btn.text === btnText);
-    if (btnToRemove) {
-      if (btnToRemove.key === 'salary') {
-        dispatch(
-          setFilters({
-            minSalary: undefined,
-            maxSalary: undefined,
-            currency: '',
-            timeframe: '',
-          }),
-        );
-      } else {
-        const key = btnToRemove.key as keyof typeof filters;
-        dispatch(setFilters({ [key]: btnToRemove.value } as never));
+      if (btnToRemove) {
+        if (btnToRemove.key === 'salary') {
+          dispatch(
+            setFilters({
+              minSalary: undefined,
+              maxSalary: undefined,
+              currency: '',
+              timeframe: '',
+            }),
+          );
+        } else {
+          const key = btnToRemove.key as keyof typeof filters;
+          dispatch(setFilters({ [key]: btnToRemove.value } as never));
+        }
       }
-    }
   };
 
   const clearAllBtns = () => {

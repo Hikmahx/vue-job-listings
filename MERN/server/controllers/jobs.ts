@@ -1,9 +1,16 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import { validationResult, Result } from 'express-validator';
 import { Job } from '../models/Job';
 import { JobDetails } from '../models/JobDetails';
 import { Company } from '../models/Company';
 import { CompanyMember } from '../models/CompanyMember';
+import { User } from '../models/User';
+import { getName as getCountryName } from 'country-list';
+import {
+  extractFiltersFromQuery,
+  resultToMernFilters,
+} from '../services/ragService';
 
 interface AuthRequest extends Request {
   user?: {
@@ -87,9 +94,19 @@ export const getAllJobs = async (req: Request, res: Response) => {
       ];
     }
 
-    // Location filter
+    // Location filter (country code e.g. US matches jobs stored as "United States"; VN matches "Vietnam")
     if (req.query.location) {
-      filter.location = { $regex: req.query.location, $options: 'i' };
+      const loc = String(req.query.location).trim();
+      const fullName =
+        loc.length === 2 ? getCountryName(loc.toUpperCase()) ?? null : null;
+      const escapedLoc = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const escapedName = fullName
+        ? fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        : null;
+      filter.location = {
+        $regex: escapedName ? `(${escapedLoc}|${escapedName})` : escapedLoc,
+        $options: 'i',
+      };
     }
 
     // Level filter
@@ -127,14 +144,11 @@ export const getAllJobs = async (req: Request, res: Response) => {
     }
 
     // Salary filter
-    if (req.query.minSalary || req.query.maxSalary) {
-      filter.$or = filter.$or || [];
-      if (req.query.minSalary) {
-        filter.minSalary = { $gte: parseInt(req.query.minSalary as string) };
-      }
-      if (req.query.maxSalary) {
-        filter.maxSalary = { $lte: parseInt(req.query.maxSalary as string) };
-      }
+    if (req.query.minSalary) {
+      filter.minSalary = { $gte: parseInt(req.query.minSalary as string) };
+    }
+    if (req.query.maxSalary) {
+      filter.maxSalary = { $lte: parseInt(req.query.maxSalary as string) };
     }
 
     // Currency filter
@@ -147,34 +161,149 @@ export const getAllJobs = async (req: Request, res: Response) => {
       filter.timeframe = req.query.timeframe;
     }
 
-    // Company market filter
-    if (req.query.markets || req.query.companySizes) {
+    // Dynamic AI filters (any extra query params in AI mode).
+    // Convention: keys are one of:
+    // - company.<field>__op (e.g. company.foundedYear__gte=2020)
+    // - founder.<userField>__op (e.g. founder.gender=male)
+    // - employee.<userField>__op (e.g. employee.experienceYears__gte=5)
+    // - job.<field>__op (e.g. job.featured=true)
+    //
+    // Supported ops: eq (default), gte, lte, in, regex
+    const KNOWN_STANDARD_KEYS = new Set([
+      'page',
+      'page_size',
+      'search',
+      'location',
+      'level',
+      'workType',
+      'contract',
+      'roles',
+      'skills',
+      'minSalary',
+      'maxSalary',
+      'currency',
+      'timeframe',
+      'markets',
+      'companySizes',
+      'sortByCompany',
+      'aiMode',
+    ]);
+
+    const aiMode = String(req.query.aiMode ?? '').toLowerCase() === 'true';
+    const aiFilters: Record<string, string> = {};
+    if (aiMode) {
+      Object.entries(req.query).forEach(([k, v]) => {
+        if (KNOWN_STANDARD_KEYS.has(k)) return;
+        if (v == null) return;
+        aiFilters[k] = String(v);
+      });
+    }
+
+    if (aiMode && Object.keys(aiFilters).length > 0) {
+      // Apply dynamic filters.
       const companyFilter: any = {};
-      if (req.query.markets) {
-        const markets = Array.isArray(req.query.markets)
-          ? req.query.markets
-          : (req.query.markets as string).split(',');
-        companyFilter.market = { $in: markets };
-      }
-      if (req.query.companySizes) {
-        const sizes = Array.isArray(req.query.companySizes)
-          ? req.query.companySizes
-          : (req.query.companySizes as string).split(',');
-        const sizeRanges = sizes
-          .map((size) => COMPANY_SIZE_RANGES[size as string])
-          .filter(Boolean);
-        if (sizeRanges.length > 0) {
-          companyFilter.$or = sizeRanges.map((range) => ({
-            teamSize: range.max
-              ? { $gte: range.min, $lte: range.max }
-              : { $gte: range.min },
-          }));
+      let companyIds: mongoose.Types.ObjectId[] | null = null;
+
+      const applyCompanyIdsIntersection = (ids: mongoose.Types.ObjectId[]) => {
+        if (companyIds === null) return (companyIds = ids);
+        const set = new Set(ids.map((x) => x.toString()));
+        companyIds = companyIds.filter((x) => set.has(x.toString()));
+        return companyIds;
+      };
+
+      for (const [rawKey, rawVal] of Object.entries(aiFilters)) {
+        const [keyPart, opPart] = rawKey.split('__');
+        const op = (opPart || 'eq').toLowerCase();
+        const val = rawVal;
+
+        const applyOp = (target: any, field: string) => {
+          if (op === 'gte') target[field] = { ...(target[field] || {}), $gte: Number(val) };
+          else if (op === 'lte') target[field] = { ...(target[field] || {}), $lte: Number(val) };
+          else if (op === 'in') target[field] = { $in: val.split(',').map((s) => s.trim()).filter(Boolean) };
+          else if (op === 'regex') target[field] = { $regex: val, $options: 'i' };
+          else target[field] = val;
+        };
+
+        if (keyPart.startsWith('company.')) {
+          const field = keyPart.slice('company.'.length);
+          if (field === 'teamSizeBand') {
+            // Map band strings to ranges (re-use existing bands)
+            const bands = val.split(',').map((s) => s.trim()).filter(Boolean);
+            const ranges = bands.map((b) => COMPANY_SIZE_RANGES[b]).filter(Boolean) as Array<{ min: number; max: number | null }>;
+            if (ranges.length) {
+              companyFilter.$or = ranges.map((r) => ({
+                teamSize: r.max ? { $gte: r.min, $lte: r.max } : { $gte: r.min },
+              }));
+            }
+          } else {
+            applyOp(companyFilter, field);
+          }
+          continue;
+        }
+
+        if (keyPart.startsWith('founder.')) {
+          const userField = keyPart.slice('founder.'.length);
+          // Companies that have at least one founder/owner whose User matches userField op value.
+          const userMatch: any = {};
+          applyOp(userMatch, userField);
+          const users = await User.find(userMatch).select('_id').lean();
+          const userIds = users.map((u: any) => u._id);
+          const members = await CompanyMember.find({
+            user: { $in: userIds },
+            $or: [{ role: 'founder' }, { permission: 'owner' }],
+          })
+            .select('company')
+            .lean();
+          const ids = members.map((m: any) => m.company);
+          applyCompanyIdsIntersection(ids);
+          continue;
+        }
+
+        if (keyPart.startsWith('employee.')) {
+          const userField = keyPart.slice('employee.'.length);
+          const userMatch: any = {};
+          if (userField === 'age') {
+            const minAge = Number(val);
+            if (!Number.isNaN(minAge) && minAge >= 0) {
+              const cutoffDate = new Date();
+              cutoffDate.setFullYear(cutoffDate.getFullYear() - minAge);
+              userMatch.dateOfBirth = { $lte: cutoffDate };
+            }
+          } else {
+            applyOp(userMatch, userField);
+          }
+          const users = await User.find(userMatch).select('_id').lean();
+          const userIds = users.map((u: any) => u._id);
+          const members = await CompanyMember.find({ user: { $in: userIds } })
+            .select('company')
+            .lean();
+          const ids = members.map((m: any) => m.company);
+          applyCompanyIdsIntersection(ids);
+          continue;
+        }
+
+        if (keyPart.startsWith('job.')) {
+          const field = keyPart.slice('job.'.length);
+          applyOp(filter, field);
+          continue;
         }
       }
 
-      const companies = await Company.find(companyFilter).select('_id');
-      const companyIds = companies.map((c) => c._id);
-      filter.company = { $in: companyIds };
+      const finalCompanyIds = companyIds as mongoose.Types.ObjectId[] | null;
+      if (finalCompanyIds !== null && finalCompanyIds.length === 0) {
+        return res.json({ count: 0, next: null, previous: null, results: [] });
+      }
+      if (finalCompanyIds !== null) {
+        companyFilter._id = { $in: finalCompanyIds };
+      }
+      if (Object.keys(companyFilter).length > 0) {
+        const companies = await Company.find(companyFilter).select('_id');
+        const ids = companies.map((c) => c._id);
+        if (ids.length === 0) {
+          return res.json({ count: 0, next: null, previous: null, results: [] });
+        }
+        filter.company = { $in: ids };
+      }
     }
 
     // Sorting
@@ -239,6 +368,36 @@ export const getAllJobs = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Get jobs error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @route   POST /api/jobs/parse-query
+// @desc    RAG: Groq LLM extracts filters from natural language (aligned with django_api ai_search).
+//          Returns FilterModal-aligned filters + optional ai_applied_criteria for display.
+// @access  Public
+export const parseQuery = async (req: Request, res: Response) => {
+  try {
+    const query = typeof req.body?.query === 'string' ? req.body.query.trim() : '';
+    if (!query) {
+      return res.status(400).json({ message: 'query is required' });
+    }
+    const { extracted_filters, ai_only, ai_applied_criteria } =
+      await extractFiltersFromQuery(query);
+
+    // Keep `filters` strictly FilterModal-aligned.
+    // Return dynamic AI-only constraints as a generic `ai_filters` bag.
+    return res.json({
+      filters: extracted_filters,
+      ai_filters: ai_only,
+      ai_applied_criteria,
+    });
+  } catch (err: any) {
+    console.error('parseQuery error:', err);
+    return res.status(500).json({
+      message:
+        err.message ||
+        'Failed to parse query. Ensure GROQ_API_KEY is set in the server environment.',
+    });
   }
 };
 

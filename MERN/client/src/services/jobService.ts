@@ -25,6 +25,8 @@ export interface JobFilters {
   roles?: string | string[];
   currency?: string;
   sortByCompany?: boolean;
+  /** AI-only dynamic filters (sent only when aiMode=true) */
+  [key: string]: unknown;
 }
 
 export const jobService = {
@@ -62,5 +64,24 @@ export const jobService = {
 
   async deleteJob(id: string): Promise<void> {
     await api.delete(`/jobs/delete/${id}`);
+  },
+
+  /**
+   * RAG: Groq extracts filters from natural language (same shape as django_api ai_search).
+   * Returns filters for FilterModal + optional ai_applied_criteria for display.
+   */
+  async parseQuery(
+    query: string
+  ): Promise<{
+    filters: Record<string, unknown>;
+    ai_filters?: Record<string, unknown>;
+    ai_applied_criteria?: string[];
+  }> {
+    const response = await api.post<{
+      filters: Record<string, unknown>;
+      ai_filters?: Record<string, unknown>;
+      ai_applied_criteria?: string[];
+    }>('/jobs/parse-query', { query });
+    return response.data;
   },
 };

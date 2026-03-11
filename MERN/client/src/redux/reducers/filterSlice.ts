@@ -2,6 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { FilterFields } from '../../types';
 
 export interface FilterState extends FilterFields {
+  /** Raw AI-only filters returned by the backend (dynamic keys) */
+  aiFilters: Record<string, unknown>;
   selectedBtns: string[];
   aiMode: boolean;
 }
@@ -21,6 +23,7 @@ const initialState: FilterState = {
   roles: [],
   currency: '',
   sortByCompany: false,
+  aiFilters: {},
   selectedBtns: [],
   aiMode: false,
 };
@@ -113,6 +116,9 @@ const filterSlice = createSlice({
     },
     setAIMode: (state, action: PayloadAction<boolean>) => {
       state.aiMode = action.payload;
+      if (!action.payload) {
+        state.aiFilters = {};
+      }
     },
     addSelectedBtn: (state, action: PayloadAction<string>) => {
       if (!state.selectedBtns.includes(action.payload)) {
@@ -207,6 +213,14 @@ export function toQueryObject(state: FilterState): Record<string, string> {
   if (state.roles.length > 0) query.roles = state.roles.join(',');
   if (state.companySizes.length > 0) query.companySizes = state.companySizes.join(',');
   if (state.contract.length > 0) query.contract = state.contract.join(',');
+  if (state.aiMode) {
+    Object.entries(state.aiFilters).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+      // Avoid overriding explicit top-level filters
+      if (query[key] !== undefined) return;
+      query[key] = String(value);
+    });
+  }
   return query;
 }
 
