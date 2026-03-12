@@ -37,9 +37,8 @@ const AISearchInput = () => {
     setError('');
     setAiAppliedCriteria([]);
     try {
-      const { filters, ai_filters, ai_applied_criteria } = await jobService.parseQuery(
-        aiQuery.trim(),
-      );
+      const { filters, ai_filters, ai_applied_criteria } =
+        await jobService.parseQuery(aiQuery.trim());
 
       const standard: Partial<FilterFields> = {};
       const aiBag: Record<string, unknown> = { ...(ai_filters || {}) };
@@ -51,14 +50,20 @@ const AISearchInput = () => {
         }
         // Basic normalization
         if (key === 'minSalary' || key === 'maxSalary') {
-          (standard as any)[key] = typeof value === 'number' ? value : undefined;
+          (standard as any)[key] =
+            typeof value === 'number' ? value : undefined;
           return;
         }
         if (key === 'sortByCompany') {
-          (standard as any)[key] = typeof value === 'boolean' ? value : undefined;
+          (standard as any)[key] =
+            typeof value === 'boolean' ? value : undefined;
           return;
         }
-        if (['skills', 'markets', 'companySizes', 'contract', 'roles'].includes(key)) {
+        if (
+          ['skills', 'markets', 'companySizes', 'contract', 'roles'].includes(
+            key,
+          )
+        ) {
           (standard as any)[key] = Array.isArray(value) ? value : undefined;
           return;
         }
@@ -74,7 +79,9 @@ const AISearchInput = () => {
       }
     } catch (e: any) {
       setError(
-        e.response?.data?.message || e.message || 'Failed to process search. Please try again.'
+        e.response?.data?.message ||
+          e.message ||
+          'Failed to process search. Please try again.',
       );
     } finally {
       setLoading(false);
@@ -82,39 +89,33 @@ const AISearchInput = () => {
   };
 
   const handleKeydown = (e: React.KeyboardEvent) => {
-    if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && !e.shiftKey)) {
+    // submit only on Enter without Shift (allow Shift+Enter for new line)
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleAISearch();
     }
   };
 
   return (
-    <div className="space-y-4 p-4 py-2 bg-gradient-to-r from-cyan-50 to-cyan-50 rounded-lg border-2 border-gray-200">
-      <div className="flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-cyan-400 shrink-0" />
+    <div className='space-y-4 p-4 py-2 bg-gradient-to-r from-cyan-50 to-cyan-50 rounded-lg border-2 border-gray-200'>
+      <div className='flex items-center gap-2'>
+        <Sparkles className='w-5 h-5 text-cyan-400 shrink-0' />
         <input
-          type="text"
+          type='text'
           value={aiQuery}
           onChange={(e) => setAiQuery(e.target.value)}
           onKeyDown={handleKeydown}
           placeholder='e.g. "Frontend developer in Nigeria, SaaS, Vue.js" or "Female founder, 20+ employees"'
-          className="flex-1 border-none shadow-none focus:ring-0 focus:outline-none text-sm bg-transparent p-0 placeholder:text-gray-500 w-full text-cyan-900"
+          className='flex-1 border-none shadow-none focus:ring-0 focus:outline-none text-sm bg-transparent p-0 placeholder:text-gray-500 w-full text-cyan-900'
         />
-        <button
-          type="button"
-          onClick={handleAISearch}
-          disabled={loading || !aiQuery.trim()}
-          className="shrink-0 h-10 px-4 rounded-md bg-cyan-400 hover:bg-cyan-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm"
-        >
-          {loading ? '…' : 'Search'}
-        </button>
-      </div>
-      {loading && <p className="text-sm text-cyan-400">Searching with AI…</p>}
+      </div>{' '}
+      {/* button removed per request */}
+      {loading && <p className='text-sm text-cyan-400'>Searching with AI…</p>}
       {error && (
-        <p className="text-sm text-red-500 bg-red-50/50 p-2 rounded">{error}</p>
+        <p className='text-sm text-red-500 bg-red-50/50 p-2 rounded'>{error}</p>
       )}
       {aiAppliedCriteria.length > 0 && (
-        <p className="text-xs text-cyan-900 mt-1">
+        <p className='text-xs text-cyan-900 mt-1'>
           Applied: {aiAppliedCriteria.join(' · ')}
         </p>
       )}
