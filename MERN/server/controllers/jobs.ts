@@ -7,10 +7,7 @@ import { Company } from '../models/Company';
 import { CompanyMember } from '../models/CompanyMember';
 import { User } from '../models/User';
 import { getName as getCountryName } from 'country-list';
-import {
-  extractFiltersFromQuery,
-  resultToMernFilters,
-} from '../services/ragService';
+import { extractFiltersFromQuery } from '../rag/generate-responses';
 
 interface AuthRequest extends Request {
   user?: {
@@ -371,25 +368,77 @@ export const getAllJobs = async (req: Request, res: Response) => {
   }
 };
 
-// @route   POST /api/jobs/parse-query
-// @desc    RAG: Groq LLM extracts filters from natural language (aligned with django_api ai_search).
-//          Returns FilterModal-aligned filters + optional ai_applied_criteria for display.
-// @access  Public
+/**
+ * PARSE QUERY - RAG-POWERED FILTER EXTRACTION
+ * 
+ * HOW IT WORKS (RAG Phase 3: Generation):
+ * 1. User sends natural language query: "I want female-founded tech startups in US"
+ * 2. Groq LLM extracts two categories of filters:
+ *    a) REGULAR FILTERS: location=US, markets=ai_ml (user explicitly mentioned)
+ *    b) AI-ONLY FILTERS: founderCeoGender=female (AI inferred from context)
+ * 3. Client receives both sets and can apply them differently:
+ *    - Regular filters → shown in query string (persist across sessions)
+ *    - AI filters → shown as "AI suggestions" (can be cleared in regular mode)
+ * 
+ * KEY DIFFERENCE FROM REGULAR FILTER MODAL:
+ * - Filter Modal: User manually picks from dropdowns (deterministic)
+ * - Parse Query: AI extracts patterns from natural language (probabilistic)
+ * - This is why we SEPARATE them - different UX handling needed
+ * 
+ * @route   POST /api/jobs/parse-query
+ * @desc    Parse natural language query into structured filters
+ * @access  Public
+ */
 export const parseQuery = async (req: Request, res: Response) => {
   try {
     const query = typeof req.body?.query === 'string' ? req.body.query.trim() : '';
+    const mode = req.body?.mode || 'ai'; // 'ai' or 'regular'
+    
     if (!query) {
       return res.status(400).json({ message: 'query is required' });
     }
-    const { extracted_filters, ai_only, ai_applied_criteria } =
-      await extractFiltersFromQuery(query);
 
-    // Keep `filters` strictly FilterModal-aligned.
-    // Return dynamic AI-only constraints as a generic `ai_filters` bag.
+    const result = await extractFiltersFromQuery(
+      query,
+      process.env.MONGO_URI,
+      mode
+    );
+
+    /**
+     * RESPONSE STRUCTURE - Beginner's Guide:
+     * 
+     * `filters`: FilterModal fields (regular search filters)
+     *   - location, roles, skills, workType, level, etc.
+     *   - These are shown in URL/query string for persistence
+     *   - Example: ?location=US&level=senior
+     * 
+     * `ai_filters`: AI-inferred context (not in FilterModal)
+     *   - founderCeoGender, companyFoundedAfter, employeeMinExperienceYears, etc.
+     *   - These are AI interpretations, may have false positives
+     *   - Can be removed when user switches to regular mode
+     * 
+     * `ai_applied_criteria`: Human-readable descriptions
+     *   - Converts ai_filters to text: "Founder/CEO: Female"
+     *   - Shown to user as "AI extracted these criteria"
+     *   - User can see what AI inferred and remove incorrect ones
+     * 
+     * USAGE IN CLIENT:
+     * - Apply both filters to search
+     * - In AI mode: show ai_applied_criteria as removable tags
+     * - In regular mode: ignore ai_filters completely
+     */
     return res.json({
-      filters: extracted_filters,
-      ai_filters: ai_only,
-      ai_applied_criteria,
+      filters: result.filters,
+      ai_filters: result.ai_filters,
+      ai_applied_criteria: result.ai_applied_criteria,
+      debug: {
+        // For debugging - remove in production
+        query_processed: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
+        filters_found: Object.values(result.filters).filter(
+          (v) => v !== null && v !== '' && (!Array.isArray(v) || v.length > 0)
+        ).length,
+        ai_criteria_count: result.ai_applied_criteria.length,
+      },
     });
   } catch (err: any) {
     console.error('parseQuery error:', err);
@@ -397,6 +446,7 @@ export const parseQuery = async (req: Request, res: Response) => {
       message:
         err.message ||
         'Failed to parse query. Ensure GROQ_API_KEY is set in the server environment.',
+      error_type: err.constructor.name,
     });
   }
 };
