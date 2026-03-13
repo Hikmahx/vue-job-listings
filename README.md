@@ -143,6 +143,7 @@ Future improvements and features to consider:
 - [Shubham Sarda's IMDB Clone DRF](https://github.com/ShubhamSarda/IMDB-Clone-DRF) - A great repo to learn drf better
 - [shadcn-vue](https://www.shadcn-vue.com/) - Shadcn Vue component library documentation
 - [RAG Crash Course for Beginners](https://www.youtube.com/watch?v=swvzKSOEluc&t=819s) - A great YouTube video explaining RAG very simply and visually
+- [Retrieval-Augmented Generation (RAG) with MongoDB](https://www.mongodb.com/docs/atlas/atlas-vector-search/rag/?embedding-model=voyage&language-no-interface=nodejs&llm=openai) - Link to RAG system with MongoDB Vector Search (Node.js + OpenAI)
 
 ## Author
 
