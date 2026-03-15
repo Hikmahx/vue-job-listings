@@ -28,9 +28,9 @@ import { MongoClient } from 'mongodb';
 import { getEmbeddings } from './get-embeddings.js';
 
 // Import models
-import { Job } from '../models/Job.js';
-import { Company } from '../models/Company.js';
-import { CompanyMember } from '../models/CompanyMember.js';
+import { Job } from '../models/Job.ts';
+import { Company } from '../models/Company.ts';
+import { CompanyMember } from '../models/CompanyMember.ts';
 
 // MongoDB connection
 const VECTOR_DB_NAME = "vector_store_database";

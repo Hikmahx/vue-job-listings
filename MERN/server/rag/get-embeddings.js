@@ -18,7 +18,7 @@
  * Example: [0.123, -0.456, 0.789, ... ] (768 values)
  */
 
-import VoyageAIClient from 'voyageai';
+import {VoyageAIClient} from 'voyageai';
 
 // Initialize Voyage AI client with API key from environment
 const client = new VoyageAIClient({

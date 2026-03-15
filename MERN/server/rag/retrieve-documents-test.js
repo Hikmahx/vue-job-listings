@@ -15,10 +15,10 @@
  * See RAG_DEBUG_GUIDE.md for common issues and solutions
  */
 
-import dotenv from 'dotenv';
 import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
+import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: './config/config.env' });
 
 /**
  * Test embedding generation and retrieval
