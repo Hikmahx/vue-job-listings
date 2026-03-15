@@ -15,7 +15,7 @@
  * Used for semantic search: "senior frontend" ≈ "senior react engineer"
  */
 
-const { MongoClient } = require("mongodb");
+import { MongoClient } from 'mongodb';
 
 const VECTOR_DB_NAME = "vector_store_database";
 const VECTOR_COLLECTION_NAME = "embedding_store";
@@ -142,7 +142,7 @@ async function getIndexInfo(mongoUri) {
   }
 }
 
-module.exports = {
+export {
   createVectorIndex,
   getIndexInfo,
 };

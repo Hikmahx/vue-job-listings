@@ -1,4 +1,3 @@
-
 /**
  * RETRIEVE-DOCUMENTS-TEST.JS - Testing & Debugging Vector Retrieval
  * 
@@ -16,8 +15,10 @@
  * See RAG_DEBUG_GUIDE.md for common issues and solutions
  */
 
-require("dotenv").config();
-const { retrieveDocuments, buildContextString } = require("./retrieve-documents");
+import dotenv from 'dotenv';
+import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
+
+dotenv.config();
 
 /**
  * Test embedding generation and retrieval
@@ -115,11 +116,12 @@ async function testRetrieval() {
 }
 
 // Run test
-if (require.main === module) {
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   testRetrieval().catch((error) => {
-    console.error("Test failed:", error);
+    console.error('Test failed:', error);
     process.exit(1);
   });
 }
 
-module.exports = { testRetrieval };
+export { testRetrieval };

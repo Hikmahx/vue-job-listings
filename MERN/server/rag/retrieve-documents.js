@@ -1,4 +1,3 @@
-
 /**
  * RETRIEVE-DOCUMENTS.JS - Vector Search & Document Retrieval
  * 
@@ -24,8 +23,8 @@
  * 1.0 = Identical meaning
  */
 
-const { MongoClient } = require("mongodb");
-const { getEmbedding } = require("./get-embeddings");
+import { MongoClient } from 'mongodb';
+import { getEmbedding } from './get-embeddings.js';
 
 const VECTOR_DB_NAME = "vector_store_database";
 const VECTOR_COLLECTION_NAME = "embedding_store";
@@ -76,21 +75,21 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
 
     console.log(`[RETRIEVE] Searching ${topK} similar documents...`);
 
-    // MongoDB Atlas Search aggregation pipeline
-    // $search performs vector similarity search
-    // cosineDistance returns score from 0 to 2 (lower = more similar)
+    // MongoDB Atlas Vector Search aggregation pipeline
+    // $search performs vector similarity search using cosine distance
+    // Requires vector search index to be created in MongoDB Atlas UI
     const searchPipeline = [
       {
         $search: {
           cosmosSearch: {
-            vector: queryEmbedding, // User query embedding
+            vector: queryEmbedding, // 768-dimensional query embedding
             k: topK, // Return top-K results
           },
           returnScore: true, // Include similarity scores
         },
       },
       {
-        // Project fields to return (exclude embedding for readability)
+        // Project fields to return (exclude raw embedding for readability)
         $project: {
           jobId: 1,
           companyId: 1,
@@ -100,7 +99,7 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
           level: 1,
           text: 1,
           metadata: 1,
-          similarityScore: { $meta: "searchScore" }, // Return the similarity score
+          similarityScore: { $meta: 'searchScore' }, // Return the similarity score
         },
       },
       {
@@ -195,7 +194,7 @@ function buildContextString(documents) {
   return context;
 }
 
-module.exports = {
+export {
   retrieveDocuments,
   formatDocumentsForLLM,
   buildContextString,

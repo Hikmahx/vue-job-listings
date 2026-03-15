@@ -21,11 +21,9 @@
  *   → More accurate + customizable to YOUR data
  */
 
-const Groq = require("groq-sdk");
-const {
-  retrieveDocuments,
-  buildContextString,
-} = require("./retrieve-documents");
+import Groq from 'groq-sdk';
+import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
+import { buildDynamicFilterInstructions } from './extract-filterable-fields.js';
 
 // Initialize Groq client
 const groq = new Groq({
@@ -148,21 +146,26 @@ async function extractFiltersFromQuery(userQuery, mongoUri, mode = "ai") {
  * @param {string} mode - "ai" or "regular"
  * @returns {string} - Formatted prompt for LLM
  */
-function buildExtractionPrompt(userQuery, contextString = "", mode = "ai") {
+function buildExtractionPrompt(userQuery, contextString = '', mode = 'ai') {
   const contextSection = contextString
     ? `\nRELEVANT JOB DATA FROM DATABASE:\n${contextString}`
-    : "";
+    : '';
 
   const modeInstruction =
-    mode === "ai"
-      ? "\nEXTRACT BOTH regular filters AND AI-inferred criteria from the query."
-      : "\nEXTRACT ONLY regular filters. Leave AI-only fields empty.";
+    mode === 'ai'
+      ? '\nEXTRACT BOTH regular filters AND AI-inferred criteria from the query.'
+      : '\nEXTRACT ONLY regular filters. Leave AI-only fields empty.';
+
+  // Get dynamic schema fields from models
+  const dynamicFieldInstructions = buildDynamicFilterInstructions();
 
   return `You are an intelligent job search filter extraction assistant.
 
 ${modeInstruction}
 USER QUERY: "${userQuery}"
 ${contextSection}
+
+${dynamicFieldInstructions}
 
 EXTRACT and return ONLY valid JSON (no markdown, no explanation):
 
@@ -214,9 +217,10 @@ AI-ONLY FILTERS (Context clues - extract when mentioned):
 
 EXTRACTION TIPS:
 - Be flexible with synonyms (CEO = founder = leader)
+- If fields are updated in the database schema, they appear above in the schema section
 - Empty string "" for unmentioned fields, null for unmentioned numbers
 - For arrays, only include relevant items
-- Learn patterns from context data
+- Learn patterns from context data and actual field values
 
 RETURN ONLY JSON.`;
 }
@@ -320,7 +324,7 @@ function buildAiAppliedCriteria(ai_filters) {
   return criteria;
 }
 
-module.exports = {
+export {
   extractFiltersFromQuery,
   buildExtractionPrompt,
   separateFilters,

@@ -23,14 +23,14 @@
  * Stored in "embedding_store" collection, indexed for vector search
  */
 
-const mongoose = require("mongoose");
-const { MongoClient } = require("mongodb");
-const { getEmbeddings } = require("./get-embeddings");
+import mongoose from 'mongoose';
+import { MongoClient } from 'mongodb';
+import { getEmbeddings } from './get-embeddings.js';
 
 // Import models
-const Job = require("../models/Job");
-const Company = require("../models/Company");
-const CompanyMember = require("../models/CompanyMember");
+import { Job } from '../models/Job.js';
+import { Company } from '../models/Company.js';
+import { CompanyMember } from '../models/CompanyMember.js';
 
 // MongoDB connection
 const VECTOR_DB_NAME = "vector_store_database";
@@ -211,30 +211,38 @@ async function ingestData() {
     const insertResult = await vectorCollection.insertMany(docsToInsert);
     console.log(`[INGEST] ✓ Inserted ${insertResult.insertedCount} documents`);
 
-    console.log("[INGEST] Creating vector search index...");
-    // Create vector search index (required for similarity search)
-    // This can take a few seconds on first creation
+    console.log('[INGEST] Creating MongoDB Atlas Vector Search index...');
+    // NOTE: Vector Search index is created in MongoDB Atlas UI, not via driver
+    // This is a placeholder - actual index management is handled by MongoDB Atlas
+    // Index configuration (create in Atlas UI):
+    // {
+    //   "fields": [
+    //     {
+    //       "type": "vector",
+    //       "path": "embedding",
+    //       "similarity": "cosine",
+    //       "numDimensions": 768
+    //     }
+    //   ]
+    // }
+    
     try {
-      await vectorCollection.dropIndex("vector_index");
+      await vectorCollection.dropIndex('vector_index');
     } catch (e) {
       // Index might not exist yet, that's fine
     }
 
-    // Create new index
+    // Create compound index for metadata filtering (works alongside vector index)
     await vectorCollection.createIndex(
-      { embedding: "cosmosSearch", metadata: "2dsphere" },
       {
-        name: "vector_index",
-        cosmosSearchOptions: {
-          kind: "vector-ivf",
-          m: 4, // number of bi-directional links created for each node (larger = more accurate, slower ingestion)
-          efConstruction: 400, // size of the dynamic list
-          efSearch: 400, // size of the dynamic list used during search phase
-          metric: "cosine", // distance metric (cosine similarity)
-        },
-      }
+        'metadata.market': 1,
+        'metadata.foundedYear': 1,
+        'metadata.teamSize': 1,
+        'metadata.workType': 1,
+      },
+      { name: 'metadata_index' }
     );
-    console.log("[INGEST] ✓ Vector search index created");
+    console.log('[INGEST] ✓ Metadata index created (ensure vector index exists in Atlas UI)');
 
     console.log("[INGEST] ✓ Ingestion complete!");
     return {
@@ -257,4 +265,4 @@ async function ingestData() {
   }
 }
 
-module.exports = { ingestData };
+export { ingestData };
