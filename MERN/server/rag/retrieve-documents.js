@@ -76,16 +76,17 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
     console.log(`[RETRIEVE] Searching ${topK} similar documents...`);
 
     // MongoDB Atlas Vector Search aggregation pipeline
-    // $search performs vector similarity search using cosine distance
+    // $search with vectorSearch performs vector similarity search using cosine distance
     // Requires vector search index to be created in MongoDB Atlas UI
     const searchPipeline = [
       {
         $search: {
-          cosmosSearch: {
-            vector: queryEmbedding, // 768-dimensional query embedding
-            k: topK, // Return top-K results
+          vectorSearch: {
+            queryVector: queryEmbedding, // 768-dimensional query embedding
+            path: 'embedding', // Field path where embeddings are stored
+            limit: topK, // Required: maximum number of documents to return
+            numCandidates: Math.max(topK * 4, 100), // Evaluate more candidates for better accuracy
           },
-          returnScore: true, // Include similarity scores
         },
       },
       {

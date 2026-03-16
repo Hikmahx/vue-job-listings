@@ -1,16 +1,17 @@
 /**
- * GET-EMBEDDINGS.JS - Voyage AI Embedding Generation
+ * GET-EMBEDDINGS.JS - Open-Source Embedding Generation
  *
  * WHAT IT DOES (Phase 1 - Ingestion):
- * Converts text into 768-dimensional vector embeddings using Voyage AI.
+ * Converts text into 768-dimensional vector embeddings using Xenova/Transformers.
  * These embeddings are stored in MongoDB and used for similarity search.
  *
- * VECTOR DIMENSIONS: 768 (matches MongoDB vector search index configuration)
+ * VECTOR DIMENSIONS: 768 (all-mpnet-base-v2 model output)
  *
- * WHY VOYAGE AI?
- * - State-of-the-art retrieval accuracy for RAG applications
- * - Optimized input_type parameter ("document" vs "query")
- * - Cost-effective for production use
+ * WHY OPEN-SOURCE?
+ * - No API costs or rate limits
+ * - Runs locally (no external API calls)
+ * - Privacy: data never leaves your server
+ * - SBERT models optimized for semantic search
  *
  * EMBEDDING CONCEPT:
  * An embedding converts text meaning into numbers: "senior developer" and
@@ -18,18 +19,25 @@
  * Example: [0.123, -0.456, 0.789, ... ] (768 values)
  */
 
-import {VoyageAIClient} from 'voyageai';
+import { pipeline } from '@xenova/transformers';
 
-// Initialize Voyage AI client with API key from environment
-const client = new VoyageAIClient({
-  apiKey: process.env.VOYAGE_API_KEY,
-});
+// Initialize the embedding model (lazy loads on first use)
+let embeddingPipeline = null;
+
+async function getEmbeddingPipeline() {
+  if (!embeddingPipeline) {
+    console.log('[EMBEDDINGS] Loading Xenova/all-mpnet-base-v2 model...');
+    embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-mpnet-base-v2');
+    console.log('[EMBEDDINGS] ✓ Model loaded');
+  }
+  return embeddingPipeline;
+}
 
 /**
  * Generate embedding for a single text input
  *
  * @param {string} text - The text to embed
- * @param {string} inputType - "document" for storage, "query" for search (default: "document")
+ * @param {string} inputType - Unused (kept for API compatibility with Voyage AI)
  * @returns {Promise<number[]>} - 768-dimensional vector embedding
  *
  * USAGE:
@@ -42,20 +50,18 @@ export async function getEmbedding(text, inputType = 'document') {
       throw new Error('Text input must be a non-empty string');
     }
 
-    // Voyage AI model produces 768-dimensional embeddings
-    const response = await client.embed([text], {
-      model: 'voyage-3',
-      input_type: inputType, // "document" for storage, "query" for search
+    const pipeline = await getEmbeddingPipeline();
+    
+    // all-mpnet-base-v2 produces 768-dimensional embeddings
+    const result = await pipeline(text, {
+      pooling: 'mean',
+      normalize: true,
     });
 
-    // Validate response structure
-    if (!response?.data?.[0]?.embedding) {
-      throw new Error(`Invalid embedding response: ${JSON.stringify(response)}`);
-    }
+    // Convert Xenova tensor to plain array
+    // Result is a Tensor object with data property containing the embedding
+    const embedding = Array.from(result.data);
 
-    const embedding = response.data[0].embedding;
-
-    // Validate dimensions match MongoDB vector search index (768)
     if (embedding.length !== 768) {
       throw new Error(
         `Expected 768-dimensional embedding, got ${embedding.length} dimensions`
@@ -77,7 +83,7 @@ export async function getEmbedding(text, inputType = 'document') {
  * More efficient than calling getEmbedding individually
  *
  * @param {string[]} texts - Array of texts to embed
- * @param {string} inputType - "document" or "query"
+ * @param {string} inputType - Unused (kept for API compatibility)
  * @returns {Promise<number[][]>} - Array of 768-dimensional embeddings
  *
  * USAGE:
@@ -93,19 +99,29 @@ export async function getEmbeddings(texts, inputType = 'document') {
       throw new Error('Texts must be a non-empty array');
     }
 
-    // Batch API call - more efficient than individual calls
-    const response = await client.embed(texts, {
-      model: 'voyage-3',
-      input_type: inputType,
+    const pipeline = await getEmbeddingPipeline();
+    
+    // Batch process texts
+    // Pipeline returns a Tensor2D with shape [num_texts, 768]
+    const result = await pipeline(texts, {
+      pooling: 'mean',
+      normalize: true,
     });
 
-    // Validate response
-    if (!response?.data || !Array.isArray(response.data)) {
-      throw new Error(`Invalid batch embedding response: ${JSON.stringify(response)}`);
+    // Extract embeddings from tensor
+    // If single text, result is Tensor1D; if batch, result is Tensor2D
+    let embeddings;
+    if (texts.length === 1) {
+      embeddings = [Array.from(result.data)];
+    } else {
+      // For batch, we need to iterate through rows
+      embeddings = [];
+      for (let i = 0; i < texts.length; i++) {
+        const start = i * 768;
+        const end = start + 768;
+        embeddings.push(Array.from(result.data.slice(start, end)));
+      }
     }
-
-    // Return array of embeddings in same order as input
-    const embeddings = response.data.map((item) => item.embedding);
 
     // Validate all embeddings have correct dimensions
     embeddings.forEach((embedding, index) => {

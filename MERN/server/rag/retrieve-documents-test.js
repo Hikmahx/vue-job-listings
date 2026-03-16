@@ -4,21 +4,25 @@
  * WHAT IT DOES:
  * Standalone test file to verify RAG is working correctly.
  * Tests each phase independently:
- * 1. Can generate embeddings? ✓/✗
+ * 1. Can generate embeddings? ✓/✗ (using local Xenova model)
  * 2. Can retrieve documents? ✓/✗
  * 3. Are similarity scores reasonable? ✓/✗
  * 
  * HOW TO RUN:
- * npx node MERN/server/rag/retrieve-documents-test.js
+ * npm run rag:test
+ * 
+ * REQUIREMENTS:
+ * - MONGO_URI in .env
+ * - Jobs ingested via: npm run rag:ingest
  * 
  * TROUBLESHOOTING:
  * See RAG_DEBUG_GUIDE.md for common issues and solutions
  */
 
-import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
 import dotenv from 'dotenv';
+import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
 
-dotenv.config({ path: './config/config.env' });
+dotenv.config();
 
 /**
  * Test embedding generation and retrieval
@@ -31,19 +35,13 @@ async function testRetrieval() {
   // Check environment variables
   console.log("[TEST] Checking environment variables...");
   const mongoUri = process.env.MONGO_URI;
-  const voyageApiKey = process.env.VOYAGE_API_KEY;
 
   if (!mongoUri) {
     console.error("[TEST] ✗ MONGO_URI not set in .env");
     return;
   }
   console.log("[TEST] ✓ MONGO_URI set");
-
-  if (!voyageApiKey) {
-    console.error("[TEST] ✗ VOYAGE_API_KEY not set in .env");
-    return;
-  }
-  console.log("[TEST] ✓ VOYAGE_API_KEY set");
+  console.log("[TEST] ✓ Using local embeddings (Xenova) - no API key needed");
 
   // Test queries
   const testQueries = [
@@ -89,16 +87,13 @@ async function testRetrieval() {
       console.error(`[TEST] ✗ Error: ${error.message}\n`);
 
       // Provide debugging help
-      if (
-        error.message.includes("VOYAGE_API_KEY") ||
-        error.message.includes("apiKey")
-      ) {
-        console.log(
-          "[TEST] Hint: Check your VOYAGE_API_KEY at https://www.voyageai.com/"
-        );
-      } else if (error.message.includes("MONGO_URI")) {
+      if (error.message.includes("MONGO_URI")) {
         console.log(
           "[TEST] Hint: Check your MONGO_URI connection string"
+        );
+      } else if (error.message.includes("embedding")) {
+        console.log(
+          "[TEST] Hint: Check that ingest-data.js has been run"
         );
       }
       console.log();

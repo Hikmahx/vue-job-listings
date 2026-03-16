@@ -23,6 +23,9 @@
  * Stored in "embedding_store" collection, indexed for vector search
  */
 
+import dotenv from 'dotenv';
+dotenv.config({ path: './config/config.env' });
+
 import mongoose from 'mongoose';
 import { MongoClient } from 'mongodb';
 import { getEmbeddings } from './get-embeddings.js';
@@ -34,7 +37,7 @@ import { CompanyMember } from '../models/CompanyMember.ts';
 
 // MongoDB connection
 const VECTOR_DB_NAME = "vector_store_database";
-const VECTOR_COLLECTION_NAME = "embedding_store";
+const VECTOR_COLLECTION_NAME = "embeddings_stream";
 
 /**
  * Create a semantically rich text chunk from job + company data
@@ -113,7 +116,6 @@ function createJobChunk(job, company, founder = null) {
  * @returns {Promise<Object>} - Ingestion summary
  */
 async function ingestData() {
-  let appConnection;
   let vectorConnection;
 
   try {
@@ -123,15 +125,7 @@ async function ingestData() {
       throw new Error("MONGO_URI environment variable not set");
     }
 
-    const VOYAGE_API_KEY = process.env.VOYAGE_API_KEY;
-    if (!VOYAGE_API_KEY) {
-      throw new Error(
-        "VOYAGE_API_KEY environment variable not set. Get free key at https://www.voyageai.com/"
-      );
-    }
-
     console.log("[INGEST] Connecting to application database...");
-    // Connect to application database using Mongoose
     await mongoose.connect(MONGO_URI);
     console.log("[INGEST] ✓ Connected to application database");
 
@@ -225,7 +219,7 @@ async function ingestData() {
     //     }
     //   ]
     // }
-    
+
     try {
       await vectorCollection.dropIndex('vector_index');
     } catch (e) {
@@ -256,9 +250,7 @@ async function ingestData() {
     throw error;
   } finally {
     // Clean up connections
-    if (appConnection) {
-      await mongoose.disconnect();
-    }
+    await mongoose.disconnect();
     if (vectorConnection) {
       await vectorConnection.close();
     }
@@ -266,3 +258,14 @@ async function ingestData() {
 }
 
 export { ingestData };
+
+// Run ingestion
+ingestData()
+  .then((result) => {
+    console.log('[INGEST] Result:', result);
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('[INGEST] Fatal error:', error);
+    process.exit(1);
+  });
