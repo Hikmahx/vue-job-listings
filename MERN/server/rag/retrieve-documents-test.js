@@ -20,31 +20,62 @@
  */
 
 import dotenv from 'dotenv';
+import path from 'path';
+import { MongoClient } from 'mongodb';
 import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
 
-dotenv.config();
+dotenv.config({ path: path.resolve('./config/config.env') });
 
-/**
- * Test embedding generation and retrieval
- */
+const VECTOR_DB_NAME = "vector_store_database";
+const VECTOR_COLLECTION_NAME = "embeddings_stream"; // must match ingest-data.js
+
 async function testRetrieval() {
   console.log("\n===========================================");
   console.log("RETRIEVE-DOCUMENTS TEST");
   console.log("===========================================\n");
 
-  // Check environment variables
+  // --- Step 1: Check env ---
   console.log("[TEST] Checking environment variables...");
   const mongoUri = process.env.MONGO_URI;
-
   if (!mongoUri) {
-    console.error("[TEST] ✗ MONGO_URI not set in .env");
+    console.error("[TEST] ✗ MONGO_URI not set");
     return;
   }
   console.log("[TEST] ✓ MONGO_URI set");
-  console.log("[TEST] ✓ Using local embeddings (Xenova) - no API key needed");
 
-  // Test queries
+  // --- Step 2: Directly verify documents exist in MongoDB ---
+  console.log("\n[TEST] Verifying vector store contents directly...");
+  let client;
+  try {
+    client = new MongoClient(mongoUri);
+    await client.connect();
+    const collection = client.db(VECTOR_DB_NAME).collection(VECTOR_COLLECTION_NAME);
+
+    const count = await collection.countDocuments();
+    console.log(`[TEST] Documents in '${VECTOR_COLLECTION_NAME}': ${count}`);
+
+    if (count === 0) {
+      console.error("[TEST] ✗ Collection is EMPTY — run npm run rag:ingest first");
+      await client.close();
+      return;
+    }
+
+    // Show a sample doc to confirm structure
+    const sample = await collection.findOne({}, { projection: { position: 1, company: 1, location: 1, embedding: { $slice: 3 } } });
+    console.log(`[TEST] ✓ Sample doc: "${sample.position}" at "${sample.company}" (${sample.location})`);
+    console.log(`[TEST] ✓ Embedding present: ${!!sample.embedding} | First 3 dims: [${sample.embedding?.map(n => n.toFixed(4)).join(', ')}...]`);
+
+    await client.close();
+  } catch (err) {
+    console.error("[TEST] ✗ MongoDB direct check failed:", err.message);
+    if (client) await client.close();
+    return;
+  }
+
+  // --- Step 3: Run vector search queries ---
+  console.log("\n[TEST] ✓ Using local embeddings (Xenova) - no API key needed");
   const testQueries = [
+      "Senior Frontend Developer remote United States HTML CSS JavaScript",
     "I'm looking for a senior frontend developer role in the US",
     "female-founded tech startups with remote positions",
     "backend engineer in India, startup with 10-50 employees",
@@ -53,64 +84,55 @@ async function testRetrieval() {
 
   console.log(`\n[TEST] Running ${testQueries.length} test queries...\n`);
 
+  let totalFound = 0;
+
   for (const query of testQueries) {
     console.log("-------------------------------------------");
     console.log(`Query: "${query}"\n`);
 
     try {
-      // Retrieve documents
       const results = await retrieveDocuments(query, mongoUri, 3);
 
       if (results.length === 0) {
-        console.log("[TEST] ⚠ No documents found (vector store may be empty)");
-        console.log("[TEST] Solution: Run ingest-data.js first\n");
+        console.log("[TEST] ⚠ Vector search returned 0 results");
+        console.log("[TEST] → Documents exist in MongoDB, so this is a RETRIEVAL IMPLEMENTATION issue");
+        console.log("[TEST] → Check: correct index name, correct collection in retrieve-documents.js\n");
         continue;
       }
 
+      totalFound += results.length;
       console.log(`[TEST] ✓ Retrieved ${results.length} documents\n`);
 
-      // Display results
       results.forEach((doc, idx) => {
-        const score = doc.similarityScore.toFixed(3);
+        const score = doc.similarityScore?.toFixed(3) ?? 'N/A';
         console.log(`[${idx + 1}] ${doc.position} at ${doc.company}`);
         console.log(`    Location: ${doc.location} | Level: ${doc.level}`);
         console.log(`    Similarity Score: ${score}`);
         console.log();
       });
 
-      // Build context string
       const contextString = buildContextString(results);
-      console.log("[TEST] Context string built for LLM");
-      console.log("[TEST] Sample context (first 200 chars):");
+      console.log("[TEST] Context string preview:");
       console.log(`    ${contextString.substring(0, 200)}...\n`);
+
     } catch (error) {
       console.error(`[TEST] ✗ Error: ${error.message}\n`);
-
-      // Provide debugging help
-      if (error.message.includes("MONGO_URI")) {
-        console.log(
-          "[TEST] Hint: Check your MONGO_URI connection string"
-        );
-      } else if (error.message.includes("embedding")) {
-        console.log(
-          "[TEST] Hint: Check that ingest-data.js has been run"
-        );
-      }
-      console.log();
     }
   }
 
   console.log("-------------------------------------------");
   console.log("\n[TEST] Test complete!");
-  console.log(
-    "\nNext steps:"
-  );
-  console.log("1. If you see documents: RAG retrieval is working! ✓");
-  console.log("2. If no documents: Run ingest-data.js to populate vector store");
-  console.log("3. If errors: Check RAG_DEBUG_GUIDE.md for solutions\n");
+
+  if (totalFound > 0) {
+    console.log("✓ RAG retrieval is working!\n");
+  } else {
+    console.log("✗ Vector search returned 0 results for all queries.");
+    console.log("  → Documents ARE in MongoDB (confirmed above)");
+    console.log("  → The issue is in retrieve-documents.js implementation");
+    console.log("  → Check: DB name, collection name, index name, $vectorSearch syntax\n");
+  }
 }
 
-// Run test
 const isMainModule = import.meta.url === `file://${process.argv[1]}`;
 if (isMainModule) {
   testRetrieval().catch((error) => {

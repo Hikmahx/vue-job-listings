@@ -1,18 +1,18 @@
 /**
  * INGEST-DATA.JS - Data Ingestion Pipeline
- * 
+ *
  * WHAT IT DOES (Phase 1 - Ingestion):
  * 1. Loads jobs from MongoDB
  * 2. Chunks each job + company metadata into readable text
  * 3. Generates embeddings for each chunk
  * 4. Stores embeddings in MongoDB vector store
- * 
+ *
  * WHY CHUNKING?
  * Embedding models have input limits (~4000 tokens). Chunking ensures:
  * - Each chunk is semantic complete (meaningful on its own)
  * - All relevant metadata is included (company info, founder demographics)
  * - Vector search can find the most relevant job chunks
- * 
+ *
  * BEGINNER WORKFLOW:
  * Job Data → Chunking → Embedding → MongoDB Vector Store
  *                ↓
@@ -20,7 +20,7 @@
  *                ↓
  * [0.123, -0.456, 0.789, ...]
  *                ↓
- * Stored in "embedding_store" collection, indexed for vector search
+ * Stored in "embeddings_stream" collection, indexed for vector search
  */
 
 import dotenv from 'dotenv';
@@ -36,17 +36,17 @@ import { Company } from '../models/Company.ts';
 import { CompanyMember } from '../models/CompanyMember.ts';
 
 // MongoDB connection
-const VECTOR_DB_NAME = "vector_store_database";
-const VECTOR_COLLECTION_NAME = "embeddings_stream";
+const VECTOR_DB_NAME = 'vector_store_database';
+const VECTOR_COLLECTION_NAME = 'embeddings_stream';
 
 /**
  * Create a semantically rich text chunk from job + company data
- * 
+ *
  * WHY THIS STRUCTURE?
  * The embedding model learns patterns from text structure.
  * "Founded: 2021" helps it understand founding year is important.
  * This increases RAG accuracy because the LLM can extract context.
- * 
+ *
  * @param {Object} job - Job document from MongoDB
  * @param {Object} company - Company document from MongoDB
  * @param {Object} founder - Founder profile (optional)
@@ -60,18 +60,18 @@ function createJobChunk(job, company, founder = null) {
   chunks.push(`Role: ${job.role}`);
   chunks.push(`Level: ${job.level}`);
   chunks.push(`Location: ${job.location}`);
-  chunks.push(`Work Type: ${job.workType || "unspecified"}`);
+  chunks.push(`Work Type: ${job.workType || 'unspecified'}`);
   chunks.push(`Contract: ${job.contract}`);
 
   // Technical requirements
   if (job.skills && job.skills.length > 0) {
-    chunks.push(`Required Skills: ${job.skills.join(", ")}`);
+    chunks.push(`Required Skills: ${job.skills.join(', ')}`);
   }
 
   // Salary information
   if (job.minSalary || job.maxSalary) {
-    const salary = `${job.minSalary || ""}${job.minSalary && job.maxSalary ? "-" : ""}${job.maxSalary || ""}`;
-    chunks.push(`Salary: ${salary} ${job.currency || ""}`);
+    const salary = `${job.minSalary || ''}${job.minSalary && job.maxSalary ? '-' : ''}${job.maxSalary || ''}`;
+    chunks.push(`Salary: ${salary} ${job.currency || ''}`);
   }
 
   // Job details (description & requirements)
@@ -82,15 +82,15 @@ function createJobChunk(job, company, founder = null) {
   // Company information (AI-mode filters extract from this)
   chunks.push(`Company Name: ${company.name}`);
   chunks.push(`Industry: ${company.market}`);
-  chunks.push(`Company Size: ${company.teamSize || "unknown"} employees`);
-  chunks.push(`Founded: ${company.foundedYear || "unknown"}`);
-  chunks.push(`Headquarters: ${company.location || "unknown"}`);
+  chunks.push(`Company Size: ${company.teamSize || 'unknown'} employees`);
+  chunks.push(`Founded: ${company.foundedYear || 'unknown'}`);
+  chunks.push(`Headquarters: ${company.location || 'unknown'}`);
 
   // Founder/CEO demographics (for AI filters like "female-founded")
   if (founder) {
     chunks.push(`Founder Name: ${founder.name}`);
-    chunks.push(`Founder Gender: ${founder.gender || "not specified"}`);
-    chunks.push(`Founder Background: ${founder.background || ""}`);
+    chunks.push(`Founder Gender: ${founder.gender || 'not specified'}`);
+    chunks.push(`Founder Background: ${founder.background || ''}`);
   }
 
   // Company description
@@ -98,12 +98,12 @@ function createJobChunk(job, company, founder = null) {
     chunks.push(`About: ${company.description.substring(0, 300)}`);
   }
 
-  return chunks.join(" | ");
+  return chunks.join(' | ');
 }
 
 /**
  * Ingest all jobs from MongoDB into vector store
- * 
+ *
  * FLOW:
  * 1. Connect to application database (read jobs)
  * 2. For each job:
@@ -112,7 +112,7 @@ function createJobChunk(job, company, founder = null) {
  *    c. Generate embedding via Voyage AI
  * 3. Store in vector database
  * 4. Create vector search index
- * 
+ *
  * @returns {Promise<Object>} - Ingestion summary
  */
 async function ingestData() {
@@ -122,12 +122,12 @@ async function ingestData() {
     // Connection URLs
     const MONGO_URI = process.env.MONGO_URI;
     if (!MONGO_URI) {
-      throw new Error("MONGO_URI environment variable not set");
+      throw new Error('MONGO_URI environment variable not set');
     }
 
-    console.log("[INGEST] Connecting to application database...");
+    console.log('[INGEST] Connecting to application database...');
     await mongoose.connect(MONGO_URI);
-    console.log("[INGEST] ✓ Connected to application database");
+    console.log('[INGEST] ✓ Connected to application database');
 
     // Connect to same MongoDB cluster for vector store
     vectorConnection = new MongoClient(MONGO_URI);
@@ -135,14 +135,18 @@ async function ingestData() {
     const vectorDb = vectorConnection.db(VECTOR_DB_NAME);
     const vectorCollection = vectorDb.collection(VECTOR_COLLECTION_NAME);
 
-    console.log("[INGEST] Fetching jobs from database...");
+    console.log('[INGEST] Fetching jobs from database...');
     // Fetch all jobs
     const jobs = await Job.find({}).lean();
     console.log(`[INGEST] Found ${jobs.length} jobs`);
 
     if (jobs.length === 0) {
-      console.warn("[INGEST] No jobs found in database");
-      return { status: "warning", message: "No jobs to ingest", jobsProcessed: 0 };
+      console.warn('[INGEST] No jobs found in database');
+      return {
+        status: 'warning',
+        message: 'No jobs to ingest',
+        jobsProcessed: 0,
+      };
     }
 
     // Prepare documents for ingestion
@@ -187,20 +191,22 @@ async function ingestData() {
       });
     }
 
-    console.log(`[INGEST] Generating embeddings for ${jobChunks.length} jobs...`);
+    console.log(
+      `[INGEST] Generating embeddings for ${jobChunks.length} jobs...`,
+    );
     // Generate all embeddings in batch
-    const embeddings = await getEmbeddings(jobChunks, "document");
+    const embeddings = await getEmbeddings(jobChunks, 'document');
 
     // Add embeddings to documents
     for (let i = 0; i < docsToInsert.length; i++) {
       docsToInsert[i].embedding = embeddings[i];
     }
 
-    console.log("[INGEST] Clearing existing vector store...");
+    console.log('[INGEST] Clearing existing vector store...');
     // Clear existing data
     await vectorCollection.deleteMany({});
 
-    console.log("[INGEST] Inserting documents with embeddings...");
+    console.log('[INGEST] Inserting documents with embeddings...');
     // Insert all documents
     const insertResult = await vectorCollection.insertMany(docsToInsert);
     console.log(`[INGEST] ✓ Inserted ${insertResult.insertedCount} documents`);
@@ -234,19 +240,21 @@ async function ingestData() {
         'metadata.teamSize': 1,
         'metadata.workType': 1,
       },
-      { name: 'metadata_index' }
+      { name: 'metadata_index' },
     );
-    console.log('[INGEST] ✓ Metadata index created (ensure vector index exists in Atlas UI)');
+    console.log(
+      '[INGEST] ✓ Metadata index created (ensure vector index exists in Atlas UI)',
+    );
 
-    console.log("[INGEST] ✓ Ingestion complete!");
+    console.log('[INGEST] ✓ Ingestion complete!');
     return {
-      status: "success",
-      message: "Data ingestion completed",
+      status: 'success',
+      message: 'Data ingestion completed',
       jobsProcessed: insertResult.insertedCount,
       embeddingsGenerated: embeddings.length,
     };
   } catch (error) {
-    console.error("[INGEST] Error during ingestion:", error.message);
+    console.error('[INGEST] Error during ingestion:', error.message);
     throw error;
   } finally {
     // Clean up connections

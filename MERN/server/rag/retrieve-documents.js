@@ -26,24 +26,24 @@
 import { MongoClient } from 'mongodb';
 import { getEmbedding } from './get-embeddings.js';
 
-const VECTOR_DB_NAME = "vector_store_database";
-const VECTOR_COLLECTION_NAME = "embedding_store";
+const VECTOR_DB_NAME = 'vector_store_database';
+const VECTOR_COLLECTION_NAME = 'embeddings_stream';
 
 /**
  * Retrieve top-K most similar documents to user query
- * 
+ *
  * PROCESS:
  * 1. Convert query to embedding using same model as ingestion
  * 2. Use $search stage in aggregation pipeline for vector similarity
  * 3. Return documents with similarity scores
  * 4. Filter by minimum similarity threshold
- * 
+ *
  * @param {string} query - User's natural language query
  * @param {string} mongoUri - MongoDB connection string
  * @param {number} topK - Number of top results (default 5)
  * @param {number} minSimilarity - Minimum similarity score (0-1, default 0.0)
  * @returns {Promise<Array>} - Array of relevant documents with scores
- * 
+ *
  * USAGE:
  * const results = await retrieveDocuments(
  *   "I want a female-founded tech startup in the US",
@@ -51,20 +51,25 @@ const VECTOR_COLLECTION_NAME = "embedding_store";
  *   5  // Top 5 results
  * );
  */
-async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0) {
+async function retrieveDocuments(
+  query,
+  mongoUri,
+  topK = 5,
+  minSimilarity = 0.0,
+) {
   let client;
 
   try {
     if (!mongoUri) {
-      throw new Error("MONGO_URI environment variable not set");
+      throw new Error('MONGO_URI environment variable not set');
     }
 
     // Convert query to embedding using input_type="query"
     // This optimizes embedding for search instead of storage
-    console.log("[RETRIEVE] Generating query embedding...");
-    const queryEmbedding = await getEmbedding(query, "query");
+    console.log('[RETRIEVE] Generating query embedding...');
+    const queryEmbedding = await getEmbedding(query, 'query');
     console.log(
-      `[RETRIEVE] ✓ Generated embedding (dimension: ${queryEmbedding.length})`
+      `[RETRIEVE] ✓ Generated embedding (dimension: ${queryEmbedding.length})`,
     );
 
     client = new MongoClient(mongoUri);
@@ -80,13 +85,12 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
     // Requires vector search index to be created in MongoDB Atlas UI
     const searchPipeline = [
       {
-        $search: {
-          vectorSearch: {
+        $vectorSearch: {
+          index: 'vector_index',        // must match your Atlas index name exactly
             queryVector: queryEmbedding, // 768-dimensional query embedding
             path: 'embedding', // Field path where embeddings are stored
             limit: topK, // Required: maximum number of documents to return
             numCandidates: Math.max(topK * 4, 100), // Evaluate more candidates for better accuracy
-          },
         },
       },
       {
@@ -100,7 +104,7 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
           level: 1,
           text: 1,
           metadata: 1,
-          similarityScore: { $meta: 'searchScore' }, // Return the similarity score
+          similarityScore: { $meta: 'vectorSearchScore' }, // note: vectorSearchScore not searchScore
         },
       },
       {
@@ -113,26 +117,24 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
       },
     ];
 
-    const results = await collection
-      .aggregate(searchPipeline)
-      .toArray();
+    const results = await collection.aggregate(searchPipeline).toArray();
 
     console.log(`[RETRIEVE] ✓ Found ${results.length} relevant documents`);
 
     // Filter by minimum similarity if needed
     const filteredResults = results.filter(
-      (doc) => doc.similarityScore >= minSimilarity
+      (doc) => doc.similarityScore >= minSimilarity,
     );
 
     if (filteredResults.length < results.length) {
       console.log(
-        `[RETRIEVE] Filtered to ${filteredResults.length} documents (min similarity: ${minSimilarity})`
+        `[RETRIEVE] Filtered to ${filteredResults.length} documents (min similarity: ${minSimilarity})`,
       );
     }
 
     return filteredResults;
   } catch (error) {
-    console.error("[RETRIEVE] Error retrieving documents:", error.message);
+    console.error('[RETRIEVE] Error retrieving documents:', error.message);
     throw error;
   } finally {
     if (client) {
@@ -143,11 +145,11 @@ async function retrieveDocuments(query, mongoUri, topK = 5, minSimilarity = 0.0)
 
 /**
  * Format retrieved documents for use in LLM context
- * 
+ *
  * WHAT IT DOES:
  * Converts raw MongoDB documents into clean format for passing to LLM
  * Removes unnecessary fields, includes relevant metadata
- * 
+ *
  * @param {Array} documents - Raw documents from retrieveDocuments()
  * @returns {Array} - Formatted documents ready for LLM
  */
@@ -165,11 +167,11 @@ function formatDocumentsForLLM(documents) {
 
 /**
  * Build context string from retrieved documents for LLM prompt
- * 
+ *
  * EXAMPLE OUTPUT:
  * ```
  * RELEVANT JOB DATA:
- * 
+ *
  * [1] Senior Frontend Developer at TechCorp (score: 0.876)
  * Location: United States | Level: Senior
  * Position: Senior Frontend Developer | Role: Frontend | Level: senior |
@@ -181,10 +183,10 @@ function formatDocumentsForLLM(documents) {
  */
 function buildContextString(documents) {
   if (!documents || documents.length === 0) {
-    return "No relevant job data found.";
+    return 'No relevant job data found.';
   }
 
-  let context = "RELEVANT JOB DATA:\n\n";
+  let context = 'RELEVANT JOB DATA:\n\n';
 
   documents.forEach((doc, index) => {
     context += `[${index + 1}] ${doc.position} at ${doc.company} (similarity score: ${doc.similarityScore.toFixed(3)})\n`;
@@ -195,8 +197,4 @@ function buildContextString(documents) {
   return context;
 }
 
-export {
-  retrieveDocuments,
-  formatDocumentsForLLM,
-  buildContextString,
-};
+export { retrieveDocuments, formatDocumentsForLLM, buildContextString };
