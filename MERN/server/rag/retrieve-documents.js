@@ -55,7 +55,8 @@ async function retrieveDocuments(
   query,
   mongoUri,
   topK = 5,
-  minSimilarity = 0.0,
+  minSimilarity = 0.0, // minSimilarity = 0.75) //return results above 0.75 similarity
+
 ) {
   let client;
 
@@ -91,6 +92,7 @@ async function retrieveDocuments(
             path: 'embedding', // Field path where embeddings are stored
             limit: topK, // Required: maximum number of documents to return
             numCandidates: Math.max(topK * 4, 100), // Evaluate more candidates for better accuracy
+            // exact: true,
         },
       },
       {
