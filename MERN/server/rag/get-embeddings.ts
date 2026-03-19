@@ -1,5 +1,5 @@
 /**
- * GET-EMBEDDINGS.JS - Open-Source Embedding Generation
+ * GET-EMBEDDINGS.TS - Open-Source Embedding Generation
  *
  * WHAT IT DOES (Phase 1 - Ingestion):
  * Converts text into 768-dimensional vector embeddings using Xenova/Transformers.
@@ -19,12 +19,12 @@
  * Example: [0.123, -0.456, 0.789, ... ] (768 values)
  */
 
-import { pipeline } from '@xenova/transformers';
+import { pipeline, Pipeline, Tensor } from '@xenova/transformers';
 
 // Initialize the embedding model (lazy loads on first use)
-let embeddingPipeline = null;
+let embeddingPipeline: Pipeline | null = null;
 
-async function getEmbeddingPipeline() {
+async function getEmbeddingPipeline(): Promise<Pipeline> {
   if (!embeddingPipeline) {
     console.log('[EMBEDDINGS] Loading Xenova/all-mpnet-base-v2 model...');
     embeddingPipeline = await pipeline('feature-extraction', 'Xenova/all-mpnet-base-v2');
@@ -44,7 +44,10 @@ async function getEmbeddingPipeline() {
  * const embedding = await getEmbedding("Senior Frontend Developer");
  * // Returns: [0.123, -0.456, 0.789, ... ] (768 dimensions)
  */
-export async function getEmbedding(text, inputType = 'document') {
+export async function getEmbedding(
+  text: string,
+  inputType: string = 'document'
+): Promise<number[]> {
   try {
     if (!text || typeof text !== 'string') {
       throw new Error('Text input must be a non-empty string');
@@ -53,14 +56,14 @@ export async function getEmbedding(text, inputType = 'document') {
     const pipeline = await getEmbeddingPipeline();
     
     // all-mpnet-base-v2 produces 768-dimensional embeddings
-    const result = await pipeline(text, {
+    const result: any = await pipeline(text, {
       pooling: 'mean',
       normalize: true,
     });
 
     // Convert Xenova tensor to plain array
     // Result is a Tensor object with data property containing the embedding
-    const embedding = Array.from(result.data);
+    const embedding: number[] = Array.from(result.data);
 
     if (embedding.length !== 768) {
       throw new Error(
@@ -69,7 +72,7 @@ export async function getEmbedding(text, inputType = 'document') {
     }
 
     return embedding;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[RAG] Embedding error:', {
       message: error.message,
       textLength: text?.length || 0,
@@ -93,24 +96,27 @@ export async function getEmbedding(text, inputType = 'document') {
  * ]);
  * // Returns: [[0.123, ...], [0.456, ...]] (each is 768 dims)
  */
-export async function getEmbeddings(texts, inputType = 'document') {
+export async function getEmbeddings(
+  texts: string[],
+  inputType: string = 'document'
+): Promise<number[][]> {
   try {
     if (!Array.isArray(texts) || texts.length === 0) {
       throw new Error('Texts must be a non-empty array');
     }
 
     const pipeline = await getEmbeddingPipeline();
-    
+
     // Batch process texts
     // Pipeline returns a Tensor2D with shape [num_texts, 768]
-    const result = await pipeline(texts, {
+    const result: any = await pipeline(texts, {
       pooling: 'mean',
       normalize: true,
     });
 
     // Extract embeddings from tensor
     // If single text, result is Tensor1D; if batch, result is Tensor2D
-    let embeddings;
+    let embeddings: number[][];
     if (texts.length === 1) {
       embeddings = [Array.from(result.data)];
     } else {
@@ -119,7 +125,7 @@ export async function getEmbeddings(texts, inputType = 'document') {
       for (let i = 0; i < texts.length; i++) {
         const start = i * 768;
         const end = start + 768;
-        embeddings.push(Array.from(result.data.slice(start, end)));
+        embeddings.push(Array.from((result.data as any).slice(start, end)));
       }
     }
 
@@ -133,7 +139,7 @@ export async function getEmbeddings(texts, inputType = 'document') {
     });
 
     return embeddings;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[RAG] Batch embedding error:', {
       message: error.message,
       textCount: texts?.length || 0,

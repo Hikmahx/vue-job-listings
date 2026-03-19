@@ -1,5 +1,5 @@
 /**
- * GENERATE-RESPONSES.JS - LLM Response Generation
+ * GENERATE-RESPONSES.TS - LLM Response Generation
  * 
  * WHAT IT DOES (Phase 3 - Generation):
  * 1. Takes user query + retrieved documents (context)
@@ -22,13 +22,44 @@
  */
 
 import Groq from 'groq-sdk';
-import { retrieveDocuments, buildContextString } from './retrieve-documents.js';
-import { buildDynamicFilterInstructions } from './extract-filterable-fields.js';
+import { retrieveDocuments, buildContextString } from './retrieve-documents';
+import { buildDynamicFilterInstructions } from './extract-filterable-field';
 
 // Initialize Groq client
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
+
+interface ExtractedFilters {
+  search: string;
+  location: string;
+  roles: string[];
+  skills: string[];
+  markets: string[];
+  level: string;
+  workType: string;
+  contract: string[];
+  companySizes: string[];
+  minSalary: number | null;
+  maxSalary: number | null;
+  currency: string;
+  timeframe: string;
+}
+
+interface AIFilters {
+  founderCeoGender: string | null;
+  companyFoundedAfter: number | null;
+  companyFoundedBefore: number | null;
+  employeeMinAge: number | null;
+  employeeMinExperienceYears: number | null;
+  targetApplicantGender: string | null;
+}
+
+interface ExtractFiltersResult {
+  filters: ExtractedFilters;
+  ai_filters: AIFilters;
+  ai_applied_criteria: string[];
+}
 
 /**
  * Extract filters from user query using RAG + Groq LLM
@@ -67,7 +98,11 @@ const groq = new Groq({
  *   ]
  * }
  */
-async function extractFiltersFromQuery(userQuery, mongoUri, mode = "ai") {
+async function extractFiltersFromQuery(
+  userQuery: string,
+  mongoUri: string,
+  mode: string = 'ai'
+): Promise<ExtractFiltersResult> {
   try {
     let contextString = "";
 
@@ -103,7 +138,7 @@ async function extractFiltersFromQuery(userQuery, mongoUri, mode = "ai") {
 
     // Extract JSON response
     const responseText = message.content[0].text;
-    let extractedData;
+    let extractedData: any;
 
     // Try to parse JSON from response
     try {
@@ -125,7 +160,7 @@ async function extractFiltersFromQuery(userQuery, mongoUri, mode = "ai") {
       ai_filters,
       ai_applied_criteria,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("[GENERATE] Error extracting filters:", error.message);
     throw error;
   }
@@ -146,7 +181,11 @@ async function extractFiltersFromQuery(userQuery, mongoUri, mode = "ai") {
  * @param {string} mode - "ai" or "regular"
  * @returns {string} - Formatted prompt for LLM
  */
-function buildExtractionPrompt(userQuery, contextString = '', mode = 'ai') {
+function buildExtractionPrompt(
+  userQuery: string,
+  contextString: string = '',
+  mode: string = 'ai'
+): string {
   const contextSection = contextString
     ? `\nRELEVANT JOB DATA FROM DATABASE:\n${contextString}`
     : '';
@@ -235,9 +274,11 @@ RETURN ONLY JSON.`;
  * @param {Object} extractedData - Raw extraction from LLM
  * @returns {Object} - { filters, ai_filters }
  */
-function separateFilters(extractedData) {
+function separateFilters(
+  extractedData: any
+): { filters: ExtractedFilters; ai_filters: AIFilters } {
   // Regular filters (from FilterModal)
-  const filters = {
+  const filters: ExtractedFilters = {
     search: extractedData.search || "",
     location: extractedData.location || "",
     roles: Array.isArray(extractedData.roles) ? extractedData.roles : [],
@@ -260,7 +301,7 @@ function separateFilters(extractedData) {
   };
 
   // AI-only filters (context-inferred, not in FilterModal)
-  const ai_filters = {
+  const ai_filters: AIFilters = {
     founderCeoGender: extractedData.founderCeoGender || null,
     companyFoundedAfter: extractedData.companyFoundedAfter || null,
     companyFoundedBefore: extractedData.companyFoundedBefore || null,
@@ -282,8 +323,8 @@ function separateFilters(extractedData) {
  * @param {Object} ai_filters - AI-inferred filter values
  * @returns {Array<string>} - Human-readable descriptions
  */
-function buildAiAppliedCriteria(ai_filters) {
-  const criteria = [];
+function buildAiAppliedCriteria(ai_filters: AIFilters): string[] {
+  const criteria: string[] = [];
 
   if (ai_filters.founderCeoGender) {
     const gender =
@@ -329,4 +370,7 @@ export {
   buildExtractionPrompt,
   separateFilters,
   buildAiAppliedCriteria,
+  type ExtractFiltersResult,
+  type ExtractedFilters,
+  type AIFilters,
 };

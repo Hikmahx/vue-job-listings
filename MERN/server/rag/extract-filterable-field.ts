@@ -1,7 +1,8 @@
-import { Job } from '../models/Job.js';
-import { Company } from '../models/Company.js';
-import { User } from '../models/User.js';
-import { CompanyMember } from '../models/CompanyMember.js';
+import { Model, Schema } from 'mongoose';
+import { Job } from '../models/Job';
+import { Company } from '../models/Company';
+import { User } from '../models/User';
+import { CompanyMember } from '../models/CompanyMember';
 
 /**
  * DYNAMIC FIELD EXTRACTION UTILITY
@@ -16,17 +17,54 @@ import { CompanyMember } from '../models/CompanyMember.js';
  * - Future-proof: scales as your data models evolve
  */
 
+interface FieldInfo {
+  type: string;
+  enum: string[] | null;
+  description: string;
+}
+
+interface FilterableFields {
+  [key: string]: FieldInfo;
+}
+
+interface AllFilterableFields {
+  job: FilterableFields;
+  company: FilterableFields;
+  user: FilterableFields;
+  team_member: FilterableFields;
+}
+
+interface FilterExamples {
+  job_filters: {
+    level: string;
+    contract: string;
+    workType: string;
+    skills: string[];
+  };
+  company_filters: {
+    market: string;
+    foundedYear: number;
+    teamSize: number;
+    location: string;
+  };
+  user_filters: {
+    experienceYears: number;
+    gender: string;
+    skills: string[];
+  };
+}
+
 /**
  * Extract all filterable fields from a Mongoose model schema
  * 
  * @param {Model} mongooseModel - The Mongoose model (e.g., Job, Company)
  * @returns {Object} Object with field names as keys and type info as values
  */
-function extractFieldsFromModel(mongooseModel) {
-  const fields = {};
-  const schema = mongooseModel.schema;
+function extractFieldsFromModel(mongooseModel: Model<any>): FilterableFields {
+  const fields: FilterableFields = {};
+  const schema: Schema = mongooseModel.schema;
 
-  Object.entries(schema.obj).forEach(([fieldName, fieldConfig]) => {
+  Object.entries(schema.obj).forEach(([fieldName, fieldConfig]: [string, any]) => {
     // Skip internal fields, nested objects, and references
     if (
       fieldName.startsWith('_') ||
@@ -37,8 +75,8 @@ function extractFieldsFromModel(mongooseModel) {
       return;
     }
 
-    const fieldType = fieldConfig.type?.name || fieldConfig.type;
-    const enumValues = fieldConfig.enum || [];
+    const fieldType: string = fieldConfig.type?.name || fieldConfig.type;
+    const enumValues: string[] = fieldConfig.enum || [];
 
     fields[fieldName] = {
       type: fieldType,
@@ -54,7 +92,7 @@ function extractFieldsFromModel(mongooseModel) {
  * Get all filterable fields across all models
  * Organizes them by model so LLM knows which fields belong where
  */
-export function getAllFilterableFields() {
+export function getAllFilterableFields(): AllFilterableFields {
   const jobFields = extractFieldsFromModel(Job);
   const companyFields = extractFieldsFromModel(Company);
   const userFields = extractFieldsFromModel(User);
@@ -72,11 +110,11 @@ export function getAllFilterableFields() {
  * Build dynamic filter extraction instructions for the LLM
  * This creates a prompt section that teaches Groq about your current schema
  */
-export function buildDynamicFilterInstructions() {
+export function buildDynamicFilterInstructions(): string {
   const allFields = getAllFilterableFields();
 
   // Filter out timestamp fields and IDs
-  const filterableFields = {};
+  const filterableFields: { [key: string]: FilterableFields } = {};
   Object.entries(allFields).forEach(([model, fields]) => {
     filterableFields[model] = {};
     Object.entries(fields).forEach(([fieldName, fieldInfo]) => {
@@ -114,9 +152,8 @@ export function buildDynamicFilterInstructions() {
  * Generate example filters from schema for LLM context
  * Shows Groq concrete examples of what filters look like
  */
-export function generateFilterExamples() {
-  const allFields = getAllFilterableFields();
-  const examples = {
+export function generateFilterExamples(): FilterExamples {
+  return {
     job_filters: {
       level: 'senior',
       contract: 'full-time',
@@ -135,8 +172,6 @@ export function generateFilterExamples() {
       skills: ['Python'],
     },
   };
-
-  return examples;
 }
 
 export default {

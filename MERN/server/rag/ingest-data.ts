@@ -1,5 +1,5 @@
 /**
- * INGEST-DATA.JS - Data Ingestion Pipeline
+ * INGEST-DATA.TS - Data Ingestion Pipeline
  *
  * WHAT IT DOES (Phase 1 - Ingestion):
  * 1. Loads jobs from MongoDB
@@ -28,16 +28,44 @@ dotenv.config({ path: './config/config.env' });
 
 import mongoose from 'mongoose';
 import { MongoClient } from 'mongodb';
-import { getEmbeddings } from './get-embeddings.js';
+import { getEmbeddings } from './get-embeddings';
 
 // Import models
-import { Job } from '../models/Job.ts';
-import { Company } from '../models/Company.ts';
-import { CompanyMember } from '../models/CompanyMember.ts';
+import { Job } from '../models/Job';
+import { Company } from '../models/Company';
+import { CompanyMember } from '../models/CompanyMember';
 
 // MongoDB connection
 const VECTOR_DB_NAME = 'vector_store_database';
 const VECTOR_COLLECTION_NAME = 'embeddings_stream';
+
+interface JobChunkMetadata {
+  skills: string[];
+  market: string;
+  teamSize: number;
+  foundedYear: number;
+  workType: string;
+}
+
+interface DocumentToInsert {
+  jobId: string;
+  companyId: string;
+  position: string;
+  company: string;
+  location: string;
+  level: string;
+  text: string;
+  metadata: JobChunkMetadata;
+  embedding?: number[];
+  createdAt: Date;
+}
+
+interface IngestionResult {
+  status: string;
+  message: string;
+  jobsProcessed: number;
+  embeddingsGenerated?: number;
+}
 
 /**
  * Create a semantically rich text chunk from job + company data
@@ -52,8 +80,12 @@ const VECTOR_COLLECTION_NAME = 'embeddings_stream';
  * @param {Object} founder - Founder profile (optional)
  * @returns {string} - Semantic text chunk
  */
-function createJobChunk(job, company, founder = null) {
-  const chunks = [];
+function createJobChunk(
+  job: any,
+  company: any,
+  founder: any = null
+): string {
+  const chunks: string[] = [];
 
   // Job core information (primary search terms)
   chunks.push(`Position: ${job.position}`);
@@ -115,8 +147,8 @@ function createJobChunk(job, company, founder = null) {
  *
  * @returns {Promise<Object>} - Ingestion summary
  */
-async function ingestData() {
-  let vectorConnection;
+async function ingestData(): Promise<IngestionResult> {
+  let vectorConnection: MongoClient | null = null;
 
   try {
     // Connection URLs
@@ -150,8 +182,8 @@ async function ingestData() {
     }
 
     // Prepare documents for ingestion
-    const docsToInsert = [];
-    const jobChunks = [];
+    const docsToInsert: DocumentToInsert[] = [];
+    const jobChunks: string[] = [];
 
     for (const job of jobs) {
       // Fetch associated company
@@ -211,6 +243,11 @@ async function ingestData() {
     const insertResult = await vectorCollection.insertMany(docsToInsert);
     console.log(`[INGEST] ✓ Inserted ${insertResult.insertedCount} documents`);
 
+    // Wait for Atlas to index the new documents
+    // console.log("[INGEST] Waiting for Atlas to index documents...");
+    // await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second wait
+    // console.log("[INGEST] ✓ Index should be ready");
+
     console.log('[INGEST] Creating MongoDB Atlas Vector Search index...');
     // NOTE: Vector Search index is created in MongoDB Atlas UI, not via driver
     // This is a placeholder - actual index management is handled by MongoDB Atlas
@@ -253,7 +290,7 @@ async function ingestData() {
       jobsProcessed: insertResult.insertedCount,
       embeddingsGenerated: embeddings.length,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[INGEST] Error during ingestion:', error.message);
     throw error;
   } finally {
