@@ -24,42 +24,17 @@
 import Groq from 'groq-sdk';
 import { retrieveDocuments, buildContextString } from './retrieve-documents';
 import { buildDynamicFilterInstructions } from './extract-filterable-field';
+import type {
+  ExtractedFilters,
+  AIFilters,
+  ExtractFiltersResult,
+  RawLLMExtraction,
+} from './types';
 
 // Initialize Groq client
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
-
-interface ExtractedFilters {
-  search: string;
-  location: string;
-  roles: string[];
-  skills: string[];
-  markets: string[];
-  level: string;
-  workType: string;
-  contract: string[];
-  companySizes: string[];
-  minSalary: number | null;
-  maxSalary: number | null;
-  currency: string;
-  timeframe: string;
-}
-
-interface AIFilters {
-  founderCeoGender: string | null;
-  companyFoundedAfter: number | null;
-  companyFoundedBefore: number | null;
-  employeeMinAge: number | null;
-  employeeMinExperienceYears: number | null;
-  targetApplicantGender: string | null;
-}
-
-interface ExtractFiltersResult {
-  filters: ExtractedFilters;
-  ai_filters: AIFilters;
-  ai_applied_criteria: string[];
-}
 
 /**
  * Extract filters from user query using RAG + Groq LLM
@@ -70,12 +45,12 @@ interface ExtractFiltersResult {
  * 3. buildExtractionPrompt() - Create smart extraction prompt
  * 4. Groq LLM processes: query + context + examples → filter extraction
  * 5. Parse JSON response → Return filters
- * 
- * @param {string} userQuery - User's natural language search query
- * @param {string} mongoUri - MongoDB connection string
- * @param {string} mode - "ai" or "regular" search mode
- * @returns {Promise<Object>} - Extracted filters + ai-only criteria
- * 
+ *
+ * @param userQuery - User's natural language search query
+ * @param mongoUri  - MongoDB connection string
+ * @param mode      - "ai" or "regular" search mode
+ * @returns Extracted filters + ai-only criteria
+ *
  * EXAMPLE OUTPUT:
  * {
  *   filters: {
@@ -124,8 +99,10 @@ async function extractFiltersFromQuery(
 
     console.log("[GENERATE] Sending to Groq LLM...");
 
-    // Call Groq API
-    const message = await groq.messages.create({
+    // Call Groq API via the correct chat completions endpoint.
+    // NOTE: groq.messages does not exist — the correct API is
+    //       groq.chat.completions.create(), which mirrors OpenAI"s interface.
+    const completion = await groq.chat.completions.create({
       model: "mixtral-8x7b-32768", // Fast, accurate model
       max_tokens: 1024,
       messages: [
@@ -136,14 +113,19 @@ async function extractFiltersFromQuery(
       ],
     });
 
-    // Extract JSON response
-    const responseText = message.content[0].text;
-    let extractedData: any;
+    // Extract text content from the first choice
+    const responseText = completion.choices[0]?.message?.content ?? '';
+
+    if (!responseText) {
+      throw new Error('Groq returned an empty response');
+    }
+
+    let extractedData: RawLLMExtraction;
 
     // Try to parse JSON from response
     try {
-      extractedData = JSON.parse(responseText);
-    } catch (error) {
+      extractedData = JSON.parse(responseText) as RawLLMExtraction;
+    } catch {
       console.error("[GENERATE] Failed to parse Groq response as JSON:");
       console.error(responseText);
       throw new Error("LLM returned invalid JSON format");
@@ -160,7 +142,8 @@ async function extractFiltersFromQuery(
       ai_filters,
       ai_applied_criteria,
     };
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err instanceof Error ? err : new Error(String(err));
     console.error("[GENERATE] Error extracting filters:", error.message);
     throw error;
   }
@@ -176,10 +159,10 @@ async function extractFiltersFromQuery(
  * - Separate sections for regular vs AI-only filters
  * - Flexible synonym handling (learns patterns, not rigid rules)
  * 
- * @param {string} userQuery - User's search query
- * @param {string} contextString - Retrieved job data for RAG context
- * @param {string} mode - "ai" or "regular"
- * @returns {string} - Formatted prompt for LLM
+ * @param userQuery     - User's search query
+ * @param contextString - Retrieved job data for RAG context
+ * @param mode          - "ai" or "regular"
+ * @returns Formatted prompt for LLM
  */
 function buildExtractionPrompt(
   userQuery: string,
@@ -265,63 +248,60 @@ RETURN ONLY JSON.`;
 }
 
 /**
- * Separate extracted data into regular and AI-only filters
- * 
+ * Separate extracted data into regular and AI-only filters.
+ *
  * WHY SEPARATE?
  * Regular filters → shown in URL, persisted, user-explicit
  * AI filters → shown as suggestions, cleared in regular mode, AI-inferred
- * 
- * @param {Object} extractedData - Raw extraction from LLM
- * @returns {Object} - { filters, ai_filters }
+ *
+ * @param extractedData - Raw extraction from LLM
+ * @returns { filters, ai_filters }
  */
-function separateFilters(
-  extractedData: any
-): { filters: ExtractedFilters; ai_filters: AIFilters } {
+function separateFilters(extractedData: RawLLMExtraction): {
+  filters: ExtractedFilters;
+  ai_filters: AIFilters;
+} {
   // Regular filters (from FilterModal)
   const filters: ExtractedFilters = {
-    search: extractedData.search || "",
-    location: extractedData.location || "",
-    roles: Array.isArray(extractedData.roles) ? extractedData.roles : [],
-    skills: Array.isArray(extractedData.skills) ? extractedData.skills : [],
-    markets: Array.isArray(extractedData.markets)
-      ? extractedData.markets
-      : [],
-    level: extractedData.level || "",
-    workType: extractedData.workType || "",
-    contract: Array.isArray(extractedData.contract)
-      ? extractedData.contract
-      : [],
+    search: extractedData.search ?? '',
+    location: extractedData.location ?? '',
+    roles: Array.isArray(extractedData.roles) ? (extractedData.roles as string[]) : [],
+    skills: Array.isArray(extractedData.skills) ? (extractedData.skills as string[]) : [],
+    markets: Array.isArray(extractedData.markets) ? (extractedData.markets as string[]) : [],
+    level: extractedData.level ?? '',
+    workType: extractedData.workType ?? '',
+    contract: Array.isArray(extractedData.contract) ? (extractedData.contract as string[]) : [],
     companySizes: Array.isArray(extractedData.companySizes)
-      ? extractedData.companySizes
+      ? (extractedData.companySizes as string[])
       : [],
-    minSalary: extractedData.minSalary || null,
-    maxSalary: extractedData.maxSalary || null,
-    currency: extractedData.currency || "",
-    timeframe: extractedData.timeframe || "",
+    minSalary: extractedData.minSalary ?? null,
+    maxSalary: extractedData.maxSalary ?? null,
+    currency: extractedData.currency ?? '',
+    timeframe: extractedData.timeframe ?? '',
   };
 
   // AI-only filters (context-inferred, not in FilterModal)
   const ai_filters: AIFilters = {
-    founderCeoGender: extractedData.founderCeoGender || null,
-    companyFoundedAfter: extractedData.companyFoundedAfter || null,
-    companyFoundedBefore: extractedData.companyFoundedBefore || null,
-    employeeMinAge: extractedData.employeeMinAge || null,
-    employeeMinExperienceYears: extractedData.employeeMinExperienceYears || null,
-    targetApplicantGender: extractedData.targetApplicantGender || null,
+    founderCeoGender: extractedData.founderCeoGender ?? null,
+    companyFoundedAfter: extractedData.companyFoundedAfter ?? null,
+    companyFoundedBefore: extractedData.companyFoundedBefore ?? null,
+    employeeMinAge: extractedData.employeeMinAge ?? null,
+    employeeMinExperienceYears: extractedData.employeeMinExperienceYears ?? null,
+    targetApplicantGender: extractedData.targetApplicantGender ?? null,
   };
 
   return { filters, ai_filters };
 }
 
 /**
- * Build human-readable descriptions of AI-inferred criteria
- * 
+ * Build human-readable descriptions of AI-inferred criteria.
+ *
  * EXAMPLE:
- * Input: { founderCeoGender: "female", companyFoundedAfter: 2020 }
+ * Input:  { founderCeoGender: "female", companyFoundedAfter: 2020 }
  * Output: ["Founder/CEO: Female", "Company established 2020 or later"]
- * 
- * @param {Object} ai_filters - AI-inferred filter values
- * @returns {Array<string>} - Human-readable descriptions
+ *
+ * @param ai_filters - AI-inferred filter values
+ * @returns Array of human-readable descriptions
  */
 function buildAiAppliedCriteria(ai_filters: AIFilters): string[] {
   const criteria: string[] = [];
@@ -335,13 +315,13 @@ function buildAiAppliedCriteria(ai_filters: AIFilters): string[] {
 
   if (ai_filters.companyFoundedAfter) {
     criteria.push(
-      `Company established ${ai_filters.companyFoundedAfter} or later`
+      `Company established ${ai_filters.companyFoundedAfter} or later`,
     );
   }
 
   if (ai_filters.companyFoundedBefore) {
     criteria.push(
-      `Company established before ${ai_filters.companyFoundedBefore}`
+      `Company established before ${ai_filters.companyFoundedBefore}`,
     );
   }
 
@@ -351,7 +331,7 @@ function buildAiAppliedCriteria(ai_filters: AIFilters): string[] {
 
   if (ai_filters.employeeMinExperienceYears) {
     criteria.push(
-      `Employees with ${ai_filters.employeeMinExperienceYears}+ years experience`
+      `Employees with ${ai_filters.employeeMinExperienceYears}+ years experience`,
     );
   }
 
@@ -370,7 +350,4 @@ export {
   buildExtractionPrompt,
   separateFilters,
   buildAiAppliedCriteria,
-  type ExtractFiltersResult,
-  type ExtractedFilters,
-  type AIFilters,
 };

@@ -1,5 +1,5 @@
 /**
- * RAG-VECTOR-INDEX.JS - MongoDB Vector Search Index Management
+ * RAG-VECTOR-INDEX.TS - MongoDB Vector Search Index Management
  *
  * WHAT IS A VECTOR INDEX?
  * A database index that organizes embeddings (vectors) for fast similarity search.
@@ -16,6 +16,7 @@
  */
 
 import { MongoClient } from 'mongodb';
+import { VectorIndexResult } from './types';
 
 const VECTOR_DB_NAME = 'vector_store_database';
 const VECTOR_COLLECTION_NAME = 'embeddings_stream';
@@ -31,11 +32,11 @@ const INDEX_NAME = 'vector_index';
  * - efSearch: Size of neighbor list during search (default 400)
  * - metric: "cosine" for semantic similarity
  *
- * @param {string} mongoUri - MongoDB connection string
- * @returns {Promise<Object>} - Index creation result
+ * @param mongoUri - MongoDB connection string
+ * @returns Index creation result
  */
-async function createVectorIndex(mongoUri) {
-  let client;
+async function createVectorIndex(mongoUri: string): Promise<VectorIndexResult> {
+  let client: MongoClient | null = null;
 
   try {
     if (!mongoUri) {
@@ -49,18 +50,14 @@ async function createVectorIndex(mongoUri) {
     const vectorDb = client.db(VECTOR_DB_NAME);
     const collection = vectorDb.collection(VECTOR_COLLECTION_NAME);
 
-    console.log(
-      `[INDEX] Connected to ${VECTOR_DB_NAME}.${VECTOR_COLLECTION_NAME}`,
-    );
+    console.log(`[INDEX] Connected to ${VECTOR_DB_NAME}.${VECTOR_COLLECTION_NAME}`);
 
     // Drop existing index if present
-    console.log(
-      `[INDEX] Dropping existing "${INDEX_NAME}" index (if exists)...`,
-    );
+    console.log(`[INDEX] Dropping existing "${INDEX_NAME}" index (if exists)...`);
     try {
       await collection.dropIndex(INDEX_NAME);
       console.log('[INDEX] ✓ Previous index dropped');
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('index not found')) {
         console.log('[INDEX] No existing index to drop');
       } else {
@@ -77,16 +74,18 @@ async function createVectorIndex(mongoUri) {
     console.log('  - efSearch: 400 (search neighbor list size)');
     console.log('  - metric: "cosine" (semantic similarity)');
 
-    const createIndexResult = await collection.createIndex(
+    // cosmosSearchOptions is a CosmosDB/Azure extension not in the standard MongoDB
+    // driver types, so we cast collection to `any` just for this one call
+    await (collection as any).createIndex(
       { embedding: 'cosmosSearch' },
       {
         name: INDEX_NAME,
         cosmosSearchOptions: {
           kind: 'vector-ivf',
-          m: 4, // Bi-directional links per node
+          m: 4,               // Bi-directional links per node
           efConstruction: 400, // Size of dynamic list for construction
-          efSearch: 400, // Size of dynamic list for search
-          metric: 'cosine', // Distance metric: cosine similarity
+          efSearch: 400,       // Size of dynamic list for search
+          metric: 'cosine',    // Distance metric: cosine similarity
         },
         background: true, // Build index in background (doesn't block collection)
       },
@@ -102,7 +101,7 @@ async function createVectorIndex(mongoUri) {
       indexName: INDEX_NAME,
       message: 'Vector search index created',
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('[INDEX] Error creating vector index:', error.message);
     throw error;
   } finally {
@@ -115,11 +114,12 @@ async function createVectorIndex(mongoUri) {
 
 /**
  * Get vector index information
- * @param {string} mongoUri - MongoDB connection string
- * @returns {Promise<Array>} - List of indexes on collection
+ *
+ * @param mongoUri - MongoDB connection string
+ * @returns List of indexes on collection
  */
-async function getIndexInfo(mongoUri) {
-  let client;
+async function getIndexInfo(mongoUri: string): Promise<any[]> {
+  let client: MongoClient | null = null;
 
   try {
     client = new MongoClient(mongoUri);
@@ -136,7 +136,7 @@ async function getIndexInfo(mongoUri) {
     });
 
     return indexes;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[INDEX] Error fetching index info:', error.message);
     throw error;
   } finally {

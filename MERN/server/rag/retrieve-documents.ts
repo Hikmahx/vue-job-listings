@@ -1,11 +1,11 @@
 /**
- * RETRIEVE-DOCUMENTS.JS - Vector Search & Document Retrieval
- * 
+ * RETRIEVE-DOCUMENTS.TS - Vector Search & Document Retrieval
+ *
  * WHAT IT DOES (Phase 2 - Retrieval):
  * 1. Converts user query to embedding (same model as ingestion)
  * 2. Searches MongoDB vector store for similar embeddings
  * 3. Returns top-K most relevant documents + metadata
- * 
+ *
  * WHY VECTOR SEARCH WORKS:
  * User Query: "I want a female-founded tech startup"
  *        ↓
@@ -16,7 +16,7 @@
  * Results: Jobs where embedding ≈ query embedding
  *        ↓
  * LLM: "These are relevant to female-founded startups"
- * 
+ *
  * COSINE SIMILARITY SCORE:
  * 0 = Not related at all
  * 0.5 = Moderately related
@@ -24,7 +24,8 @@
  */
 
 import { MongoClient } from 'mongodb';
-import { getEmbedding } from './get-embeddings.js';
+import { getEmbedding } from './get-embeddings';
+import { RetrievedDocument, FormattedDocument } from './types';
 
 const VECTOR_DB_NAME = 'vector_store_database';
 const VECTOR_COLLECTION_NAME = 'embeddings_stream';
@@ -38,11 +39,11 @@ const VECTOR_COLLECTION_NAME = 'embeddings_stream';
  * 3. Return documents with similarity scores
  * 4. Filter by minimum similarity threshold
  *
- * @param {string} query - User's natural language query
- * @param {string} mongoUri - MongoDB connection string
- * @param {number} topK - Number of top results (default 5)
- * @param {number} minSimilarity - Minimum similarity score (0-1, default 0.0)
- * @returns {Promise<Array>} - Array of relevant documents with scores
+ * @param query         - User's natural language query
+ * @param mongoUri      - MongoDB connection string
+ * @param topK          - Number of top results (default 5)
+ * @param minSimilarity - Minimum similarity score (0-1, default 0.0)
+ * @returns Array of relevant documents with scores
  *
  * USAGE:
  * const results = await retrieveDocuments(
@@ -52,13 +53,12 @@ const VECTOR_COLLECTION_NAME = 'embeddings_stream';
  * );
  */
 async function retrieveDocuments(
-  query,
-  mongoUri,
-  topK = 5,
-  minSimilarity = 0.0, // minSimilarity = 0.75) //return results above 0.75 similarity
-
-) {
-  let client;
+  query: string,
+  mongoUri: string,
+  topK: number = 5,
+  minSimilarity: number = 0.0, // Set to 0.75 to only return high-confidence results
+): Promise<RetrievedDocument[]> {
+  let client: MongoClient | null = null;
 
   try {
     if (!mongoUri) {
@@ -69,9 +69,7 @@ async function retrieveDocuments(
     // This optimizes embedding for search instead of storage
     console.log('[RETRIEVE] Generating query embedding...');
     const queryEmbedding = await getEmbedding(query, 'query');
-    console.log(
-      `[RETRIEVE] ✓ Generated embedding (dimension: ${queryEmbedding.length})`,
-    );
+    console.log(`[RETRIEVE] ✓ Generated embedding (dimension: ${queryEmbedding.length})`);
 
     client = new MongoClient(mongoUri);
     await client.connect();
@@ -82,17 +80,19 @@ async function retrieveDocuments(
     console.log(`[RETRIEVE] Searching ${topK} similar documents...`);
 
     // MongoDB Atlas Vector Search aggregation pipeline
-    // $search with vectorSearch performs vector similarity search using cosine distance
+    // $vectorSearch performs vector similarity search using cosine distance
     // Requires vector search index to be created in MongoDB Atlas UI
-    const searchPipeline = [
+    // We cast to `any` because $vectorSearch is an Atlas-specific stage
+    // that isn't in the standard MongoDB driver types
+    const searchPipeline: any[] = [
       {
         $vectorSearch: {
-          index: 'vector_index',        // must match your Atlas index name exactly
-            queryVector: queryEmbedding, // 768-dimensional query embedding
-            path: 'embedding', // Field path where embeddings are stored
-            limit: topK, // Required: maximum number of documents to return
-            numCandidates: Math.max(topK * 4, 100), // Evaluate more candidates for better accuracy
-            // exact: true,
+          index: 'vector_index',       // must match your Atlas index name exactly
+          queryVector: queryEmbedding,  // 768-dimensional query embedding
+          path: 'embedding',           // Field path where embeddings are stored
+          limit: topK,                 // Required: maximum number of documents to return
+          numCandidates: Math.max(topK * 4, 100), // Evaluate more candidates for better accuracy
+          // exact: true,              // Uncomment for exact (slower but more accurate) search
         },
       },
       {
@@ -119,7 +119,7 @@ async function retrieveDocuments(
       },
     ];
 
-    const results = await collection.aggregate(searchPipeline).toArray();
+    const results = await collection.aggregate(searchPipeline).toArray() as RetrievedDocument[];
 
     console.log(`[RETRIEVE] ✓ Found ${results.length} relevant documents`);
 
@@ -135,7 +135,7 @@ async function retrieveDocuments(
     }
 
     return filteredResults;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[RETRIEVE] Error retrieving documents:', error.message);
     throw error;
   } finally {
@@ -152,10 +152,10 @@ async function retrieveDocuments(
  * Converts raw MongoDB documents into clean format for passing to LLM
  * Removes unnecessary fields, includes relevant metadata
  *
- * @param {Array} documents - Raw documents from retrieveDocuments()
- * @returns {Array} - Formatted documents ready for LLM
+ * @param documents - Raw documents from retrieveDocuments()
+ * @returns Formatted documents ready for LLM
  */
-function formatDocumentsForLLM(documents) {
+function formatDocumentsForLLM(documents: RetrievedDocument[]): FormattedDocument[] {
   return documents.map((doc) => ({
     position: doc.position,
     company: doc.company,
@@ -183,7 +183,7 @@ function formatDocumentsForLLM(documents) {
  * Headquarters: San Francisco | Founder Gender: female
  * ```
  */
-function buildContextString(documents) {
+function buildContextString(documents: RetrievedDocument[]): string {
   if (!documents || documents.length === 0) {
     return 'No relevant job data found.';
   }

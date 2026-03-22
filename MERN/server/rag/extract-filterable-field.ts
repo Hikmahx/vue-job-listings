@@ -1,9 +1,3 @@
-import { Model, Schema } from 'mongoose';
-import { Job } from '../models/Job';
-import { Company } from '../models/Company';
-import { User } from '../models/User';
-import { CompanyMember } from '../models/CompanyMember';
-
 /**
  * DYNAMIC FIELD EXTRACTION UTILITY
  * 
@@ -17,52 +11,27 @@ import { CompanyMember } from '../models/CompanyMember';
  * - Future-proof: scales as your data models evolve
  */
 
-interface FieldInfo {
-  type: string;
-  enum: string[] | null;
-  description: string;
-}
-
-interface FilterableFields {
-  [key: string]: FieldInfo;
-}
-
-interface AllFilterableFields {
-  job: FilterableFields;
-  company: FilterableFields;
-  user: FilterableFields;
-  team_member: FilterableFields;
-}
-
-interface FilterExamples {
-  job_filters: {
-    level: string;
-    contract: string;
-    workType: string;
-    skills: string[];
-  };
-  company_filters: {
-    market: string;
-    foundedYear: number;
-    teamSize: number;
-    location: string;
-  };
-  user_filters: {
-    experienceYears: number;
-    gender: string;
-    skills: string[];
-  };
-}
+import { Model } from 'mongoose';
+import { Job } from '../models/Job';
+import { Company } from '../models/Company';
+import { User } from '../models/User';
+import { CompanyMember } from '../models/CompanyMember';
+import {
+  FieldInfo,
+  FilterableFields,
+  AllFilterableFields,
+  FilterExamples,
+} from './types';
 
 /**
  * Extract all filterable fields from a Mongoose model schema
- * 
- * @param {Model} mongooseModel - The Mongoose model (e.g., Job, Company)
- * @returns {Object} Object with field names as keys and type info as values
+ *
+ * @param mongooseModel - The Mongoose model (e.g., Job, Company)
+ * @returns Object with field names as keys and type info as values
  */
 function extractFieldsFromModel(mongooseModel: Model<any>): FilterableFields {
   const fields: FilterableFields = {};
-  const schema: Schema = mongooseModel.schema;
+  const schema = mongooseModel.schema;
 
   Object.entries(schema.obj).forEach(([fieldName, fieldConfig]: [string, any]) => {
     // Skip internal fields, nested objects, and references
@@ -78,11 +47,13 @@ function extractFieldsFromModel(mongooseModel: Model<any>): FilterableFields {
     const fieldType: string = fieldConfig.type?.name || fieldConfig.type;
     const enumValues: string[] = fieldConfig.enum || [];
 
-    fields[fieldName] = {
+    const info: FieldInfo = {
       type: fieldType,
       enum: enumValues.length > 0 ? enumValues : null,
       description: fieldConfig.description || `${fieldName} field`,
     };
+
+    fields[fieldName] = info;
   });
 
   return fields;
@@ -114,17 +85,16 @@ export function buildDynamicFilterInstructions(): string {
   const allFields = getAllFilterableFields();
 
   // Filter out timestamp fields and IDs
-  const filterableFields: { [key: string]: FilterableFields } = {};
+  const filterableFields: { [model: string]: FilterableFields } = {};
+
   Object.entries(allFields).forEach(([model, fields]) => {
     filterableFields[model] = {};
     Object.entries(fields).forEach(([fieldName, fieldInfo]) => {
       // Skip timestamps, IDs, and internal fields
       if (
-        !['id', '_id', 'createdAt', 'updatedAt', 'timestamps'].includes(
-          fieldName
-        )
+        !['id', '_id', 'createdAt', 'updatedAt', 'timestamps'].includes(fieldName)
       ) {
-        filterableFields[model][fieldName] = fieldInfo;
+        filterableFields[model][fieldName] = fieldInfo as FieldInfo;
       }
     });
   });

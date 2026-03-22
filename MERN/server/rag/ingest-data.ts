@@ -35,37 +35,11 @@ import { Job } from '../models/Job';
 import { Company } from '../models/Company';
 import { CompanyMember } from '../models/CompanyMember';
 
+import { DocumentToInsert, IngestionResult } from './types';
+
 // MongoDB connection
 const VECTOR_DB_NAME = 'vector_store_database';
 const VECTOR_COLLECTION_NAME = 'embeddings_stream';
-
-interface JobChunkMetadata {
-  skills: string[];
-  market: string;
-  teamSize: number;
-  foundedYear: number;
-  workType: string;
-}
-
-interface DocumentToInsert {
-  jobId: string;
-  companyId: string;
-  position: string;
-  company: string;
-  location: string;
-  level: string;
-  text: string;
-  metadata: JobChunkMetadata;
-  embedding?: number[];
-  createdAt: Date;
-}
-
-interface IngestionResult {
-  status: string;
-  message: string;
-  jobsProcessed: number;
-  embeddingsGenerated?: number;
-}
 
 /**
  * Create a semantically rich text chunk from job + company data
@@ -75,16 +49,12 @@ interface IngestionResult {
  * "Founded: 2021" helps it understand founding year is important.
  * This increases RAG accuracy because the LLM can extract context.
  *
- * @param {Object} job - Job document from MongoDB
- * @param {Object} company - Company document from MongoDB
- * @param {Object} founder - Founder profile (optional)
- * @returns {string} - Semantic text chunk
+ * @param job     - Job document from MongoDB
+ * @param company - Company document from MongoDB
+ * @param founder - Founder profile (optional)
+ * @returns Semantic text chunk
  */
-function createJobChunk(
-  job: any,
-  company: any,
-  founder: any = null
-): string {
+function createJobChunk(job: any, company: any, founder: any = null): string {
   const chunks: string[] = [];
 
   // Job core information (primary search terms)
@@ -141,17 +111,16 @@ function createJobChunk(
  * 2. For each job:
  *    a. Fetch associated company and founder data
  *    b. Create text chunk with all context
- *    c. Generate embedding via Voyage AI
+ *    c. Generate embedding via Xenova
  * 3. Store in vector database
  * 4. Create vector search index
  *
- * @returns {Promise<Object>} - Ingestion summary
+ * @returns Ingestion summary
  */
 async function ingestData(): Promise<IngestionResult> {
   let vectorConnection: MongoClient | null = null;
 
   try {
-    // Connection URLs
     const MONGO_URI = process.env.MONGO_URI;
     if (!MONGO_URI) {
       throw new Error('MONGO_URI environment variable not set');
@@ -194,9 +163,9 @@ async function ingestData(): Promise<IngestionResult> {
       }
 
       // Fetch founder info if available
-      let founder = null;
-      if (company.founders && company.founders.length > 0) {
-        founder = await CompanyMember.findById(company.founders[0]).lean();
+      let founder: any = null;
+      if ((company as any).founders && (company as any).founders.length > 0) {
+        founder = await CompanyMember.findById((company as any).founders[0]).lean();
       }
 
       // Create text chunk
@@ -206,26 +175,24 @@ async function ingestData(): Promise<IngestionResult> {
       // Prepare document for insertion (metadata + placeholder for embedding)
       docsToInsert.push({
         jobId: job._id.toString(),
-        companyId: company._id.toString(),
-        position: job.position,
-        company: company.name,
-        location: job.location,
-        level: job.level,
+        companyId: (company as any)._id.toString(),
+        position: (job as any).position,
+        company: (company as any).name,
+        location: (job as any).location,
+        level: (job as any).level,
         text: chunk,
         metadata: {
-          skills: job.skills || [],
-          market: company.market,
-          teamSize: company.teamSize,
-          foundedYear: company.foundedYear,
-          workType: job.workType,
+          skills: (job as any).skills || [],
+          market: (company as any).market,
+          teamSize: (company as any).teamSize,
+          foundedYear: (company as any).foundedYear,
+          workType: (job as any).workType,
         },
         createdAt: new Date(),
       });
     }
 
-    console.log(
-      `[INGEST] Generating embeddings for ${jobChunks.length} jobs...`,
-    );
+    console.log(`[INGEST] Generating embeddings for ${jobChunks.length} jobs...`);
     // Generate all embeddings in batch
     const embeddings = await getEmbeddings(jobChunks, 'document');
 
@@ -242,11 +209,6 @@ async function ingestData(): Promise<IngestionResult> {
     // Insert all documents
     const insertResult = await vectorCollection.insertMany(docsToInsert);
     console.log(`[INGEST] ✓ Inserted ${insertResult.insertedCount} documents`);
-
-    // Wait for Atlas to index the new documents
-    // console.log("[INGEST] Waiting for Atlas to index documents...");
-    // await new Promise(resolve => setTimeout(resolve, 5000)); // 5 second wait
-    // console.log("[INGEST] ✓ Index should be ready");
 
     console.log('[INGEST] Creating MongoDB Atlas Vector Search index...');
     // NOTE: Vector Search index is created in MongoDB Atlas UI, not via driver
@@ -310,7 +272,7 @@ ingestData()
     console.log('[INGEST] Result:', result);
     process.exit(0);
   })
-  .catch((error) => {
+  .catch((error: any) => {
     console.error('[INGEST] Fatal error:', error);
     process.exit(1);
   });
