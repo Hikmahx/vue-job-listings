@@ -6,8 +6,10 @@ import authRoutes from './routes/auth';
 import jobsRoutes from './routes/jobs';
 import companiesRoutes from './routes/companies';
 import coldEmailsRoutes from './routes/coldEmails';
+import cron from 'node-cron';
+import { ingestData } from './rag/ingest-data';
 
-dotenv.config({ path: "./config/config.env" });
+dotenv.config({ path: './config/config.env' });
 connectDB();
 
 const app = express();
@@ -16,6 +18,12 @@ app.use(express.json());
 
 // CORS
 app.use(cors());
+
+// Re-ingest all jobs every night at midnight to catch any company data changes
+// (team size, founder info, location etc.) that wouldn't be caught by single-job ingestion
+cron.schedule('0 0 * * *', () => {
+  ingestData().catch((err) => console.error('[CRON] Nightly ingest failed:', err));
+});
 
 // Routes
 app.use('/api/accounts', authRoutes);

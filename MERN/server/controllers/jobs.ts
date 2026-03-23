@@ -8,6 +8,7 @@ import { CompanyMember } from '../models/CompanyMember';
 import { User } from '../models/User';
 import { getName as getCountryName } from 'country-list';
 import { extractFiltersFromQuery } from '../rag/generate-responses';
+import { ingestSingleJob, removeJobFromIndex } from '../rag/ingest-data';
 
 interface AuthRequest extends Request {
   user?: {
@@ -400,7 +401,7 @@ export const parseQuery = async (req: Request, res: Response) => {
 
     const result = await extractFiltersFromQuery(
       query,
-      process.env.MONGO_URI,
+      process.env.MONGO_URI || '',
       mode
     );
 
@@ -567,6 +568,12 @@ export const createJob = async (req: AuthRequest, res: Response) => {
 
     await JobDetails.create(detailsData);
 
+    // Ingest new job into the vector store (fire and forget) so it appears in AI-powered search.
+    // We don't await this — embedding generation is slow and the user shouldn't
+    // wait for it just to get confirmation their job was posted.
+    // If this fails, the nightly cron in server.ts will re-ingest everything as a safety net.
+    ingestSingleJob(job._id.toString()).catch(console.error);
+
     const populatedJob = await Job.findById(job._id)
       .populate({
         path: 'company',
@@ -651,6 +658,11 @@ export const updateJob = async (req: AuthRequest, res: Response) => {
     });
 
     await job.save();
+
+    // Re-ingest the updated job so the vector store reflects the latest changes.
+    // We don't await this — same reason as createJob, the user gets their response immediately.
+    // The nightly cron in server.ts acts as a safety net if this fails.
+    ingestSingleJob(job._id.toString()).catch(console.error);
 
     // Update job details if provided
     if (req.body.details) {
@@ -738,6 +750,11 @@ export const deleteJob = async (req: AuthRequest, res: Response) => {
     await JobDetails.deleteOne({ job: job._id });
     // Delete job
     await Job.deleteOne({ _id: job._id });
+
+    // Remove the deleted job from the vector store so it no longer appears in AI search results.
+    // We don't await this — the job is already deleted from the main DB, that's what matters to the user.
+    // The nightly cron in server.ts will also clean up anything missed.
+    removeJobFromIndex(job._id.toString()).catch(console.error);
 
     res.json({ message: 'Job deleted successfully' });
   } catch (error: any) {
