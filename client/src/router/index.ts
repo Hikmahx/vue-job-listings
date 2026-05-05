@@ -1,90 +1,61 @@
 import { createWebHistory, createRouter } from 'vue-router'
-import HomeView from "@/views/HomeView.vue"
-import JobsView from "@/views/JobsView.vue"
-import JobDetailView from "@/views/JobDetailView.vue"
-import LoginView from "@/views/LoginView.vue"
-import SignupView from "@/views/SignupView.vue"
-// import type { RouteRecordRaw } from 'vue-router'
-// import MainLayout from '@/layouts/MainLayout.vue'
-// import DashboardOverviewView from '@/views/DashboardOverview.vue'
-import AppliedJobsView from '@/views/AppliedJobs.vue'
-import SettingsView from '@/views/Settings.vue'
-import CreateJobView from '@/views/CreateJob.vue'
-import NotFoundView from '@/views/NotFound.vue'
-import MainLayout from '../components/dashboard/MainLayout.vue'
-import Dashboard from '../views/Dashboard.vue'
-import JobApplicationView from '../views/JobApplicationView.vue'
-import CompaniesView from '../views/CompaniesView.vue'
-import CompanyFormView from '../views/CompanyFormView.vue'
-import CompanyDetailView from '../views/CompanyDetailView.vue'
+import { authService } from '@/services/authService'
+
+// Lazy-load all views for code splitting
+const HomeView = () => import('@/views/HomeView.vue')
+const JobsView = () => import('@/views/JobsView.vue')
+const JobDetailView = () => import('@/views/JobDetailView.vue')
+const JobApplicationView = () => import('@/views/JobApplicationView.vue')
+const LoginView = () => import('@/views/LoginView.vue')
+const SignupView = () => import('@/views/SignupView.vue')
+const NotFoundView = () => import('@/views/NotFound.vue')
+
+// Dashboard (protected)
+const MainLayout = () => import('@/components/dashboard/MainLayout.vue')
+const Dashboard = () => import('@/views/Dashboard.vue')
+const AppliedJobsView = () => import('@/views/AppliedJobs.vue')
+const SettingsView = () => import('@/views/Settings.vue')
+const CreateJobView = () => import('@/views/CreateJob.vue')
+const CompaniesView = () => import('@/views/CompaniesView.vue')
+const CompanyFormView = () => import('@/views/CompanyFormView.vue')
+const CompanyDetailView = () => import('@/views/CompanyDetailView.vue')
 
 const routes = [
-  { path: "/", component: HomeView },
-  { path: "/jobs", component: JobsView },
-  { path: "/jobs/:id", component: JobDetailView, name: "job-detail" },
-    { path: "/jobs/:jobId/apply", component: JobApplicationView, name: "apply" },
-  { path: "/login", component: LoginView, name: "login" },
-  { path: "/signup", component: SignupView, name: "signup" },
-  // { path: "/apply/:jobId", component: JobApplicationView, name: "apply" },
-  // { path: "/create-job", component: CreateJobView, name: "create-job" },
-  // { path: "/dashboard", component: DashboardView, name: "dashboard" },
-  {
-    path: '/',
-    redirect: '/dashboard'
-  },
+  { path: '/', component: HomeView },
+  { path: '/jobs', component: JobsView },
+  { path: '/jobs/:id', component: JobDetailView, name: 'job-detail' },
+  { path: '/jobs/:jobId/apply', component: JobApplicationView, name: 'apply' },
+  { path: '/login', component: LoginView, name: 'login' },
+  { path: '/signup', component: SignupView, name: 'signup' },
+
+  // Dashboard — protected, requires auth
   {
     path: '/dashboard',
     component: MainLayout,
+    meta: { requiresAuth: true },
     children: [
-      {
-        path: '',
-        component: Dashboard,
-        name: 'Dashboard'
-      },
-      {
-        path: 'applied-jobs',
-        component: AppliedJobsView,
-        name: 'AppliedJobs'
-      },
-      {
-        path: 'settings',
-        component: SettingsView,
-        name: 'Settings'
-      },
-      {
-        path: 'create-job',
-        component: CreateJobView,
-        name: 'CreateJob'
-      },
-      {
-        path: 'companies',
-        component: CompaniesView,
-        name: 'Companies'
-      },
-      {
-        path: 'companies/create',
-        component: CompanyFormView,
-        name: 'CreateCompany'
-      },
-      {
-        path: 'companies/:slug',
-        component: CompanyDetailView,
-        name: 'CompanyDetail'
-      },
-      {
-        path: 'companies/:slug/edit',
-        component: CompanyFormView,
-        name: 'EditCompany'
-      }
-    ]
+      { path: '', component: Dashboard, name: 'Dashboard' },
+      { path: 'applied-jobs', component: AppliedJobsView, name: 'AppliedJobs' },
+      { path: 'settings', component: SettingsView, name: 'Settings' },
+      { path: 'create-job', component: CreateJobView, name: 'CreateJob' },
+      { path: 'companies', component: CompaniesView, name: 'Companies' },
+      { path: 'companies/create', component: CompanyFormView, name: 'CreateCompany' },
+      { path: 'companies/:slug', component: CompanyDetailView, name: 'CompanyDetail' },
+      { path: 'companies/:slug/edit', component: CompanyFormView, name: 'EditCompany' },
+    ],
   },
-  {
-    path: '/:pathMatch(.*)*',
-    component: NotFoundView
-  }
+
+  { path: '/:pathMatch(.*)*', component: NotFoundView },
 ]
 
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+})
+
+// Auth guard — mirrors MERN protected routes pattern
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !authService.isAuthenticated()) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
 })

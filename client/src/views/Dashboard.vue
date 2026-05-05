@@ -1,41 +1,64 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Button } from '@/components/ui/button'
+import { onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/AuthStore'
 import { Separator } from '@/components/ui/separator'
 
-const userRole = ref('job_seeker')
-const userName = ref('John Doe')
+const authStore = useAuthStore()
+
+onMounted(async () => {
+  // Fetch latest profile data on mount (mirrors MERN: dispatch(getProfile()))
+  try {
+    await authStore.getProfile()
+  } catch {
+    // User may not be authenticated — MainLayout guards this route
+  }
+})
 </script>
 
 <template>
   <div class="bg-white rounded-lg shadow-md p-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome Back, {{ userName }}</h2>
-    <p class="text-gray-600 mb-6">Role: <span class="font-medium capitalize">{{ userRole.replace('_', ' ') }}</span></p>
+    <h2 class="text-2xl font-bold text-gray-900 mb-4">Welcome Back, {{ authStore.user?.fullName || 'User' }}</h2>
+    <p class="text-gray-600 mb-6">Role: <span class="font-medium capitalize">{{ authStore.user?.role?.replace('_', ' ') || 'User' }}</span></p>
     
     <Separator class="my-6" />
 
-    <div v-if="userRole === 'job_seeker'" class="space-y-4">
-      <h3 class="text-lg font-semibold text-gray-900">Your Applications</h3>
-      <p class="text-gray-600">You have 3 active applications</p>
-      <Button class="mt-4 bg-cyan-400 hover:bg-cyan-900 text-white">
-        View Applications
-      </Button>
+    <div v-if="authStore.loading" class="text-center py-8">
+      <p class="text-gray-600">Loading profile…</p>
     </div>
 
-    <div v-else-if="userRole === 'team_member'" class="space-y-4">
-      <h3 class="text-lg font-semibold text-gray-900">Team Jobs</h3>
-      <p class="text-gray-600">Your team has 5 open positions</p>
-      <Button class="mt-4 bg-cyan-400 hover:bg-cyan-900 text-white">
-        Manage Positions
-      </Button>
-    </div>
+    <template v-else>
+      <!-- Job Seeker -->
+      <div v-if="authStore.user?.role === 'job_seeker'" class="space-y-4">
+        <h3 class="text-lg font-semibold text-gray-900">Your Applications</h3>
+        <p class="text-gray-600">View and manage your job applications</p>
+        <RouterLink
+          to="/dashboard/applied-jobs"
+          class="inline-block mt-4 bg-cyan-400 hover:bg-cyan-900 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+        >
+          View Applications
+        </RouterLink>
+      </div>
 
-    <div v-else-if="userRole === 'admin'" class="space-y-4">
-      <h3 class="text-lg font-semibold text-gray-900">Admin Dashboard</h3>
-      <p class="text-gray-600">Total jobs: 12 | Total applicants: 87 | Active users: 234</p>
-      <Button class="mt-4 bg-cyan-400 hover:bg-cyan-900 text-white">
-        View All Jobs
-      </Button>
-    </div>
+      <!-- Team Member -->
+      <div v-else-if="authStore.user?.role === 'team_member'" class="space-y-4">
+        <h3 class="text-lg font-semibold text-gray-900">Company Management</h3>
+        <p class="text-gray-600">Manage your companies and create job postings</p>
+        <div class="flex gap-4 mt-4">
+          <RouterLink
+            to="/dashboard/companies"
+            class="bg-cyan-400 hover:bg-cyan-900 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            My Companies
+          </RouterLink>
+          <RouterLink
+            to="/dashboard/create-job"
+            class="bg-cyan-400 hover:bg-cyan-900 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+          >
+            Create Job
+          </RouterLink>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
