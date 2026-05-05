@@ -18,8 +18,20 @@ export interface FilterFields {
   sortByCompany: boolean
 }
 
-export const useFilterStore = defineStore('filterStore', {
-  state: (): FilterFields & { selectedBtns: string[]; aiMode: boolean } => ({
+/** AI-only filters returned by backend */
+export type AIFilters = Record<string, unknown>
+
+// Declare the full state shape as a plain interface so Pinia infers it correctly.
+// Inline return-type annotations on state() break Pinia's store type inference for
+// extra fields like aiFilters — a known limitation of the options-API form.
+interface FilterState extends FilterFields {
+  selectedBtns: string[]
+  aiMode: boolean
+  aiFilters: AIFilters
+}
+
+function initialState(): FilterState {
+  return {
     search: '',
     location: '',
     minSalary: undefined,
@@ -34,150 +46,95 @@ export const useFilterStore = defineStore('filterStore', {
     roles: [],
     currency: '',
     sortByCompany: false,
-    // Selected buttons from job cards
     selectedBtns: [],
     aiMode: false,
-  }),
+    aiFilters: {},
+  }
+}
+
+export const useFilterStore = defineStore('filterStore', {
+  state: () => initialState(),
 
   getters: {
     uniqueSelectedBtns: (state) => Array.from(new Set(state.selectedBtns)),
     groupedFilters: (state) => {
-      const data = Object.entries(state).filter(
-        ([key]) => key !== 'selectedBtns' && key !== 'aiMode',
-      )
-      const mappedData = data
-        .filter(
-          ([key, value]) =>
-            value !== null &&
-            value !== undefined &&
-            !(Array.isArray(value) && value.length === 0) &&
-            !(typeof value === 'string' && value.trim() === ''),
+      const skip = new Set(['selectedBtns', 'aiMode', 'aiFilters'])
+      return Object.entries(state)
+        .filter(([key]) => !skip.has(key))
+        .filter(([, value]) =>
+          value !== null &&
+          value !== undefined &&
+          !(Array.isArray(value) && (value as unknown[]).length === 0) &&
+          !(typeof value === 'string' && value.trim() === ''),
         )
         .map(([key, value]) => {
           if (Array.isArray(value)) {
-            if (value.length === 1) {
-              return { [key]: value[0] }
-            }
-            if (value.length > 1) {
-              return { [key]: value.length }
-            }
-          } else if (typeof value === 'string' || typeof value === 'number') {
-            return { [key]: value }
-          } else if (typeof value === 'boolean' && value === true) {
-            return { [key]: value }
+            return (value as unknown[]).length === 1
+              ? { [key]: (value as unknown[])[0] }
+              : { [key]: (value as unknown[]).length }
           }
+          if (typeof value === 'string' || typeof value === 'number') return { [key]: value }
+          if (typeof value === 'boolean' && value) return { [key]: value }
+          return undefined
         })
         .filter(Boolean)
-
-      return mappedData
     },
   },
 
   actions: {
-    /**
-     * Remove a value from the correct filter array (roles, skills, etc.)
-     * Used for 'x' and 'clear' actions in the UI.
-     */
-    removeFilterValue(value: string, filterType: 'role' | 'level' | 'skills') {
-      let field: string[] | undefined
-      switch (filterType) {
-        case 'role':
-          field = this.roles
-          break
-        case 'level':
-          if (this.level === value) {
-            this.level = ''
-          }
-          return
-        case 'skills':
-          field = this.skills
-          break
-        default:
-          return
-      }
-      if (field) {
-        const idx = field.indexOf(value)
-        if (idx !== -1) {
-          field.splice(idx, 1)
-        }
-      }
-    },
-
-    setFilters(filters: Record<string, any>) {
-      Object.assign(this, filters)
-    },
+    setSearch(value: string) { this.search = value },
+    setLocation(value: string) { this.location = value },
+    setWorkType(value: string) { this.workType = value },
+    setLevel(value: string) { this.level = value },
+    setSortByCompany(value: boolean) { this.sortByCompany = value },
 
     setAIMode(enabled: boolean) {
       this.aiMode = enabled
+      if (!enabled) this.aiFilters = {}
+    },
+
+    setFilters(filters: Partial<FilterFields>) {
+      Object.assign(this, filters)
+    },
+
+    setAIFilters(aiFilters: AIFilters) {
+      this.aiFilters = aiFilters
+    },
+
+    removeFilterValue(value: string, filterType: 'role' | 'level' | 'skills') {
+      if (filterType === 'level') { if (this.level === value) this.level = ''; return }
+      const field = filterType === 'role' ? this.roles : this.skills
+      const idx = field.indexOf(value)
+      if (idx !== -1) field.splice(idx, 1)
     },
 
     resetFilters() {
-      this.search = ''
-      this.location = ''
-      this.minSalary = undefined
-      this.maxSalary = undefined
-      this.timeframe = ''
-      this.workType = ''
-      this.level = ''
-      this.skills = []
-      this.markets = []
-      this.companySizes = []
-      this.contract = []
-      this.roles = []
-      this.currency = ''
-      this.sortByCompany = false
-      this.aiMode = false
+      Object.assign(this, initialState())
     },
-    // Selected buttons actions
+
     addSelectedBtn(value: string) {
       if (!this.selectedBtns.includes(value)) this.selectedBtns.push(value)
     },
-
     removeSelectedBtn(value: string) {
       this.selectedBtns = this.selectedBtns.filter((v) => v !== value)
     },
-
-    clearSelectedBtns() {
-      this.selectedBtns = []
-    },
-
+    clearSelectedBtns() { this.selectedBtns = [] },
     toggleSelectedBtn(value: string) {
-      if (this.selectedBtns.includes(value)) this.removeSelectedBtn(value)
-      else this.addSelectedBtn(value)
+      this.selectedBtns.includes(value) ? this.removeSelectedBtn(value) : this.addSelectedBtn(value)
     },
 
-    /**
-     * Handle filter click from job cards: intelligently categorize the clicked value
-     * and update the appropriate filter field (level, roles, skills, etc.).
-     */
     onFilterClick(value: string, filterType: 'role' | 'level' | 'skills') {
-      let field: string[] | undefined
-      switch (filterType) {
-        case 'role':
-          field = this.roles
-          break
-        case 'level':
-          const levelObj = levelsOptions.find((l) => l.label === value || l.value === value)
-          if (levelObj) {
-            this.level = levelObj.value
-            return
-          }
-          break
-        case 'skills':
-          field = this.skills
-          value = value.toLowerCase().replace(/\s+/g, '-')
-          break
-        default:
-          return
+      if (filterType === 'level') {
+        const levelObj = levelsOptions.find((l) => l.label === value || l.value === value)
+        if (levelObj) this.level = levelObj.value
+        return
       }
-      if (field && !field.includes(value)) {
-        field.push(value)
-      }
+      const field = filterType === 'role' ? this.roles : this.skills
+      if (filterType === 'skills') value = value.toLowerCase().replace(/\s+/g, '-')
+      if (!field.includes(value)) field.push(value)
     },
 
-    loadFromObject(data: Record<string, any>) {
-      console.log('Loading filters from URL:', data)
-
+    loadFromObject(data: Record<string, unknown>) {
       if (data.search !== undefined) this.search = String(data.search).trim()
       if (data.location !== undefined) this.location = String(data.location)
       if (data.workType !== undefined) this.workType = String(data.workType)
@@ -187,91 +144,45 @@ export const useFilterStore = defineStore('filterStore', {
       if (data.maxSalary !== undefined) this.maxSalary = Number(data.maxSalary)
       if (data.timeframe !== undefined) this.timeframe = String(data.timeframe)
       if (data.sortByCompany !== undefined) this.sortByCompany = data.sortByCompany === 'true'
+      if (data.aiMode !== undefined) this.aiMode = data.aiMode === 'true'
 
-      // Load AI mode from URL if present
-      if (data.aiMode !== undefined) {
-        this.aiMode = data.aiMode === 'true'
-      }
-      
-      if (data.skills !== undefined) {
-        this.skills =
-          typeof data.skills === 'string'
-            ? data.skills.split(',').filter(Boolean)
-            : Array.isArray(data.skills)
-              ? data.skills
-              : []
-      }
+      const toArray = (v: unknown): string[] =>
+        typeof v === 'string' ? v.split(',').filter(Boolean)
+        : Array.isArray(v) ? (v as string[])
+        : []
 
-      if (data.markets !== undefined) {
-        this.markets =
-          typeof data.markets === 'string'
-            ? data.markets.split(',').filter(Boolean)
-            : Array.isArray(data.markets)
-              ? data.markets
-              : []
-      }
-
-      if (data.roles !== undefined) {
-        this.roles =
-          typeof data.roles === 'string'
-            ? data.roles.split(',').filter(Boolean)
-            : Array.isArray(data.roles)
-              ? data.roles
-              : []
-      }
-
-      if (data.companySizes !== undefined) {
-        this.companySizes =
-          typeof data.companySizes === 'string'
-            ? data.companySizes.split(',').filter(Boolean)
-            : Array.isArray(data.companySizes)
-              ? data.companySizes
-              : []
-      }
-
-      if (data.contract !== undefined) {
-        this.contract =
-          typeof data.contract === 'string'
-            ? data.contract.split(',').filter(Boolean)
-            : Array.isArray(data.contract)
-              ? data.contract
-              : []
-      }
-
-      console.log('Store after loading:', {
-        workType: this.workType,
-        level: this.level,
-        skills: this.skills,
-        markets: this.markets,
-        roles: this.roles,
-      })
+      if (data.skills !== undefined) this.skills = toArray(data.skills)
+      if (data.markets !== undefined) this.markets = toArray(data.markets)
+      if (data.roles !== undefined) this.roles = toArray(data.roles)
+      if (data.companySizes !== undefined) this.companySizes = toArray(data.companySizes)
+      if (data.contract !== undefined) this.contract = toArray(data.contract)
     },
 
-    /**
-     * Export filter state as an object (used to build query string)
-     */
-    toQueryObject(): Record<string, any> {
-      const query: Record<string, any> = {}
-
-      // Only include search if NOT in AI mode
-      if (!this.aiMode && this.search && String(this.search).trim() !== '')
-        query.search = String(this.search).trim()
-
+    toQueryObject(): Record<string, string> {
+      const query: Record<string, string> = {}
+      if (!this.aiMode && this.search?.trim()) query.search = this.search.trim()
       if (this.location) query.location = this.location
       if (this.workType) query.workType = this.workType
       if (this.level) query.level = this.level
       if (this.currency) query.currency = this.currency
-      if (this.minSalary && this.minSalary > 0) query.minSalary = this.minSalary
-      if (this.maxSalary && this.maxSalary > 0) query.maxSalary = this.maxSalary
+      if (this.minSalary && this.minSalary > 0) query.minSalary = String(this.minSalary)
+      if (this.maxSalary && this.maxSalary > 0) query.maxSalary = String(this.maxSalary)
       if (this.timeframe) query.timeframe = this.timeframe
       if (this.sortByCompany) query.sortByCompany = 'true'
-
+      if (this.aiMode) query.aiMode = 'true'
       if (this.skills.length > 0) query.skills = this.skills.join(',')
       if (this.markets.length > 0) query.markets = this.markets.join(',')
       if (this.roles.length > 0) query.roles = this.roles.join(',')
       if (this.companySizes.length > 0) query.companySizes = this.companySizes.join(',')
       if (this.contract.length > 0) query.contract = this.contract.join(',')
 
+      if (this.aiMode) {
+        Object.entries(this.aiFilters).forEach(([key, value]) => {
+          if (value === undefined || value === null || value === '') return
+          if (query[key] !== undefined) return // don't override explicit filter modal keys
+          query[key] = String(value)
+        })
+      }
       return query
     },
   },

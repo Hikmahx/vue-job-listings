@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+
+import { watch, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
+import { Sparkles, ArrowLeftRight } from 'lucide-vue-next'
 import { useFilterStore } from '@/stores/FilterStore'
 import { useJobStore } from '@/stores/JobStore'
 import Filter from './Filter.vue'
 import FilterModal from './FilterModal.vue'
 import SearchAndCountry from './SearchAndCountry.vue'
 import AISearchInput from './AISearchInput.vue'
-import { Sparkles, ArrowLeftRight } from 'lucide-vue-next'
-import { toTypedSchema } from '@vee-validate/zod'
-import * as z from 'zod'
-import { useForm } from 'vee-validate'
 
 const filterStore = useFilterStore()
 const jobStore = useJobStore()
@@ -19,93 +17,81 @@ const route = useRoute()
 const router = useRouter()
 
 const { search, location, sortByCompany, aiMode } = storeToRefs(filterStore)
+const totalCount = computed(() => jobStore.totalCount)
 
+// Load from URL params on mount and navigation
 onMounted(() => {
-  const urlAiMode = route.query.aiMode === 'true'
-  if (urlAiMode) {
-    filterStore.setAIMode(true)
+  const query = route.query as Record<string, string>
+  if (Object.keys(query).length > 0) {
+    filterStore.loadFromObject(query)
   }
 })
 
-// Toggle between AI and Regular search
+watch(
+  () => route.query,
+  (query) => {
+    if (Object.keys(query).length > 0) {
+      filterStore.loadFromObject(query as Record<string, string>)
+    }
+  },
+  { deep: true },
+)
+
+// Update URL when filters change
+watch(
+  () => filterStore.toQueryObject(),
+  (queryObj) => {
+    const urlQuery: Record<string, string> = { ...queryObj }
+    if (aiMode.value) urlQuery.aiMode = 'true'
+    router.replace({ query: urlQuery })
+  },
+  { deep: true },
+)
+
+// Fetch jobs when filter state changes
+watch(
+  () => ({
+    search: search.value,
+    location: location.value,
+    sortByCompany: sortByCompany.value,
+    aiMode: aiMode.value,
+    workType: filterStore.workType,
+    level: filterStore.level,
+    minSalary: filterStore.minSalary,
+    maxSalary: filterStore.maxSalary,
+    currency: filterStore.currency,
+    timeframe: filterStore.timeframe,
+    skills: [...filterStore.skills],
+    markets: [...filterStore.markets],
+    roles: [...filterStore.roles],
+    companySizes: [...filterStore.companySizes],
+    contract: [...filterStore.contract],
+  }),
+  () => {
+    // Don't auto-fetch in aiMode — AISearchInput controls fetching via parseQuery
+    if (!aiMode.value) {
+      jobStore.getData(1)
+    }
+  },
+  { deep: true },
+)
+
 const toggleSearchMode = () => {
   const newMode = !aiMode.value
-  filterStore.setAIMode(newMode)
-
-  // When switching TO regular mode, trigger a fresh fetch
+  filterStore.setAIMode(newMode) // also clears aiFilters when switching off
   if (!newMode) {
     jobStore.getData(1)
   }
 }
 
-// Load from URL params
-watch(
-  () => route.query,
-  (query) => {
-    if (Object.keys(query).length > 0) {
-      filterStore.loadFromObject(query)
-    }
-  },
-  { immediate: true, deep: true },
-)
-
-// Regular search form
-const formSchema = toTypedSchema(
-  z.object({
-    search: z.string().optional(),
-    location: z.string().optional(),
-    sortByCompany: z.boolean().default(false),
-  }),
-)
-
-const { handleSubmit, setValues } = useForm({
-  validationSchema: formSchema,
-  initialValues: {
-    search: search.value,
-    location: location.value,
-    sortByCompany: sortByCompany.value || false,
-  },
-})
-
-// Update form when store changes
-watch(
-  () => ({ search: search.value, location: location.value }),
-  (newFilters) => {
-    setValues({
-      search: newFilters.search || '',
-      location: newFilters.location || '',
-      sortByCompany: sortByCompany.value || false,
-    })
-  },
-  { deep: true },
-)
-
-const onSubmit = (values: any) => {
-  filterStore.setFilters({
-    search: values.search,
-    location: values.location,
-    sortByCompany: values.sortByCompany,
-  })
+const handleFormSubmit = (e: Event) => {
+  e.preventDefault()
+  jobStore.getData(1)
 }
-
-const handleFormSubmit = handleSubmit(onSubmit)
 
 const onSortChange = (event: Event) => {
-  const checked = (event.target as HTMLInputElement).checked
-  filterStore.setFilters({ sortByCompany: checked })
+  filterStore.setSortByCompany((event.target as HTMLInputElement).checked)
 }
-
-watch(
-  () => filterStore.toQueryObject(),
-  (queryObj) => {
-    const urlQuery = { ...queryObj }
-    if (aiMode.value) {
-      urlQuery.aiMode = 'true'
-    }
-    router.push({ query: urlQuery })
-  },
-  { deep: true },
-)
 </script>
 
 <template>
@@ -119,7 +105,7 @@ watch(
 
         <!-- Regular Search Mode -->
         <div v-else class="w-full">
-          <form @submit.prevent="handleFormSubmit" class="mb-6">
+          <form class="mb-6" @submit.prevent="handleFormSubmit">
             <SearchAndCountry />
             <button type="submit" class="sr-only">Apply Search</button>
           </form>
@@ -131,29 +117,24 @@ watch(
         <Filter />
       </div>
 
-      <!-- Results count and sorting (shown in both modes) -->
+      <!-- Results count + sorting + FilterModal toggle -->
       <div
         class="flex flex-wrap md:flex-nowrap flex-col md:flex-row items-center justify-between pt-6 mt-6 border-t gap-8"
       >
         <div class="flex items-center gap-2 w-full">
-          <!-- Toggle Button -->
+          <!-- Toggle AI / Regular -->
           <div class="flex">
             <button
-              @click="toggleSearchMode"
+              type="button"
               class="group flex items-center h-12 gap-2 mr-4 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
               :title="aiMode ? 'Switch to Regular Search' : 'Switch to AI Search'"
+              @click="toggleSearchMode"
             >
               <ArrowLeftRight
-                :class="[
-                  'w-4 h-4 transition-transform duration-300',
-                  !aiMode ? 'rotate-180 text-cyan-400' : '',
-                ]"
+                :class="['w-4 h-4 transition-transform duration-300', !aiMode ? 'rotate-180 text-cyan-400' : '']"
               />
               <span
-                :class="[
-                  'flex items-center gap-1 text-xs relative',
-                  !aiMode ? 'text-cyan-400' : 'text-cyan-900',
-                ]"
+                :class="['flex items-center gap-1 text-xs relative', !aiMode ? 'text-cyan-400' : 'text-cyan-900']"
               >
                 <Sparkles v-if="!aiMode" class="w-2.5 h-2.5 absolute -top-2.5 -right-2.5" />
                 {{ !aiMode ? 'AI' : 'Regular' }}
@@ -161,11 +142,13 @@ watch(
             </button>
           </div>
 
+          <!-- Live result count from jobStore (no hardcoded value) -->
           <span
             class="relative mr-6 after:content-['.'] after:ml-1 after:text-3xl after:absolute after:top-[-1rem] after:opacity-70 after:blur-[0.06rem]"
           >
-            159 results
+            {{ totalCount }} results
           </span>
+
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
@@ -176,6 +159,7 @@ watch(
             <span class="text-[10px]">Sort by Company (A-Z)</span>
           </label>
         </div>
+
         <FilterModal />
       </div>
     </div>

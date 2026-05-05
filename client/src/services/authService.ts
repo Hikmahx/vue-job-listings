@@ -158,3 +158,6 @@ export const authService = {
     return !!this.getAccessToken()
   },
 }
+
+// Expose shared axios instance for other services (jobService, companyService)
+export { axiosInstance as _axiosInstance }

@@ -1,11 +1,17 @@
 <script setup lang="ts">
+
 import { ref } from 'vue'
+import { Sparkles } from 'lucide-vue-next'
 import { useFilterStore } from '@/stores/FilterStore'
 import { useJobStore } from '@/stores/JobStore'
-import { Textarea } from '@/components/ui/textarea'
-import { Sparkles } from 'lucide-vue-next'
-import axios from 'axios'
-import Input from '../ui/input/Input.vue'
+import { jobService } from '@/services/jobService'
+import type { FilterFields } from '@/stores/FilterStore'
+
+const STANDARD_KEYS = new Set([
+  'search', 'location', 'minSalary', 'maxSalary', 'workType', 'level',
+  'skills', 'markets', 'companySizes', 'contract', 'roles', 'currency',
+  'timeframe', 'sortByCompany',
+])
 
 const filterStore = useFilterStore()
 const jobStore = useJobStore()
@@ -13,44 +19,64 @@ const jobStore = useJobStore()
 const aiQuery = ref('')
 const loading = ref(false)
 const error = ref('')
+const aiAppliedCriteria = ref<string[]>([])
 
 const handleAISearch = async () => {
   if (loading.value || !aiQuery.value.trim()) return
-
   loading.value = true
   error.value = ''
+  aiAppliedCriteria.value = []
 
   try {
-    // Enable AI mode and KEEP IT ON
-    filterStore.setAIMode(true)
+    const { filters, ai_filters, ai_applied_criteria } = await jobService.parseQuery(aiQuery.value.trim())
 
-    const response = await axios.post('http://127.0.0.1:8000/api/jobs/ai-search/', {
-      query: aiQuery.value,
+    // Separate standard FilterModal fields from any AI-only keys
+    const standard: Partial<FilterFields> = {}
+    const aiBag: Record<string, unknown> = { ...(ai_filters || {}) }
+
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (!STANDARD_KEYS.has(key)) {
+        aiBag[key] = value
+        return
+      }
+      if (key === 'minSalary' || key === 'maxSalary') {
+        ;(standard as Record<string, unknown>)[key] = typeof value === 'number' ? value : undefined
+        return
+      }
+      if (key === 'sortByCompany') {
+        ;(standard as Record<string, unknown>)[key] = typeof value === 'boolean' ? value : undefined
+        return
+      }
+      if (['skills', 'markets', 'companySizes', 'contract', 'roles'].includes(key)) {
+        ;(standard as Record<string, unknown>)[key] = Array.isArray(value) ? value : []
+        return
+      }
+      ;(standard as Record<string, unknown>)[key] = typeof value === 'string' ? value : ''
     })
 
-    // Sync extracted filters to UI
-    filterStore.setFilters(response.data.extracted_filters)
+    // Apply FilterModal fields to store (pre-fills the modal)
+    filterStore.setFilters(standard)
 
-    // Directly update jobs list
-    jobStore.jobs = response.data.jobs
+    // Store AI-only criteria (forwarded to backend on next getData call)
+    filterStore.setAIFilters(aiBag)
 
-    console.log('AI Search Results:', {
-      filters: response.data.extracted_filters,
-      count: response.data.count,
-    })
-  } catch (err: any) {
-    error.value = err.response?.data?.error || 'Failed to process search. Please try again.'
-    console.error('AI search error:', err)
+    // Fetch jobs with the new filters applied
+    await jobStore.getData(1)
+
+    if (ai_applied_criteria?.length) {
+      aiAppliedCriteria.value = ai_applied_criteria
+    }
+  } catch (e: unknown) {
+    const err = e as { response?: { data?: { message?: string } }; message?: string }
+    error.value = err.response?.data?.message || err.message || 'Failed to process search. Please try again.'
   } finally {
     loading.value = false
-    // REMOVED: setTimeout(() => filterStore.setAIMode(false), 500)
-    // aiMode stays TRUE until user manually switches or clears
   }
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
-  // Enter or Ctrl + Enter submits
-  if ((e.key === 'Enter' && e.ctrlKey) || (e.key === 'Enter' && !e.shiftKey)) {
+  // Submit on Enter without Shift (Shift+Enter = new line)
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
     handleAISearch()
   }
@@ -58,30 +84,22 @@ const handleKeydown = (e: KeyboardEvent) => {
 </script>
 
 <template>
-  <div
-    class="space-y-4 p-4 py-2 bg-gradient-to-r from-cyan-50 to-cyan-50 rounded-lg border-2 border-grayish-cyan"
-  >
-    <div class="flex items-start gap-2">
-      <Sparkles class="w-5 h-5 text-cyan-400" />
-      <!-- <h3 class="font-semibold text-cyan-900">AI-Powered Search</h3> -->
-      <Input
+  <div class="space-y-4 p-4 py-2 bg-gradient-to-r from-cyan-50 to-cyan-50 rounded-lg border-2 border-gray-200">
+    <div class="flex items-center gap-2">
+      <Sparkles class="w-5 h-5 text-cyan-400 shrink-0" />
+      <input
         v-model="aiQuery"
-        placeholder='Try: "Senior Frontend developer in Nigeria with Vue.js experience, remote work, SaaS companies"'
-        class="border-none shadow-none focus:ring-0 focus:outline-none text-sm bg-transparent p-0 placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50 
-        "
+        type="text"
+        placeholder='e.g. "Frontend developer in Nigeria, SaaS, Vue.js" or "Female founder, 20+ employees"'
+        class="flex-1 border-none shadow-none focus:ring-0 focus:outline-none text-sm bg-transparent p-0 placeholder:text-gray-500 w-full text-cyan-900"
         @keydown="handleKeydown"
       />
     </div>
 
-
-    <!-- <p class="text-xs text-gray-500">
-      Press <b>Enter</b> or <b>Ctrl + Enter</b> to search · <b>Shift + Enter</b> for new line
-    </p> -->
-
     <p v-if="loading" class="text-sm text-cyan-400">Searching with AI…</p>
-
-    <p v-if="error" class="text-sm text-red-500 bg-red-50/50 p-2 rounded">
-      {{ error }}
+    <p v-if="error" class="text-sm text-red-500 bg-red-50/50 p-2 rounded">{{ error }}</p>
+    <p v-if="aiAppliedCriteria.length > 0" class="text-xs text-cyan-900 mt-1">
+      Applied: {{ aiAppliedCriteria.join(' · ') }}
     </p>
   </div>
 </template>
