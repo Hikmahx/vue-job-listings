@@ -58,17 +58,57 @@ def _build_ai_applied_criteria(ai_only: dict) -> list:
     return out
 
 
+def _build_rag_context(user_query: str) -> str:
+    """
+    Retrieve semantically similar jobs and format them as context for the LLM.
+    Mirrors the MERN generate-responses.ts retrieveDocuments + buildContextString pattern.
+    Falls back to empty string if vector search is unavailable.
+    """
+    try:
+        from jobs.api.vector_search import search_similar_jobs
+        from jobs.models import Job
+        semantic_ids = search_similar_jobs(user_query, limit=5)
+        if not semantic_ids:
+            return ""
+        jobs = Job.objects.select_related("company").filter(id__in=semantic_ids)
+        lines = ["RELEVANT JOB DATA FROM DATABASE:\n"]
+        for i, job in enumerate(jobs, 1):
+            company = getattr(job, "company", None)
+            lines.append(
+                f"[{i}] {job.position} at {getattr(company, 'name', 'Unknown')} "
+                f"| Level: {job.level} | Location: {job.location} "
+                f"| Market: {getattr(company, 'market', '')} "
+                f"| Founded: {getattr(company, 'founded_year', 'unknown')} "
+                f"| Team size: {getattr(company, 'team_size', 'unknown')}"
+            )
+        return "\n".join(lines)
+    except Exception as e:
+        print(f"RAG context retrieval failed (non-fatal): {e}")
+        return ""
+
+
 def extract_filters_from_query(user_query: str) -> dict:
     """
-    Extract structured filters from natural language using Groq LLM.
+    RAG-powered filter extraction from natural language using Groq LLM.
+
+    Pipeline:
+      1. Retrieve semantically similar jobs from sqlite-vec (RAG context)
+      2. Build extraction prompt with that context so the LLM sees real examples
+      3. LLM extracts structured filters from query + context
+      4. Separate into FilterModal filters vs AI-only criteria
+
     Returns:
         - extracted_filters: only FilterModal keys (search, location, roles, skills, etc.)
           so the client can pre-fill the filter modal and stay in sync.
         - ai_only: founder/CEO gender, company founded year, employee age/experience,
-          target applicant gender; applied only in backend; can be shown when aiMode and hidden when not.
-        - ai_applied_criteria: list of human-readable strings for optional display in aiMode.
+          target applicant gender; applied only in backend; shown when aiMode.
+        - ai_applied_criteria: list of human-readable strings for display in aiMode.
     """
+    rag_context = _build_rag_context(user_query)
+    context_section = f"\nRELEVANT JOB DATA FROM DATABASE:\n{rag_context}" if rag_context else ""
+
     prompt = f"""Extract job search filters from this natural language query: "{user_query}"
+{context_section}
 
 Return ONLY valid JSON (no markdown, no explanation) with this exact structure:
 {{
