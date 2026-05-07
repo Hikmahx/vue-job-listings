@@ -56,7 +56,7 @@ const step1Schema = toTypedSchema(
     phone: z.string().min(1, 'Phone is required'),
     gender: z.string().min(1, 'Gender is required'),
     dob: z.string().min(1, 'Date of birth is required'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     confirmPassword: z.string().min(1, 'Confirm password is required'),
   }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
