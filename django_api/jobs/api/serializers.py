@@ -21,9 +21,8 @@ class JobDetailsSerializer(serializers.ModelSerializer):
             'apply',
             'experienceRequired',
             'foundedYear',
-            'website'
+            'website',
         ]
-        exclude = ('job',)
         
     def get_foundedYear(self, obj):
         try:
@@ -171,7 +170,9 @@ class JobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         details_data = validated_data.pop("details")
         job = Job.objects.create(**validated_data)
-        JobDetails.objects.create(job=job, **details_data)
+        details = JobDetails.objects.create(**details_data)
+        job.details = details
+        job.save()
         return job
 
     def update(self, instance, validated_data):
