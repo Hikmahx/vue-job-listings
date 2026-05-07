@@ -13,6 +13,7 @@ from .serializers import (
 
 class RegisterAPI(generics.CreateAPIView):
     """User registration endpoint"""
+    authentication_classes = []
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
@@ -37,6 +38,7 @@ class RegisterAPI(generics.CreateAPIView):
 
 class LoginAPI(generics.GenericAPIView):
     """User login endpoint"""
+    authentication_classes = []
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
 
@@ -54,6 +56,11 @@ class LoginAPI(generics.GenericAPIView):
                 'access': str(refresh.access_token),
             }
         }, status=status.HTTP_200_OK)
+
+
+class TokenRefreshAPIView(TokenRefreshView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
 
 
 class LogoutAPI(generics.GenericAPIView):

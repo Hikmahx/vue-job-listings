@@ -170,9 +170,7 @@ class JobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         details_data = validated_data.pop("details")
         job = Job.objects.create(**validated_data)
-        details = JobDetails.objects.create(**details_data)
-        job.details = details
-        job.save()
+        JobDetails.objects.create(job=job, **details_data)
         return job
 
     def update(self, instance, validated_data):
