@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from accounts.models import User, JobSeekerProfile, TeamMemberProfile
-from django.contrib.auth import authenticate
 
 
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
@@ -143,13 +142,25 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
+    print("LoginSerializer class loaded")  # Debug statement
     email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=1)
 
     def validate(self, data):
-        user = authenticate(email=data['email'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError('Invalid email or password.')
+        # Check if user exists first
+        try:
+            user = User.objects.get(email=data.get('email'))
+        except User.DoesNotExist:
+            raise serializers.ValidationError(
+                'Invalid email or password. If you don\'t have an account, please register.'
+            )
+        
+        # Then verify password
+        if not user.check_password(data.get('password')):
+            raise serializers.ValidationError(
+                'Invalid email or password. If you don\'t have an account, please register.'
+            )
+        
         if not user.is_active:
-            raise serializers.ValidationError('User account is disabled.')
+            raise serializers.ValidationError('User account is disabled. Please contact support.')
         return user

@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -44,7 +45,18 @@ class LoginAPI(generics.GenericAPIView):
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except ValidationError as exc:
+            errors = exc.detail
+            if isinstance(errors, dict):
+                errors = errors.get('message') or errors.get('non_field_errors') or errors
+            if isinstance(errors, list) and len(errors) == 1:
+                errors = errors[0]
+            return Response(
+                {'message': errors},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         user = serializer.validated_data
         refresh = RefreshToken.for_user(user)
