@@ -1,18 +1,18 @@
 // authService.ts
-import axios from "axios"
+import axios from 'axios'
 
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 })
 
 // Add token to requests
 axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access_token")
+  const token = localStorage.getItem('access_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -56,43 +56,43 @@ export const authService = {
       const formData = new FormData()
 
       // Add all string fields
-      formData.append("firstName", payload.firstName)
-      formData.append("lastName", payload.lastName)
-      formData.append("email", payload.email)
-      formData.append("password", payload.password)
-      formData.append("password2", payload.password2)
-      formData.append("phoneNumber", payload.phoneNumber)
-      formData.append("gender", payload.gender)
-      formData.append("dateOfBirth", payload.dateOfBirth)
-      formData.append("role", payload.role)
-      formData.append("location", payload.location)
+      formData.append('firstName', payload.firstName)
+      formData.append('lastName', payload.lastName)
+      formData.append('email', payload.email)
+      formData.append('password', payload.password)
+      formData.append('password2', payload.password2)
+      formData.append('phoneNumber', payload.phoneNumber)
+      formData.append('gender', payload.gender)
+      formData.append('dateOfBirth', payload.dateOfBirth)
+      formData.append('role', payload.role)
+      formData.append('location', payload.location)
 
       if (payload.experienceYears !== undefined) {
-        formData.append("experienceYears", payload.experienceYears.toString())
+        formData.append('experienceYears', payload.experienceYears.toString())
       }
       if (payload.linkedinUrl) {
-        formData.append("linkedinUrl", payload.linkedinUrl)
+        formData.append('linkedinUrl', payload.linkedinUrl)
       }
       if (payload.githubUrl) {
-        formData.append("githubUrl", payload.githubUrl)
+        formData.append('githubUrl', payload.githubUrl)
       }
       if (payload.portfolioUrl) {
-        formData.append("portfolioUrl", payload.portfolioUrl)
+        formData.append('portfolioUrl', payload.portfolioUrl)
       }
       if (payload.resume) {
-        formData.append("resume", payload.resume)
+        formData.append('resume', payload.resume)
       }
 
-      const response = await axiosInstance.post<AuthResponse>("/accounts/register/", formData, {
+      const response = await axiosInstance.post<AuthResponse>('/accounts/register/', formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
+          'Content-Type': 'multipart/form-data',
         },
       })
 
       if (response.data.tokens) {
-        localStorage.setItem("access_token", response.data.tokens.access)
-        localStorage.setItem("refresh_token", response.data.tokens.refresh)
-        localStorage.setItem("user", JSON.stringify(response.data.user))
+        localStorage.setItem('access_token', response.data.tokens.access)
+        localStorage.setItem('refresh_token', response.data.tokens.refresh)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
       }
 
       return response.data
@@ -103,33 +103,33 @@ export const authService = {
 
   async login(payload: LoginPayload): Promise<AuthResponse> {
     try {
-      const response = await axiosInstance.post<AuthResponse>("/accounts/login/", payload)
+      const response = await axiosInstance.post<AuthResponse>('/accounts/login/', payload)
 
       if (response.data.tokens) {
-        localStorage.setItem("access_token", response.data.tokens.access)
-        localStorage.setItem("refresh_token", response.data.tokens.refresh)
-        localStorage.setItem("user", JSON.stringify(response.data.user))
+        localStorage.setItem('access_token', response.data.tokens.access)
+        localStorage.setItem('refresh_token', response.data.tokens.refresh)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
       }
 
       return response.data
     } catch (error: any) {
-      throw error.response?.data || error
+      throw error
     }
   },
 
   async logout(): Promise<void> {
     try {
-      await axiosInstance.post("/accounts/logout/")
+      await axiosInstance.post('/accounts/logout/')
     } finally {
-      localStorage.removeItem("access_token")
-      localStorage.removeItem("refresh_token")
-      localStorage.removeItem("user")
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
     }
   },
 
   async getProfile(): Promise<any> {
     try {
-      const response = await axiosInstance.get("/accounts/profile/")
+      const response = await axiosInstance.get('/accounts/profile/')
       return response.data
     } catch (error: any) {
       throw error.response?.data || error
@@ -138,7 +138,7 @@ export const authService = {
 
   async updateProfile(data: any): Promise<any> {
     try {
-      const response = await axiosInstance.put("/accounts/profile/", data)
+      const response = await axiosInstance.put('/accounts/profile/', data)
       return response.data
     } catch (error: any) {
       throw error.response?.data || error
@@ -146,12 +146,12 @@ export const authService = {
   },
 
   getStoredUser(): any {
-    const user = localStorage.getItem("user")
+    const user = localStorage.getItem('user')
     return user ? JSON.parse(user) : null
   },
 
   getAccessToken(): string | null {
-    return localStorage.getItem("access_token")
+    return localStorage.getItem('access_token')
   },
 
   isAuthenticated(): boolean {

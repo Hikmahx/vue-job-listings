@@ -37,7 +37,8 @@ const onSubmit = handleSubmit(async (formValues) => {
     })
     router.push('/dashboard')
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || error.detail || 'Login failed. Please try again.'
+    const payload = error.response?.data || error
+    errorMessage.value = payload.message || 'Login failed. Please try again.'
   } finally {
     isLoading.value = false
   }
@@ -46,7 +47,6 @@ const onSubmit = handleSubmit(async (formValues) => {
 const updateField = (field: 'email' | 'password', value: string) => {
   setFieldValue(field, value)
 }
-
 </script>
 
 <template>
