@@ -8,7 +8,7 @@ from companies.api.serializers import (
     CompanyDetailSerializer,
     CompanyMemberSerializer,
 )
-from companies.api.permissions import IsCompanyFounder, IsPrimaryFounder
+from companies.api.permissions import IsCompanyFounder, IsCompanyOwner
 from accounts.models import User
 
 
@@ -76,7 +76,7 @@ class DeleteCompanyAPI(generics.DestroyAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     lookup_field = "slug"
-    permission_classes = [permissions.IsAuthenticated, IsPrimaryFounder]
+    permission_classes = [permissions.IsAuthenticated, IsCompanyOwner]
 
 class AddFounderAPI(APIView):
     permission_classes = [permissions.IsAuthenticated, IsCompanyFounder]
@@ -110,7 +110,7 @@ class AddFounderAPI(APIView):
 
 
 class RemoveFounderAPI(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsPrimaryFounder]
+    permission_classes = [permissions.IsAuthenticated, IsCompanyOwner]
 
     def delete(self, request, slug, member_id):
         company = get_object_or_404(Company, slug=slug)

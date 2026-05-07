@@ -1,6 +1,5 @@
 from django.contrib import admin
-from companies.models import Company, CompanyFounder, CompanyEmployee
+from companies.models import Company, CompanyMember
 
 admin.site.register(Company)
-admin.site.register(CompanyFounder)
-admin.site.register(CompanyEmployee)
+admin.site.register(CompanyMember)
