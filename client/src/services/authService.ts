@@ -113,7 +113,7 @@ export const authService = {
 
       return response.data
     } catch (error: any) {
-      throw error
+      throw error.response?.data || error
     }
   },
 
