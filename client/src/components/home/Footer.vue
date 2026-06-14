@@ -129,7 +129,7 @@ const currentYear = computed(() => new Date().getFullYear())
         <p class="text-grayish-cyan text-center text-sm">
           © {{ currentYear }} JobList, All Rights Reserved. | Site by
           <a
-            href="https://github.com/Hikmahx"
+            href="https://hikmahyousuph.com"
             target="_blank"
             rel="noopener noreferrer"
             class="text-cyan-50 hover:text-white transition-colors underline"
