@@ -19,6 +19,7 @@ const CreateJobView = () => import('@/views/CreateJob.vue')
 const CompaniesView = () => import('@/views/CompaniesView.vue')
 const CompanyFormView = () => import('@/views/CompanyFormView.vue')
 const CompanyDetailView = () => import('@/views/CompanyDetailView.vue')
+const ColdEmailTracker = () => import('@/views/ColdEmailTracker.vue')
 
 const routes = [
   { path: '/', component: HomeView },
@@ -42,6 +43,7 @@ const routes = [
       { path: 'companies/create', component: CompanyFormView, name: 'CreateCompany' },
       { path: 'companies/:slug', component: CompanyDetailView, name: 'CompanyDetail' },
       { path: 'companies/:slug/edit', component: CompanyFormView, name: 'EditCompany' },
+      { path: 'cold-email-tracker', component: ColdEmailTracker, name: 'ColdEmailTracker' },
     ],
   },
 
