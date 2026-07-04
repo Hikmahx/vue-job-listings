@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'jobs',
     'accounts',
     'companies',
+    'cold_emails',
 ]
 
 # customised User model
