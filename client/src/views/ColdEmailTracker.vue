@@ -1,8 +1,5 @@
 <script setup lang="ts">
-/**
- * ColdEmailTracker.vue — mirrors MERN ColdEmailTracker.tsx exactly.
- * Same stats panels, same filter bar, same table layout, same modal flow.
- */
+
 import { ref, computed, onMounted } from 'vue'
 import {
   Plus, Trash2, Download, Search, ChevronDown, ChevronUp,
@@ -14,7 +11,7 @@ import type { ColdEmailEntry, ColdEmailStatus, ColdEmailFollowUp } from '@/types
 import { coldEmailService } from '@/services/coldEmailService'
 import ColdEmailEntryModal from '@/components/cold-email/ColdEmailEntryModal.vue'
 
-// ── status config 
+//status config 
 const STATUS_CONFIG = {
   opened:  { label: 'Opened',  icon: MailOpen,      cls: 'bg-amber-100 text-amber-800 border-amber-200' },
   replied: { label: 'Replied', icon: Reply,         cls: 'bg-orange-100 text-orange-800 border-orange-200' },
@@ -34,7 +31,7 @@ function truncate(str: string, n: number): string {
   return str.length > n ? str.slice(0, n) + '…' : str
 }
 
-// ── state 
+//state 
 const entries        = ref<ColdEmailEntry[]>([])
 const loading        = ref(true)
 const error          = ref<string | null>(null)
@@ -53,7 +50,7 @@ const filterTg       = ref(false)
 const importing      = ref(false)
 const fileInput      = ref<HTMLInputElement | null>(null)
 
-// ── data ─────────────────────────────────────────────────────────────────────
+//data
 async function fetchEntries() {
   loading.value = true; error.value = null
   try { entries.value = await coldEmailService.getEntries() }
@@ -65,7 +62,7 @@ async function fetchEntries() {
 }
 onMounted(fetchEntries)
 
-// ── derived ──────────────────────────────────────────────────────────────────
+//derived
 const allTags = computed(() => {
   const s = new Set<string>()
   entries.value.forEach(e => (e.tags ?? []).forEach(t => s.add(t)))
@@ -113,7 +110,7 @@ const stats = computed(() => {
   return { total, replied, opened }
 })
 
-// ── actions ──────────────────────────────────────────────────────────────────
+//actions
 function openAdd()   { addDropOpen.value = false; editingEntry.value = null; modalOpen.value = true }
 function openEdit(e: ColdEmailEntry) { editingEntry.value = e; modalOpen.value = true }
 
