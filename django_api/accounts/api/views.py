@@ -1,5 +1,4 @@
 from rest_framework import generics, permissions, status
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -14,7 +13,6 @@ from .serializers import (
 
 class RegisterAPI(generics.CreateAPIView):
     """User registration endpoint"""
-    authentication_classes = []
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
@@ -39,24 +37,12 @@ class RegisterAPI(generics.CreateAPIView):
 
 class LoginAPI(generics.GenericAPIView):
     """User login endpoint"""
-    authentication_classes = []
     serializer_class = LoginSerializer
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as exc:
-            errors = exc.detail
-            if isinstance(errors, dict):
-                errors = errors.get('message') or errors.get('non_field_errors') or errors
-            if isinstance(errors, list) and len(errors) == 1:
-                errors = errors[0]
-            return Response(
-                {'message': errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer.is_valid(raise_exception=True)
 
         user = serializer.validated_data
         refresh = RefreshToken.for_user(user)
@@ -68,11 +54,6 @@ class LoginAPI(generics.GenericAPIView):
                 'access': str(refresh.access_token),
             }
         }, status=status.HTTP_200_OK)
-
-
-class TokenRefreshAPIView(TokenRefreshView):
-    authentication_classes = []
-    permission_classes = [permissions.AllowAny]
 
 
 class LogoutAPI(generics.GenericAPIView):
